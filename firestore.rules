@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * FIRESTORE SECURITY RULES DOCUMENTATION
+     *
+     * Core Philosophy: 
+     * This ruleset implements a strict Role-Based Access Control (RBAC) model. Access to student 
+     * profiles and library tracking data is restricted exclusively to authorized library staff.
+     *
+     * Data Structure:
+     * - /students/{studentId}: Top-level collection for student records.
+     * - /librarySessions/{sessionId}: Top-level collection for check-in/out events.
+     * - /roles_libraryStaff/{uid}: A system-level collection used to verify staff privileges.
+     *
+     * Key Security Decisions:
+     * 1. DBAC (Database Access Control): Authorization is determined by the existence of a 
+     *    document in the 'roles_libraryStaff' collection matching the user's Firebase UID. 
+     *    This provides an atomic, high-performance check for administrative rights.
+     * 2. Staff-Only Policy: Both 'students' and 'librarySessions' collections are private 
+     *    to the library staff. There is no public or student-level access defined.
+     * 3. Identity Consistency: Rules enforce that the document ID in the Firestore path 
+     *    matches the 'id' field within the document data during creation.
+     */
+
+    // --- Global Helper Functions ---
+
+    /**
+     * @description Checks if the user is authenticated with a valid Firebase account.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user has a record in the library staff roles collection.
+     */
+    function isLibraryStaff() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_libraryStaff/$(request.auth.uid));
+    }
+
+    /**
+     * @description Combines staff authorization with a check ensuring the document currently exists.
+     * Used for update and delete operations to prevent actions on non-existent data.
+     */
+    function isExistingStaff() {
+      return isLibraryStaff() && resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Security rules for the Student collection, managing profiles for library access.
+     * @path /students/{studentId}
+     * @allow (get) If user is authenticated library staff.
+     * @deny (list) If user is not authenticated or lacks the staff role.
+     * @principle Role-based access control and relational integrity between path and data.
+     */
+    match /students/{studentId} {
+      allow get, list: if isLibraryStaff();
+      allow create: if isLibraryStaff() && request.resource.data.id == studentId;
+      allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingStaff();
+    }
+
+    /**
+     * @description Security rules for LibrarySession events, tracking check-in/out timestamps.
+     * @path /librarySessions/{sessionId}
+     * @allow (create) If staff creates a session where the data ID matches the path ID.
+     * @deny (update) If staff attempts to modify the primary ID of the session record.
+     * @principle Enforces immutability of relational identifiers and restricts management to staff.
+     */
+    match /librarySessions/{sessionId} {
+      allow get, list: if isLibraryStaff();
+      allow create: if isLibraryStaff() && request.resource.data.id == sessionId;
+      allow update: if isExistingStaff() && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingStaff();
+    }
+
+    /**
+     * @description System-level collection to define administrative library staff roles.
+     * @path /roles_libraryStaff/{uid}
+     * @allow (get) Any signed-in user can check if they (or others) have a staff role document.
+     * @deny (write) No client-side writes allowed; roles must be managed via Admin SDK or Console.
+     * @principle Restricted administrative collection for internal authorization lookups.
+     */
+    match /roles_libraryStaff/{uid} {
+      allow get: if isSignedIn();
+      allow list: if isLibraryStaff();
+      allow create, update, delete: if false;
+    }
+  }
+}
