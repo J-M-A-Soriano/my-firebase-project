@@ -1,12 +1,35 @@
-
 "use client";
 
-import Link from "next/link";
-import { BookOpen, ShieldCheck, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BookOpen, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth, useUser, initiateAnonymousSignIn } from "@/firebase";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  // If user is already logged in and we just clicked "Enter", redirect
+  useEffect(() => {
+    if (user && isSigningIn) {
+      router.push("/dashboard");
+    }
+  }, [user, isSigningIn, router]);
+
+  const handleEnterDashboard = () => {
+    if (user) {
+      router.push("/dashboard");
+      return;
+    }
+    
+    setIsSigningIn(true);
+    initiateAnonymousSignIn(auth);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/20 via-background to-background">
       <div className="max-w-4xl w-full space-y-12 text-center">
@@ -34,10 +57,19 @@ export default function LandingPage() {
                   Access the administrative dashboard to manage check-ins, view real-time occupancy, and generate AI insights.
                 </p>
               </div>
-              <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  Enter Dashboard <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button 
+                onClick={handleEnterDashboard} 
+                size="lg" 
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={isUserLoading || isSigningIn}
+              >
+                {isSigningIn || isUserLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    Enter Dashboard <ArrowRight className="h-4 w-4" />
+                  </div>
+                )}
               </Button>
             </CardContent>
           </Card>

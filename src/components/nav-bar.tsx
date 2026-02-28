@@ -1,10 +1,12 @@
-
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth, useUser } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -15,20 +17,30 @@ const navItems = [
 
 export function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+  const { user } = useUser();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-primary font-headline">LibriGuard</span>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-primary font-headline">LibriGuard</span>
+            </Link>
           </div>
           
           <div className="hidden md:block">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -52,13 +64,31 @@ export function NavBar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs font-medium">Library Staff</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Authorized</span>
-            </div>
-            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold text-xs border border-primary/20">
-              LS
-            </div>
+            {user ? (
+              <>
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-xs font-medium">Library Staff</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {user.isAnonymous ? "Guest Access" : "Authorized"}
+                  </span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleSignOut}
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+                <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-bold text-xs border border-primary/20">
+                  {user.email ? user.email.charAt(0).toUpperCase() : "LS"}
+                </div>
+              </>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/">Sign In</Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
