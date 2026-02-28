@@ -7,18 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Search, Mail, Book, Loader2, Users as UsersIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useState } from "react";
 
 export default function StudentsDirectory() {
   const db = useFirestore();
+  const { user } = useUser();
   const [filter, setFilter] = useState("");
 
   const studentsRef = useMemoFirebase(() => {
-    if (!db) return null;
+    // Only return the reference if the user is authenticated
+    if (!db || !user) return null;
     return collection(db, 'students');
-  }, [db]);
+  }, [db, user]);
 
   const { data: students, isLoading } = useCollection(studentsRef);
 

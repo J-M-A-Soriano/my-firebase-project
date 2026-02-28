@@ -9,21 +9,23 @@ import { Users, LogOut, Clock, Calendar as CalendarIcon, UserPlus, Loader2 } fro
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, doc, serverTimestamp } from "firebase/firestore";
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const db = useFirestore();
+  const { user, isUserLoading } = useUser();
 
   const sessionsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    // Only return a query if the database is ready and a user is authenticated
+    if (!db || !user) return null;
     return query(
       collection(db, 'librarySessions'),
       where('checkOutTime', '==', null)
     );
-  }, [db]);
+  }, [db, user]);
 
   const { data: presentSessions, isLoading } = useCollection(sessionsQuery);
 
@@ -68,14 +70,14 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Current Occupancy</p>
-                  <h3 className="text-4xl font-bold">{presentSessions?.length || 0}</h3>
+                  <h3 className="text-4xl font-bold">{(isLoading || isUserLoading) ? "..." : (presentSessions?.length || 0)}</h3>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                {presentSessions ? `Capacity: 50 students (${((presentSessions.length / 50) * 100).toFixed(0)}% full)` : 'Loading occupancy...'}
+                {presentSessions ? `Capacity: 50 students (${((presentSessions.length / 50) * 100).toFixed(0)}% full)` : 'Awaiting sync...'}
               </p>
             </CardContent>
           </Card>
@@ -85,7 +87,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Session Status</p>
-                  <h3 className="text-4xl font-bold">{isLoading ? "..." : "Active"}</h3>
+                  <h3 className="text-4xl font-bold">{(isLoading || isUserLoading) ? "..." : "Active"}</h3>
                 </div>
                 <div className="p-3 bg-accent/20 rounded-full">
                   <Clock className="h-6 w-6 text-primary" />
@@ -126,7 +128,7 @@ export default function Dashboard() {
             </Badge>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading ? (
+            {(isLoading || isUserLoading) ? (
               <div className="p-12 text-center space-y-3">
                 <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
                 <p className="text-muted-foreground">Syncing occupancy data...</p>
