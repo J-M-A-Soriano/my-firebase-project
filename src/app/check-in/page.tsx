@@ -7,44 +7,64 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, UserCheck, ChevronRight, XCircle, Info } from "lucide-react";
-import { MOCK_STUDENTS, Student } from "@/lib/mock-data";
+import { Search, UserCheck, XCircle, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useFirestore } from "@/firebase";
+import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function CheckInPage() {
   const { toast } = useToast();
-  const [studentId, setStudentId] = useState("");
-  const [foundStudent, setFoundStudent] = useState<Student | null>(null);
+  const db = useFirestore();
+  const [studentIdInput, setStudentIdInput] = useState("");
+  const [foundStudent, setFoundStudent] = useState<any | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLookup = (e: React.FormEvent) => {
+  const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!studentIdInput) return;
+    
     setIsSearching(true);
     setError(null);
     setFoundStudent(null);
 
-    // Simulate database delay
-    setTimeout(() => {
-      const student = MOCK_STUDENTS.find(s => s.id === studentId.toUpperCase());
-      if (student) {
-        setFoundStudent(student);
+    try {
+      const studentDoc = await getDoc(doc(db, 'students', studentIdInput.toUpperCase()));
+      if (studentDoc.exists()) {
+        setFoundStudent({ ...studentDoc.data(), id: studentDoc.id });
       } else {
-        setError("No student found with this ID.");
+        setError(`No student found with ID: ${studentIdInput.toUpperCase()}`);
       }
+    } catch (err) {
+      setError("Database connection error. Please check permissions.");
+    } finally {
       setIsSearching(false);
-    }, 600);
+    }
   };
 
   const handleCheckIn = () => {
+    if (!foundStudent) return;
+
+    const sessionId = `sess_${Date.now()}`;
+    addDocumentNonBlocking(collection(db, 'librarySessions'), {
+      id: sessionId,
+      studentId: foundStudent.id,
+      firstName: foundStudent.firstName,
+      lastName: foundStudent.lastName,
+      checkInTime: serverTimestamp(),
+      checkOutTime: null
+    });
+
     toast({
       title: "Check-in Successful",
-      description: `${foundStudent?.name} has been logged at ${new Date().toLocaleTimeString()}.`,
+      description: `${foundStudent.firstName} ${foundStudent.lastName} has been logged.`,
     });
+    
     setFoundStudent(null);
-    setStudentId("");
+    setStudentIdInput("");
   };
 
   return (
@@ -54,21 +74,21 @@ export default function CheckInPage() {
         <div className="space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold font-headline">Student Access Control</h1>
-            <p className="text-muted-foreground">Enter student ID to verify profile and authorize entry.</p>
+            <p className="text-muted-foreground">Verify student ID to authorize library entry.</p>
           </div>
 
           <Card className="shadow-lg border-primary/20">
             <CardHeader>
               <CardTitle>ID Entry</CardTitle>
-              <CardDescription>Search by ID (e.g., S1001, S1002)</CardDescription>
+              <CardDescription>Enter the unique student identifier</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLookup} className="flex gap-2">
                 <div className="relative flex-1">
                   <Input 
-                    placeholder="Enter Student ID" 
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
+                    placeholder="e.g., S1001" 
+                    value={studentIdInput}
+                    onChange={(e) => setStudentIdInput(e.target.value)}
                     className="pl-10 h-12 text-lg uppercase tracking-widest"
                     autoFocus
                   />
@@ -77,9 +97,9 @@ export default function CheckInPage() {
                 <Button 
                   type="submit" 
                   className="h-12 bg-primary px-6"
-                  disabled={!studentId || isSearching}
+                  disabled={!studentIdInput || isSearching}
                 >
-                  {isSearching ? "Searching..." : "Lookup"}
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
                 </Button>
               </form>
             </CardContent>
@@ -107,12 +127,11 @@ export default function CheckInPage() {
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center gap-4 py-4">
                   <Avatar className="h-24 w-24 ring-4 ring-accent ring-offset-2">
-                    <AvatarImage src={foundStudent.avatar} alt={foundStudent.name} />
-                    <AvatarFallback className="text-2xl">{foundStudent.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-2xl">{foundStudent.firstName.charAt(0)}{foundStudent.lastName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="text-center">
-                    <h3 className="text-2xl font-bold font-headline">{foundStudent.name}</h3>
-                    <p className="text-muted-foreground">Grade {foundStudent.grade} • ID: {foundStudent.id}</p>
+                    <h3 className="text-2xl font-bold font-headline">{foundStudent.firstName} {foundStudent.lastName}</h3>
+                    <p className="text-muted-foreground">Grade {foundStudent.gradeLevel} • ID: {foundStudent.id}</p>
                   </div>
                 </div>
 
@@ -125,14 +144,14 @@ export default function CheckInPage() {
                     </div>
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
-                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">Library Debt</Label>
-                    <div className="text-sm font-semibold">$0.00</div>
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">Email</Label>
+                    <div className="text-xs truncate font-medium">{foundStudent.email}</div>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-3 p-3 bg-accent/10 rounded-lg text-accent-foreground text-xs">
                   <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                  <p>Student has valid membership. No overdue books currently listed in the system.</p>
+                  <p>Student is currently authorized for library access. No active restrictions found.</p>
                 </div>
               </CardContent>
               <CardFooter className="pt-2">
@@ -153,7 +172,7 @@ export default function CheckInPage() {
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground max-w-xs mx-auto">
-                Ready to check-in. Use the student scanner or enter ID manually.
+                Enter a student ID to begin the verification process.
               </p>
             </div>
           )}

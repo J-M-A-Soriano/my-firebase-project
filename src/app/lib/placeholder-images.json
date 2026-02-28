@@ -8,21 +8,9 @@
       "imageHint": "school library"
     },
     {
-      "id": "student-1",
-      "description": "Student portrait",
-      "imageUrl": "https://picsum.photos/seed/student1/200/200",
-      "imageHint": "student person"
-    },
-    {
-      "id": "student-2",
-      "description": "Student portrait",
-      "imageUrl": "https://picsum.photos/seed/student2/200/200",
-      "imageHint": "student person"
-    },
-    {
-      "id": "student-3",
-      "description": "Student portrait",
-      "imageUrl": "https://picsum.photos/seed/student3/200/200",
+      "id": "student-generic",
+      "description": "Generic student avatar placeholder",
+      "imageUrl": "https://picsum.photos/seed/student-placeholder/200/200",
       "imageHint": "student person"
     }
   ]

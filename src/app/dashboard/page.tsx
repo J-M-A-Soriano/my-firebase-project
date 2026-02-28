@@ -1,33 +1,41 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, LogOut, Clock, Calendar as CalendarIcon, UserPlus } from "lucide-react";
-import { MOCK_STUDENTS, Student } from "@/lib/mock-data";
+import { Users, LogOut, Clock, Calendar as CalendarIcon, UserPlus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where, doc, serverTimestamp } from "firebase/firestore";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  // Simulate live occupancy
-  const [presentStudents, setPresentStudents] = useState<Student[]>([]);
-  
-  useEffect(() => {
-    // Initial load: pick a few students as currently present
-    setPresentStudents(MOCK_STUDENTS.slice(0, 3));
-  }, []);
+  const db = useFirestore();
 
-  const handleCheckOut = (studentId: string) => {
-    const student = presentStudents.find(s => s.id === studentId);
-    setPresentStudents(prev => prev.filter(s => s.id !== studentId));
+  const sessionsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(
+      collection(db, 'librarySessions'),
+      where('checkOutTime', '==', null)
+    );
+  }, [db]);
+
+  const { data: presentSessions, isLoading } = useCollection(sessionsQuery);
+
+  const handleCheckOut = (sessionId: string, studentName: string) => {
+    const docRef = doc(db, 'librarySessions', sessionId);
+    updateDocumentNonBlocking(docRef, {
+      checkOutTime: serverTimestamp()
+    });
+    
     toast({
       title: "Student Checked Out",
-      description: `${student?.name} has successfully exited the library.`,
+      description: `${studentName} has successfully exited the library.`,
     });
   };
 
@@ -38,7 +46,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">Library Dashboard</h1>
-            <p className="text-muted-foreground">Monitoring real-time activity and occupancy.</p>
+            <p className="text-muted-foreground">Monitoring real-time occupancy and traffic.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-9">
@@ -60,14 +68,14 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Current Occupancy</p>
-                  <h3 className="text-4xl font-bold">{presentStudents.length}</h3>
+                  <h3 className="text-4xl font-bold">{presentSessions?.length || 0}</h3>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Capacity: 50 students ({(presentStudents.length / 50 * 100).toFixed(0)}% full)
+                {presentSessions ? `Capacity: 50 students (${((presentSessions.length / 50) * 100).toFixed(0)}% full)` : 'Loading occupancy...'}
               </p>
             </CardContent>
           </Card>
@@ -76,15 +84,15 @@ export default function Dashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Today's Total</p>
-                  <h3 className="text-4xl font-bold">142</h3>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Session Status</p>
+                  <h3 className="text-4xl font-bold">{isLoading ? "..." : "Active"}</h3>
                 </div>
                 <div className="p-3 bg-accent/20 rounded-full">
-                  <UserPlus className="h-6 w-6 text-primary" />
+                  <Clock className="h-6 w-6 text-primary" />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                +12% from yesterday
+                Database connected
               </p>
             </CardContent>
           </Card>
@@ -93,15 +101,15 @@ export default function Dashboard() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Avg. Stay Duration</p>
-                  <h3 className="text-4xl font-bold">42m</h3>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Live Feed</p>
+                  <h3 className="text-4xl font-bold">ON</h3>
                 </div>
                 <div className="p-3 bg-secondary rounded-full">
                   <Clock className="h-6 w-6 text-secondary-foreground" />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Stable across all grades
+                Listening for changes...
               </p>
             </CardContent>
           </Card>
@@ -118,39 +126,43 @@ export default function Dashboard() {
             </Badge>
           </CardHeader>
           <CardContent className="p-0">
-            {presentStudents.length === 0 ? (
+            {isLoading ? (
+              <div className="p-12 text-center space-y-3">
+                <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
+                <p className="text-muted-foreground">Syncing occupancy data...</p>
+              </div>
+            ) : !presentSessions || presentSessions.length === 0 ? (
               <div className="p-12 text-center space-y-3">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto opacity-20" />
                 <p className="text-muted-foreground">The library is currently empty.</p>
               </div>
             ) : (
               <div className="divide-y">
-                {presentStudents.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                {presentSessions.map((session: any) => (
+                  <div key={session.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10 border border-primary/20">
-                        <AvatarImage src={student.avatar} alt={student.name} />
-                        <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{session.firstName?.charAt(0)}{session.lastName?.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-semibold">{student.name}</div>
+                        <div className="font-semibold">{session.firstName} {session.lastName}</div>
                         <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          <span>{student.id}</span>
-                          <span>•</span>
-                          <span>Grade {student.grade}</span>
+                          <span>{session.studentId}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="hidden sm:flex flex-col items-end">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Checked in</span>
-                        <span className="text-sm font-medium">10:15 AM</span>
+                        <span className="text-sm font-medium">
+                          {session.checkInTime?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleCheckOut(student.id)}
+                        onClick={() => handleCheckOut(session.id, `${session.firstName} ${session.lastName}`)}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
                         Check-out
