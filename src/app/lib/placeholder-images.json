@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-library",
+      "description": "A modern, serene school library with students studying.",
+      "imageUrl": "https://picsum.photos/seed/libriguard1/1200/800",
+      "imageHint": "school library"
+    },
+    {
+      "id": "student-1",
+      "description": "Student portrait",
+      "imageUrl": "https://picsum.photos/seed/student1/200/200",
+      "imageHint": "student person"
+    },
+    {
+      "id": "student-2",
+      "description": "Student portrait",
+      "imageUrl": "https://picsum.photos/seed/student2/200/200",
+      "imageHint": "student person"
+    },
+    {
+      "id": "student-3",
+      "description": "Student portrait",
+      "imageUrl": "https://picsum.photos/seed/student3/200/200",
+      "imageHint": "student person"
+    }
+  ]
+}
