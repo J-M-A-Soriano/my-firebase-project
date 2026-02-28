@@ -3,14 +3,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, ArrowRight, Loader2, UserCheck, LogOut, Search } from "lucide-react";
+import { BookOpen, ShieldCheck, ArrowRight, Loader2, UserCheck, UserPlus, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth, useUser, useFirestore, initiateAnonymousSignIn } from "@/firebase";
 import { doc, getDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
-import { addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 const ADMIN_CODE = "ADMIN123";
 
@@ -23,8 +32,12 @@ export default function LandingPage() {
   
   const [idInput, setIdInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Quick Registration State
+  const [regFirstName, setRegFirstName] = useState("");
+  const [regLastName, setRegLastName] = useState("");
 
-  // Auto-sign in anonymously so the kiosk can perform database lookups
   useEffect(() => {
     if (!user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
@@ -38,7 +51,6 @@ export default function LandingPage() {
 
     setIsProcessing(true);
 
-    // 1. Admin Access Check
     if (input === ADMIN_CODE) {
       toast({
         title: "Administrative Access",
@@ -48,14 +60,12 @@ export default function LandingPage() {
       return;
     }
 
-    // 2. Student ID Check
     try {
       const studentDoc = await getDoc(doc(db, 'students', input));
       
       if (studentDoc.exists()) {
         const studentData = studentDoc.data();
         
-        // Look for an active session (not checked out)
         const activeSessionsQuery = query(
           collection(db, 'librarySessions'),
           where('studentId', '==', input),
@@ -65,7 +75,6 @@ export default function LandingPage() {
         const sessionSnapshot = await getDocs(activeSessionsQuery);
 
         if (!sessionSnapshot.empty) {
-          // Check-out logic
           const sessionDoc = sessionSnapshot.docs[0];
           updateDocumentNonBlocking(doc(db, 'librarySessions', sessionDoc.id), {
             checkOutTime: serverTimestamp()
@@ -76,7 +85,6 @@ export default function LandingPage() {
             description: `Goodbye, ${studentData.firstName}! Your session has ended.`,
           });
         } else {
-          // Check-in logic
           const sessionId = `sess_${Date.now()}`;
           addDocumentNonBlocking(collection(db, 'librarySessions'), {
             id: sessionId,
@@ -94,11 +102,8 @@ export default function LandingPage() {
         }
         setIdInput("");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Invalid ID",
-          description: "No student profile found for this ID number.",
-        });
+        // Offer registration
+        setIsRegistering(true);
       }
     } catch (err) {
       toast({
@@ -109,6 +114,40 @@ export default function LandingPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleQuickRegister = () => {
+    if (!regFirstName || !regLastName) return;
+    
+    const studentId = idInput.trim().toUpperCase();
+    const studentRef = doc(db, 'students', studentId);
+    
+    setDocumentNonBlocking(studentRef, {
+      id: studentId,
+      firstName: regFirstName,
+      lastName: regLastName,
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    toast({
+      title: "Profile Created",
+      description: `Welcome to the library, ${regFirstName}! You can now check in.`,
+    });
+
+    setIsRegistering(false);
+    setRegFirstName("");
+    setRegLastName("");
+    // Process the check-in immediately
+    const sessionId = `sess_${Date.now()}`;
+    addDocumentNonBlocking(collection(db, 'librarySessions'), {
+      id: sessionId,
+      studentId: studentId,
+      firstName: regFirstName,
+      lastName: regLastName,
+      checkInTime: serverTimestamp(),
+      checkOutTime: null
+    });
+    setIdInput("");
   };
 
   return (
@@ -129,7 +168,7 @@ export default function LandingPage() {
         <Card className="glass-card shadow-2xl border-primary/20">
           <CardHeader>
             <CardTitle>ID Entry</CardTitle>
-            <CardDescription>Enter your 5-digit Student ID or Admin Code</CardDescription>
+            <CardDescription>Enter your Student ID or Admin Code</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -164,14 +203,38 @@ export default function LandingPage() {
             <ShieldCheck className="h-4 w-4" />
             Security monitored terminal
           </p>
-          {isUserLoading && (
-            <div className="flex items-center gap-2 text-xs text-primary animate-pulse">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Initializing secure session...
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Quick Registration Dialog */}
+      <Dialog open={isRegistering} onOpenChange={setIsRegistering}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Student Detected</DialogTitle>
+            <DialogDescription>
+              ID <span className="font-bold text-primary">{idInput.toUpperCase()}</span> is not registered. 
+              Please enter your name to create a profile and check in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reg-first">First Name</Label>
+              <Input id="reg-first" value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} placeholder="e.g. Jane" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reg-last">Last Name</Label>
+              <Input id="reg-last" value={regLastName} onChange={(e) => setRegLastName(e.target.value)} placeholder="e.g. Doe" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRegistering(false)}>Cancel</Button>
+            <Button onClick={handleQuickRegister} disabled={!regFirstName || !regLastName}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Register & Check-in
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
