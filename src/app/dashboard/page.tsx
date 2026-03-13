@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import jsPDF from "jsPDF";
+import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export default function AdminDashboard() {
