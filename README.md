@@ -10,19 +10,42 @@ This application is fully optimized for:
 - **Mozilla Firefox**
 - **Safari**
 
-## 🚀 Going Live (Deployment)
-This is a dynamic Next.js app. To make it "live" from GitHub:
+## 🚀 How to Put This on GitHub
+Since you have already initialized git and committed your files, follow these steps to put it on GitHub:
 
-### 1. Push to GitHub
-Upload your project to a private or public repository on GitHub.
+### 1. Create a Repository on GitHub
+1. Go to [github.com](https://github.com) and sign in.
+2. Click the **"+"** icon in the top right and select **"New repository"**.
+3. Name it `neu-library-log` (or anything you like).
+4. Keep it Public or Private, then click **"Create repository"**.
+5. Copy the **remote URL** provided (it looks like `https://github.com/your-username/neu-library-log.git`).
 
-### 2. Connect to a Hosting Provider
-Since this app uses Firebase and Next.js Server Actions, you should use:
-- **Firebase App Hosting (Recommended):** Go to the Firebase Console, select "App Hosting," and connect your GitHub repo. It will automatically build and deploy your site.
-- **Vercel:** Connect your GitHub repo to Vercel. It will handle the Next.js environment perfectly.
+### 2. Connect Your Project & Push
+In your terminal (the one in the screenshot), run these commands:
 
-### 3. Environment Variables
-Make sure to copy your Firebase configuration into the environment variables of your hosting provider so the database remains connected.
+```bash
+# Add the remote link (paste your copied URL)
+git remote add origin https://github.com/your-username/neu-library-log.git
+
+# Rename your branch to main (if not already)
+git branch -M main
+
+# Push your code to GitHub
+git push -u origin main
+```
+
+## 🌍 Going Live (Deployment)
+Once your code is on GitHub, you can make it a live website:
+
+### 1. Connect to Firebase App Hosting (Recommended)
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Select your project.
+3. Click on **"App Hosting"** in the sidebar.
+4. Click **"Get Started"** and connect your GitHub repository.
+5. Firebase will automatically build and deploy your app every time you push code to GitHub.
+
+### 2. Environment Variables
+In the Firebase App Hosting settings, ensure you add your Firebase API keys (found in `src/firebase/config.ts`) as environment variables if required by the build process.
 
 ## 🖥️ Professional Kiosk Setup
 For the best experience on your physical terminal:
@@ -39,7 +62,7 @@ Simply press **F11** once the page loads to hide all browser UI elements.
 
 ## 📊 Administrative Access
 - **Terminal ID:** L-01
-- **Admin Bypass Code:** `ADMIN123` (Type this in the main ID field to access the dashboard)
+- **Admin Bypass Code:** `ADMIN123` (Type this in the main ID field on the landing page to access the dashboard)
 
 ## 🛠️ Tech Stack
 - **Framework:** Next.js 15 (App Router)
