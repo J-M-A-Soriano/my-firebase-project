@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, FileDown, TrendingUp, Calendar as CalendarIcon, Loader2, Clock, Filter, ArrowRight, UserCheck } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
-import { format, subDays, startOfDay, endOfDay, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import jsPDF from "jspdf";
+import jsPDF from "jsPDF";
 import "jspdf-autotable";
 
 export default function AdminDashboard() {
