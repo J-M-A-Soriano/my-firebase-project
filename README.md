@@ -2,39 +2,41 @@
 
 A professional, high-performance visitor management system for the NEU Library. Optimized for high-traffic RFID terminals and administrative oversight.
 
-**Deployment URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
+**Production URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
 
 ---
 
-## 🌐 Browser Compatibility
-This system is certified for deployment on modern chromium-based environments:
-- **Google Chrome** (Recommended for Kiosk mode)
-- **Microsoft Edge**
-- **Opera**
-- **Safari** (macOS/iOS)
+## 🌐 Browser Certification
+The system is certified for deployment on modern Chromium-based engines. For maximum reliability, the following environments are recommended:
+- **Google Chrome Enterprise** (Stable Channel)
+- **Microsoft Edge** (Chromium Engine)
+- **Opera One**
 
-## 🖥️ Professional Kiosk Configuration
-For production-grade terminal deployment, follow these optimization steps:
+## 🖥️ Terminal Deployment & Configuration
+To maintain terminal integrity and prevent unauthorized user navigation, the following deployment standards must be applied:
 
-### 1. Dedicated Kiosk Mode (Chrome)
-Launch the terminal in a sandboxed environment to prevent unauthorized navigation:
-`chrome.exe --kiosk https://my-firebase-project-ten.vercel.app`
+### 1. Sandbox Environment (Chrome Kiosk Mode)
+For dedicated terminals, launch the browser using the following command-line flags to initiate a sandboxed session:
+`chrome.exe --kiosk --incognito https://my-firebase-project-ten.vercel.app`
 
-### 2. Hardware Synchronization (RFID)
-The system is configured for high-speed HID (Human Interface Device) input. Ensure the RFID reader is connected and recognized as a keyboard input device. No additional drivers are required.
+### 2. Hardware Integration (RFID/HID)
+The system utilizes standard HID (Human Interface Device) drivers. 
+- **Compatibility:** Plug-and-play compatible with all ISO/IEC 14443A RFID readers.
+- **Input Sync:** The primary authentication field is globally focused to ensure zero-latency scanning.
 
-### 3. Display Optimization
-- **Fullscreen:** Toggle **F11** to eliminate browser UI overhead.
-- **Auto-Focus:** The primary identification field is hard-coded to maintain focus for rapid scanning.
+### 3. Display Calibration
+- **Resolution:** Optimized for 1920x1080 Full HD displays.
+- **Interface:** Toggle **F11** for chrome-less operation.
 
-## 📊 Administrative Oversight
-- **Terminal ID:** L-01 (Primary Gate)
-- **Security Override Code:** `ADMIN123`
-- **Analytics Hub:** Accessible via the "Intelligence Center" in the navigation bar.
+## 📊 Administrative Specifications
+- **Hardware ID:** TERMINAL-L01 (Main Entry)
+- **System Authority:** Authenticated Library Staff only.
+- **Security Override:** `ADMIN123`
+- **Analytics Access:** Intelligence Hub restricted via Firebase Authentication.
 
-## 🛠️ Technical Architecture
-- **Framework:** Next.js 15 (App Router Architecture)
-- **Data Layer:** Firebase Firestore (Real-time synchronization)
-- **Intelligence Engine:** Google Genkit (Generative AI Analytics)
-- **Reporting:** Integrated jsPDF Engine with AutoTable extensions
-- **Styling:** Tailwind CSS with Shadcn/UI primitives
+## 🛠️ System Architecture
+- **Core Framework:** Next.js 15 (App Router / React 19)
+- **Database Engine:** Google Firebase Firestore (Real-time NoSQL)
+- **Logic Layer:** Google Genkit (Generative AI Pattern Analysis)
+- **Document Generation:** jsPDF Engine with AutoTable extensions
+- **Design System:** Tailwind CSS / Shadcn UI Component Library
