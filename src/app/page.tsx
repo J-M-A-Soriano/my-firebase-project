@@ -44,6 +44,7 @@ export default function LandingPage() {
   const [showPurposeDialog, setShowPurposeDialog] = useState(false);
   const [selectedPurpose, setSelectedPurpose] = useState("");
   const [currentVisitor, setCurrentVisitor] = useState<any>(null);
+  const [localTime, setLocalTime] = useState<string>("");
   
   const [regData, setRegData] = useState({ firstName: "", lastName: "", collegeOrOffice: "" });
 
@@ -52,12 +53,23 @@ export default function LandingPage() {
       initiateAnonymousSignIn(auth);
     }
     
+    // Set initial time and start interval
+    const updateTime = () => {
+      setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 10000); // Update every 10 seconds
+
     const focusInput = () => inputRef.current?.focus();
     focusInput();
 
     const handleGlobalClick = () => focusInput();
     window.addEventListener('click', handleGlobalClick);
-    return () => window.removeEventListener('click', handleGlobalClick);
+    
+    return () => {
+      window.removeEventListener('click', handleGlobalClick);
+      clearInterval(timer);
+    };
   }, [user, isUserLoading, auth]);
 
   const handleKioskSubmit = async (e: React.FormEvent) => {
@@ -196,7 +208,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" /> System Live</span>
-              <span className="opacity-50">Local Time: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="opacity-50">Local Time: {localTime || "--:--"}</span>
             </div>
           </div>
 
