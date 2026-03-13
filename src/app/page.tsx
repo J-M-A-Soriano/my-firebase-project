@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, UserPlus, LogIn, CheckCircle2, Scan } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, UserPlus, LogIn, CheckCircle2, Scan, Fingerprint, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,13 +55,11 @@ export default function LandingPage() {
       initiateAnonymousSignIn(auth);
     }
     
-    // Initial focus
-    inputRef.current?.focus();
+    // Maintain focus on the input for hardware RFID readers
+    const focusInput = () => inputRef.current?.focus();
+    focusInput();
 
-    // Re-focus whenever clicking anywhere on the screen (Kiosk Mode)
-    const handleGlobalClick = () => {
-      inputRef.current?.focus();
-    };
+    const handleGlobalClick = () => focusInput();
     window.addEventListener('click', handleGlobalClick);
     return () => window.removeEventListener('click', handleGlobalClick);
   }, [user, isUserLoading, auth]);
@@ -180,91 +178,120 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
-      <div className="max-w-xl w-full space-y-12 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background overflow-hidden">
+      <div className="max-w-2xl w-full space-y-10 text-center relative">
+        {/* Background Decorative Element */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+
         <div className="space-y-4">
-          <div className="inline-flex items-center justify-center p-4 bg-primary text-primary-foreground rounded-3xl mb-4 shadow-xl">
-            <BookOpen className="h-14 w-14" />
+          <div className="inline-flex items-center justify-center p-5 bg-primary text-primary-foreground rounded-[2rem] mb-2 shadow-2xl ring-8 ring-primary/10">
+            <BookOpen className="h-16 w-16" />
           </div>
-          <h1 className="text-5xl font-extrabold tracking-tight text-foreground font-headline">
-            NEU Library <span className="text-primary">Log</span>
+          <h1 className="text-6xl font-black tracking-tighter text-foreground font-headline">
+            NEU LIBRARY <span className="text-primary">LOG</span>
           </h1>
-          <p className="text-xl text-muted-foreground">
-            Tap RFID Card or Enter Institutional ID
+          <p className="text-xl text-muted-foreground font-medium">
+            Electronic Access Control & Visitor Monitoring
           </p>
         </div>
 
-        <Card className="glass-card shadow-2xl border-primary/20 p-4">
-          <CardHeader>
-            <div className="flex items-center justify-center gap-2 text-primary font-bold mb-2">
-              <Scan className="h-5 w-5 animate-pulse" />
-              RFID Terminal Active
-            </div>
-            <CardTitle className="text-2xl">Visitor Entry</CardTitle>
-            <CardDescription>Place your card near the reader</CardDescription>
+        <Card className="glass-card shadow-2xl border-primary/20 overflow-hidden">
+          <div className="bg-primary/5 p-3 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary border-b">
+            <Fingerprint className="h-4 w-4 animate-pulse" />
+            RFID Reader Terminal Active
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-3xl">Please Tap ID Card</CardTitle>
+            <CardDescription className="text-lg">Place card near the reader to identify yourself</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleKioskSubmit} className="space-y-6">
-              <div className="relative">
+          <CardContent className="pt-4">
+            <form onSubmit={handleKioskSubmit} className="space-y-8">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-primary/5 rounded-2xl -m-2 opacity-0 group-focus-within:opacity-100 transition-opacity" />
                 <Input 
                   ref={inputRef}
-                  placeholder="Scan ID or Type ID/Email"
+                  placeholder="--- SCAN ID NOW ---"
                   value={idInput}
                   onChange={(e) => setIdInput(e.target.value)}
-                  className="h-20 text-3xl text-center font-bold border-2 focus-visible:ring-primary shadow-inner bg-muted/30"
+                  className="h-28 text-5xl text-center font-black border-4 border-dashed border-primary/20 focus-visible:border-primary focus-visible:ring-0 shadow-inner bg-muted/20 tracking-tighter rounded-2xl uppercase placeholder:text-muted-foreground/30 placeholder:text-3xl"
                   autoFocus
                   disabled={isProcessing}
                   autoComplete="off"
                 />
                 {isProcessing && (
-                  <div className="absolute right-4 top-7">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <div className="absolute right-6 top-10">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
                   </div>
                 )}
               </div>
-              <Button 
-                type="submit" 
-                className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 shadow-lg active:scale-[0.98] transition-all"
-                disabled={!idInput.trim() || isProcessing}
-              >
-                {isProcessing ? "Verifying..." : "Confirm Identification"}
-              </Button>
+              
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-4 text-muted-foreground">
+                  <div className="h-px w-12 bg-border" />
+                  <span className="text-sm font-bold uppercase tracking-widest">or manually enter email</span>
+                  <div className="h-px w-12 bg-border" />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-20 text-2xl font-black bg-primary hover:bg-primary/90 shadow-[0_10px_30px_rgba(0,0,0,0.15)] active:scale-[0.97] transition-all rounded-2xl"
+                  disabled={!idInput.trim() || isProcessing}
+                >
+                  {isProcessing ? "VALIDATING..." : "CONFIRM IDENTIFICATION"}
+                </Button>
+              </div>
             </form>
           </CardContent>
+          <div className="p-4 bg-muted/30 border-t flex items-center justify-center gap-6 opacity-60">
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <Scan className="h-4 w-4" />
+              RFID COMPATIBLE
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <LogIn className="h-4 w-4" />
+              GOOGLE AUTH
+            </div>
+          </div>
         </Card>
 
-        <div className="pt-8 opacity-60 flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <ShieldCheck className="h-5 w-5" />
-            Secure University Monitoring
+        <div className="pt-6 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent-foreground rounded-full text-xs font-bold border border-accent/20">
+            <ShieldCheck className="h-4 w-4" />
+            SECURE CAMPUS MONITORING SYSTEM
           </div>
-          <p className="text-xs">University ID / Institutional Email Integration Active</p>
+          <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground opacity-50">
+            Authorized Personnel Only • IP Logged
+          </p>
         </div>
       </div>
 
       {/* Purpose Selection Dialog */}
       <Dialog open={showPurposeDialog} onOpenChange={setShowPurposeDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-[2rem] border-primary/20 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-primary flex items-center gap-2">
-              <LogIn className="h-6 w-6" />
-              Purpose of Visit
+            <DialogTitle className="text-3xl font-black text-primary flex items-center gap-3">
+              <LogIn className="h-8 w-8" />
+              VISIT PURPOSE
             </DialogTitle>
-            <DialogDescription>
-              Welcome, <span className="font-bold">{currentVisitor?.firstName} {currentVisitor?.lastName}</span>! 
-              Please specify the reason for your visit.
+            <DialogDescription className="text-lg">
+              Welcome to <span className="font-black text-foreground">NEU Library</span>, 
+              <span className="block font-bold text-primary mt-1">{currentVisitor?.firstName} {currentVisitor?.lastName}</span>
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 space-y-4">
+          <div className="py-6 space-y-3">
+            <Label className="text-xs font-black uppercase tracking-widest opacity-50 mb-2 block text-center">Select Activity</Label>
             <div className="grid grid-cols-1 gap-3">
               {PURPOSES.map((p) => (
                 <Button 
                   key={p} 
                   variant={selectedPurpose === p ? "default" : "outline"}
-                  className="h-12 text-lg justify-start px-6 font-semibold"
+                  className={cn(
+                    "h-16 text-xl justify-start px-8 font-bold rounded-2xl transition-all",
+                    selectedPurpose === p ? "ring-4 ring-primary/20 scale-[1.02]" : "hover:bg-primary/5"
+                  )}
                   onClick={() => setSelectedPurpose(p)}
                 >
-                  <CheckCircle2 className={cn("mr-3 h-5 w-5", selectedPurpose === p ? "opacity-100" : "opacity-0")} />
+                  <CheckCircle2 className={cn("mr-4 h-6 w-6", selectedPurpose === p ? "opacity-100" : "opacity-0")} />
                   {p}
                 </Button>
               ))}
@@ -272,11 +299,11 @@ export default function LandingPage() {
           </div>
           <DialogFooter>
             <Button 
-              className="w-full h-12 text-lg font-bold" 
+              className="w-full h-16 text-xl font-black rounded-2xl shadow-xl" 
               onClick={finalizeCheckIn} 
               disabled={!selectedPurpose}
             >
-              Complete Check-In
+              COMPLETE CHECK-IN
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -284,34 +311,57 @@ export default function LandingPage() {
 
       {/* Registration Dialog */}
       <Dialog open={isRegistering} onOpenChange={setIsRegistering}>
-        <DialogContent>
+        <DialogContent className="rounded-[2rem] shadow-2xl">
           <DialogHeader>
-            <DialogTitle>First-Time Visitor Detected</DialogTitle>
-            <DialogDescription>
-              Profile for <span className="font-bold text-primary">{idInput}</span> not found. Please provide your details to register.
+            <DialogTitle className="text-2xl font-black">NEW VISITOR PROFILE</DialogTitle>
+            <DialogDescription className="text-lg">
+              ID <span className="font-bold text-primary">{idInput}</span> not found. Please register your details.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>First Name</Label>
-                <Input value={regData.firstName} onChange={(e) => setRegData({...regData, firstName: e.target.value})} placeholder="Jane" />
+                <Label className="font-bold">First Name</Label>
+                <Input 
+                  value={regData.firstName} 
+                  onChange={(e) => setRegData({...regData, firstName: e.target.value})} 
+                  placeholder="e.g. Maria"
+                  className="h-12 rounded-xl"
+                />
               </div>
               <div className="space-y-2">
-                <Label>Last Name</Label>
-                <Input value={regData.lastName} onChange={(e) => setRegData({...regData, lastName: e.target.value})} placeholder="Doe" />
+                <Label className="font-bold">Last Name</Label>
+                <Input 
+                  value={regData.lastName} 
+                  onChange={(e) => setRegData({...regData, lastName: e.target.value})} 
+                  placeholder="e.g. Santos"
+                  className="h-12 rounded-xl"
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>College / Office</Label>
-              <Input value={regData.collegeOrOffice} onChange={(e) => setRegData({...regData, collegeOrOffice: e.target.value})} placeholder="e.g. College of Computing" />
+              <Label className="font-bold">College / Department / Office</Label>
+              <Input 
+                value={regData.collegeOrOffice} 
+                onChange={(e) => setRegData({...regData, collegeOrOffice: e.target.value})} 
+                placeholder="e.g. College of Engineering"
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl text-xs font-medium text-primary">
+              <Info className="h-5 w-5 shrink-0" />
+              <p>Your ID will be saved to the database for future one-tap access. Ensure information matches your institutional records.</p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRegistering(false)}>Cancel</Button>
-            <Button onClick={handleRegisterAndCheckIn} disabled={!regData.firstName || !regData.lastName || !regData.collegeOrOffice}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Register & Check-In
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" className="h-12 font-bold" onClick={() => setIsRegistering(false)}>Cancel</Button>
+            <Button 
+              className="h-12 px-8 font-black rounded-xl"
+              onClick={handleRegisterAndCheckIn} 
+              disabled={!regData.firstName || !regData.lastName || !regData.collegeOrOffice}
+            >
+              <UserPlus className="mr-2 h-5 w-5" />
+              REGISTER & CONTINUE
             </Button>
           </DialogFooter>
         </DialogContent>
