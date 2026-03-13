@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, ArrowRight, Loader2, UserCheck, UserPlus, XCircle } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, UserPlus, XCircle, LogIn, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth, useUser, useFirestore, initiateAnonymousSignIn } from "@/firebase";
-import { doc, getDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, serverTimestamp, limit } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -20,8 +20,22 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ADMIN_CODE = "ADMIN123";
+const PURPOSES = [
+  "Reading Books",
+  "Thesis Research",
+  "Computer Use",
+  "Assignments",
+  "Others"
+];
 
 export default function LandingPage() {
   const router = useRouter();
@@ -33,10 +47,12 @@ export default function LandingPage() {
   const [idInput, setIdInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPurposeDialog, setShowPurposeDialog] = useState(false);
+  const [selectedPurpose, setSelectedPurpose] = useState("");
+  const [currentVisitor, setCurrentVisitor] = useState<any>(null);
   
-  // Quick Registration State
-  const [regFirstName, setRegFirstName] = useState("");
-  const [regLastName, setRegLastName] = useState("");
+  // Registration State
+  const [regData, setRegData] = useState({ firstName: "", lastName: "", collegeOrOffice: "" });
 
   useEffect(() => {
     if (!user && !isUserLoading) {
@@ -44,140 +60,146 @@ export default function LandingPage() {
     }
   }, [user, isUserLoading, auth]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleKioskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const input = idInput.trim().toUpperCase();
+    const input = idInput.trim();
     if (!input || isProcessing) return;
 
-    setIsProcessing(true);
-
-    if (input === ADMIN_CODE) {
-      toast({
-        title: "Administrative Access",
-        description: "Redirecting to management dashboard...",
-      });
+    if (input.toUpperCase() === ADMIN_CODE) {
       router.push("/dashboard");
       return;
     }
 
+    setIsProcessing(true);
+
     try {
-      const studentDoc = await getDoc(doc(db, 'students', input));
+      // 1. Try Lookup by ID or Email
+      let visitorDoc: any = null;
       
-      if (studentDoc.exists()) {
-        const studentData = studentDoc.data();
-        
-        const activeSessionsQuery = query(
+      if (input.includes("@")) {
+        const q = query(collection(db, 'students'), where('email', '==', input.toLowerCase()), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) visitorDoc = snap.docs[0];
+      } else {
+        const docRef = doc(db, 'students', input.toUpperCase());
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) visitorDoc = docSnap;
+      }
+
+      if (visitorDoc) {
+        const data = visitorDoc.data();
+        const visitorId = visitorDoc.id;
+
+        if (data.isBlocked) {
+          toast({ variant: "destructive", title: "Access Denied", description: "This visitor has been blocked by the Administrator." });
+          setIsProcessing(false);
+          return;
+        }
+
+        // Check for active session (to handle check-out)
+        const activeQ = query(
           collection(db, 'librarySessions'),
-          where('studentId', '==', input),
+          where('studentId', '==', visitorId),
           where('checkOutTime', '==', null)
         );
-        
-        const sessionSnapshot = await getDocs(activeSessionsQuery);
+        const activeSnap = await getDocs(activeQ);
 
-        if (!sessionSnapshot.empty) {
-          const sessionDoc = sessionSnapshot.docs[0];
-          updateDocumentNonBlocking(doc(db, 'librarySessions', sessionDoc.id), {
-            checkOutTime: serverTimestamp()
-          });
-          
-          toast({
-            title: "Check-out Recorded",
-            description: `Goodbye, ${studentData.firstName}! Your session has ended.`,
-          });
+        if (!activeSnap.empty) {
+          // CHECK OUT
+          const sessionDoc = activeSnap.docs[0];
+          updateDocumentNonBlocking(doc(db, 'librarySessions', sessionDoc.id), { checkOutTime: serverTimestamp() });
+          toast({ title: "Checked Out", description: `Goodbye, ${data.firstName}! See you again soon.` });
+          setIdInput("");
+          setIsProcessing(false);
         } else {
-          const sessionId = `sess_${Date.now()}`;
-          addDocumentNonBlocking(collection(db, 'librarySessions'), {
-            id: sessionId,
-            studentId: input,
-            firstName: studentData.firstName,
-            lastName: studentData.lastName,
-            checkInTime: serverTimestamp(),
-            checkOutTime: null
-          });
-
-          toast({
-            title: "Check-in Successful",
-            description: `Welcome, ${studentData.firstName}! Access granted.`,
-          });
+          // PREPARE CHECK IN (needs purpose)
+          setCurrentVisitor({ ...data, id: visitorId });
+          setShowPurposeDialog(true);
+          setIsProcessing(false);
         }
-        setIdInput("");
       } else {
         // Offer registration
         setIsRegistering(true);
+        setIsProcessing(false);
       }
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "System Error",
-        description: "Could not connect to the database. Please try again.",
-      });
-    } finally {
+      toast({ variant: "destructive", title: "Error", description: "Database connection failed." });
       setIsProcessing(false);
     }
   };
 
-  const handleQuickRegister = () => {
-    if (!regFirstName || !regLastName) return;
-    
-    const studentId = idInput.trim().toUpperCase();
-    const studentRef = doc(db, 'students', studentId);
-    
-    setDocumentNonBlocking(studentRef, {
-      id: studentId,
-      firstName: regFirstName,
-      lastName: regLastName,
-      createdAt: new Date().toISOString()
-    }, { merge: true });
+  const finalizeCheckIn = () => {
+    if (!currentVisitor || !selectedPurpose) return;
 
-    toast({
-      title: "Profile Created",
-      description: `Welcome to the library, ${regFirstName}! You can now check in.`,
-    });
-
-    setIsRegistering(false);
-    setRegFirstName("");
-    setRegLastName("");
-    // Process the check-in immediately
     const sessionId = `sess_${Date.now()}`;
     addDocumentNonBlocking(collection(db, 'librarySessions'), {
       id: sessionId,
-      studentId: studentId,
-      firstName: regFirstName,
-      lastName: regLastName,
+      studentId: currentVisitor.id,
+      visitorName: `${currentVisitor.firstName} ${currentVisitor.lastName}`,
+      collegeOrOffice: currentVisitor.collegeOrOffice,
       checkInTime: serverTimestamp(),
-      checkOutTime: null
+      checkOutTime: null,
+      purpose: selectedPurpose
     });
+
+    toast({ 
+      title: "Welcome to NEU Library!", 
+      description: `${currentVisitor.firstName} from ${currentVisitor.collegeOrOffice} checked in for ${selectedPurpose}.`,
+    });
+
+    setShowPurposeDialog(false);
+    setCurrentVisitor(null);
+    setSelectedPurpose("");
     setIdInput("");
   };
 
+  const handleRegisterAndCheckIn = () => {
+    if (!regData.firstName || !regData.lastName || !regData.collegeOrOffice) return;
+    
+    const inputId = idInput.trim().toUpperCase();
+    const studentRef = doc(db, 'students', inputId);
+    const newStudent = {
+      ...regData,
+      id: inputId,
+      email: inputId.includes("@") ? inputId.toLowerCase() : "",
+      isBlocked: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    setDocumentNonBlocking(studentRef, newStudent, { merge: true });
+    setIsRegistering(false);
+    setCurrentVisitor(newStudent);
+    setShowPurposeDialog(true);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/20 via-background to-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
       <div className="max-w-xl w-full space-y-12 text-center">
         <div className="space-y-4">
-          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4">
-            <BookOpen className="h-12 w-12 text-primary" />
+          <div className="inline-flex items-center justify-center p-4 bg-primary text-primary-foreground rounded-3xl mb-4 shadow-xl">
+            <BookOpen className="h-14 w-14" />
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground font-headline sm:text-5xl">
-            LibriGuard <span className="text-primary">Kiosk</span>
+          <h1 className="text-5xl font-extrabold tracking-tight text-foreground font-headline">
+            NEU Library <span className="text-primary">Log</span>
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Please enter your Student ID to check in or out.
+          <p className="text-xl text-muted-foreground">
+            Tap RFID or Enter Institutional ID/Email
           </p>
         </div>
 
-        <Card className="glass-card shadow-2xl border-primary/20">
+        <Card className="glass-card shadow-2xl border-primary/20 p-4">
           <CardHeader>
-            <CardTitle>ID Entry</CardTitle>
-            <CardDescription>Enter your Student ID or Admin Code</CardDescription>
+            <CardTitle className="text-2xl">Visitor Terminal</CardTitle>
+            <CardDescription>Enter credentials for library entry/exit</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleKioskSubmit} className="space-y-6">
               <div className="relative">
                 <Input 
-                  placeholder="e.g. S1001"
+                  placeholder="ID Number or Email"
                   value={idInput}
                   onChange={(e) => setIdInput(e.target.value)}
-                  className="h-16 text-2xl text-center font-bold tracking-[0.5em] uppercase border-2 focus-visible:ring-primary"
+                  className="h-16 text-2xl text-center font-bold border-2 focus-visible:ring-primary shadow-inner"
                   autoFocus
                   disabled={isProcessing}
                 />
@@ -189,48 +211,94 @@ export default function LandingPage() {
               </div>
               <Button 
                 type="submit" 
-                className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 transition-all active:scale-95"
+                className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 shadow-lg active:scale-[0.98] transition-all"
                 disabled={!idInput.trim() || isProcessing}
               >
-                {isProcessing ? "Processing..." : "Confirm Access"}
+                {isProcessing ? "Verifying..." : "Tap / Enter"}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="pt-8 flex flex-col items-center gap-4">
-          <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-            <ShieldCheck className="h-4 w-4" />
-            Security monitored terminal
-          </p>
+        <div className="pt-8 opacity-60 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <ShieldCheck className="h-5 w-5" />
+            Secure Entry Monitoring System
+          </div>
+          <p className="text-xs">University ID / Institutional Email Integration Active</p>
         </div>
       </div>
 
-      {/* Quick Registration Dialog */}
+      {/* Purpose Selection Dialog */}
+      <Dialog open={showPurposeDialog} onOpenChange={setShowPurposeDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-primary flex items-center gap-2">
+              <LogIn className="h-6 w-6" />
+              Purpose of Visit
+            </DialogTitle>
+            <DialogDescription>
+              Welcome, <span className="font-bold">{currentVisitor?.firstName} {currentVisitor?.lastName}</span>! 
+              Please specify the reason for your visit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              {PURPOSES.map((p) => (
+                <Button 
+                  key={p} 
+                  variant={selectedPurpose === p ? "default" : "outline"}
+                  className="h-12 text-lg justify-start px-6 font-semibold"
+                  onClick={() => setSelectedPurpose(p)}
+                >
+                  <CheckCircle2 className={cn("mr-3 h-5 w-5", selectedPurpose === p ? "opacity-100" : "opacity-0")} />
+                  {p}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              className="w-full h-12 text-lg font-bold" 
+              onClick={finalizeCheckIn} 
+              disabled={!selectedPurpose}
+            >
+              Complete Check-In
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Registration Dialog */}
       <Dialog open={isRegistering} onOpenChange={setIsRegistering}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Student Detected</DialogTitle>
+            <DialogTitle>First-Time Visitor Detected</DialogTitle>
             <DialogDescription>
-              ID <span className="font-bold text-primary">{idInput.toUpperCase()}</span> is not registered. 
-              Please enter your name to create a profile and check in.
+              Profile for <span className="font-bold text-primary">{idInput}</span> not found. Please provide details.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="reg-first">First Name</Label>
-              <Input id="reg-first" value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} placeholder="e.g. Jane" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input value={regData.firstName} onChange={(e) => setRegData({...regData, firstName: e.target.value})} placeholder="Jane" />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name</Label>
+                <Input value={regData.lastName} onChange={(e) => setRegData({...regData, lastName: e.target.value})} placeholder="Doe" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reg-last">Last Name</Label>
-              <Input id="reg-last" value={regLastName} onChange={(e) => setRegLastName(e.target.value)} placeholder="e.g. Doe" />
+              <Label>College / Office</Label>
+              <Input value={regData.collegeOrOffice} onChange={(e) => setRegData({...regData, collegeOrOffice: e.target.value})} placeholder="e.g. College of Computing" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRegistering(false)}>Cancel</Button>
-            <Button onClick={handleQuickRegister} disabled={!regFirstName || !regLastName}>
+            <Button onClick={handleRegisterAndCheckIn} disabled={!regData.firstName || !regData.lastName || !regData.collegeOrOffice}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Register & Check-in
+              Register & Continue
             </Button>
           </DialogFooter>
         </DialogContent>

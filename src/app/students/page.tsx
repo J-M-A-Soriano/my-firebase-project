@@ -3,14 +3,14 @@
 
 import { useState } from "react";
 import { NavBar } from "@/components/nav-bar";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Mail, Book, Loader2, Users as UsersIcon, Plus, MoreVertical, Edit2, Trash2, UserPlus } from "lucide-react";
+import { Search, Mail, Book, Loader2, Users as UsersIcon, Plus, MoreVertical, Edit2, Trash2, Ban, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, deleteDoc } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,10 +27,11 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-export default function StudentsDirectory() {
+export default function VisitorDirectory() {
   const db = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -45,7 +46,7 @@ export default function StudentsDirectory() {
     firstName: "",
     lastName: "",
     email: "",
-    gradeLevel: ""
+    collegeOrOffice: ""
   });
 
   const studentsRef = useMemoFirebase(() => {
@@ -71,17 +72,28 @@ export default function StudentsDirectory() {
     setDocumentNonBlocking(studentRef, {
       ...formData,
       id: studentId,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      isBlocked: selectedStudent?.isBlocked || false
     }, { merge: true });
 
     toast({
-      title: isEditDialogOpen ? "Student Updated" : "Student Added",
-      description: `${formData.firstName} ${formData.lastName} has been saved to the database.`,
+      title: isEditDialogOpen ? "Profile Updated" : "Visitor Added",
+      description: `${formData.firstName} ${formData.lastName} saved successfully.`,
     });
 
     setIsAddDialogOpen(false);
     setIsEditDialogOpen(false);
-    setFormData({ id: "", firstName: "", lastName: "", email: "", gradeLevel: "" });
+    setFormData({ id: "", firstName: "", lastName: "", email: "", collegeOrOffice: "" });
+  };
+
+  const toggleBlockStatus = (student: any) => {
+    const docRef = doc(db, 'students', student.id);
+    updateDocumentNonBlocking(docRef, { isBlocked: !student.isBlocked });
+    toast({
+      title: student.isBlocked ? "Access Restored" : "Visitor Blocked",
+      description: `${student.firstName} ${student.lastName} has been ${student.isBlocked ? 'unblocked' : 'blocked'}.`,
+      variant: student.isBlocked ? "default" : "destructive"
+    });
   };
 
   const openEditDialog = (student: any) => {
@@ -91,19 +103,15 @@ export default function StudentsDirectory() {
       firstName: student.firstName,
       lastName: student.lastName,
       email: student.email || "",
-      gradeLevel: student.gradeLevel || ""
+      collegeOrOffice: student.collegeOrOffice || ""
     });
     setIsEditDialogOpen(true);
   };
 
   const handleDeleteStudent = (studentId: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
       deleteDocumentNonBlocking(doc(db, 'students', studentId));
-      toast({
-        title: "Student Deleted",
-        description: `${name} has been removed from the directory.`,
-        variant: "destructive"
-      });
+      toast({ title: "Visitor Deleted", variant: "destructive" });
     }
   };
 
@@ -113,15 +121,15 @@ export default function StudentsDirectory() {
       <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Student Directory</h1>
-            <p className="text-muted-foreground">Manage library memberships and student profiles.</p>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">NEU Visitor Directory</h1>
+            <p className="text-muted-foreground">Manage student and staff library access profiles.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search..." 
-                className="pl-9 h-10" 
+                placeholder="Search name, ID, email..." 
+                className="pl-9 h-10 shadow-sm" 
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               />
@@ -129,43 +137,43 @@ export default function StudentsDirectory() {
             
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary">
+                <Button className="bg-primary shadow-lg">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Student
+                  Add Visitor
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add New Student</DialogTitle>
-                  <DialogDescription>Create a new profile for library access.</DialogDescription>
+                  <DialogTitle>Add Library Visitor</DialogTitle>
+                  <DialogDescription>Create a profile for RFID/Email lookup.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSaveStudent} className="space-y-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="id">Student ID</Label>
-                      <Input id="id" placeholder="e.g. S1001" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} required />
+                      <Label>Student/Employee ID</Label>
+                      <Input placeholder="e.g. NEU-2023-01" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="grade">Grade Level</Label>
-                      <Input id="grade" placeholder="e.g. 10th" value={formData.gradeLevel} onChange={(e) => setFormData({...formData, gradeLevel: e.target.value})} />
+                      <Label>College / Office</Label>
+                      <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
+                      <Label>First Name</Label>
+                      <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
+                      <Label>Last Name</Label>
+                      <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <Label>Institutional Email</Label>
+                    <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                   </div>
                   <DialogFooter>
-                    <Button type="submit">Save Student</Button>
+                    <Button type="submit">Save Profile</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -174,64 +182,80 @@ export default function StudentsDirectory() {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="h-12 w-12 text-primary animate-spin" />
-            <p className="text-muted-foreground font-medium">Loading student database...</p>
-          </div>
+          <div className="flex flex-col items-center py-24 gap-4"><Loader2 className="h-12 w-12 text-primary animate-spin" /></div>
         ) : filteredStudents.length === 0 ? (
           <div className="text-center py-24 bg-muted/20 rounded-3xl border-2 border-dashed">
             <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold">No Students Found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or add a new student.</p>
+            <h3 className="text-lg font-semibold">No Results Found</h3>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredStudents.map((student: any) => (
-              <Card key={student.id} className="group hover:border-primary transition-all duration-300 overflow-hidden relative">
-                <div className="h-16 bg-gradient-to-r from-primary/10 to-accent/10" />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Card key={student.id} className={cn(
+                "group transition-all duration-300 relative overflow-hidden",
+                student.isBlocked ? "border-destructive bg-destructive/5" : "hover:border-primary border-primary/10"
+              )}>
+                <div className={cn(
+                  "h-1.5",
+                  student.isBlocked ? "bg-destructive" : "bg-primary"
+                )} />
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/80 backdrop-blur">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/80 backdrop-blur shadow-sm">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem onClick={() => openEditDialog(student)}>
                         <Edit2 className="mr-2 h-4 w-4" /> Edit Profile
                       </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => toggleBlockStatus(student)}
+                        className={student.isBlocked ? "text-primary" : "text-destructive"}
+                      >
+                        {student.isBlocked ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Ban className="mr-2 h-4 w-4" />}
+                        {student.isBlocked ? "Unblock Visitor" : "Block Visitor"}
+                      </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteStudent(student.id, `${student.firstName} ${student.lastName}`)}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Student
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
                 
-                <CardHeader className="relative pt-0 -mt-8 flex flex-col items-center">
-                  <Avatar className="h-20 w-20 border-4 border-background ring-2 ring-primary/20 group-hover:ring-primary transition-all duration-300">
-                    <AvatarFallback>{student.firstName?.charAt(0)}{student.lastName?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center mt-2">
-                    <CardTitle className="text-lg font-headline">{student.firstName} {student.lastName}</CardTitle>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{student.id}</p>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <Mail className="h-4 w-4" />
-                      <span className="truncate">{student.email || 'No email provided'}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <Book className="h-4 w-4" />
-                      {student.gradeLevel || 'N/A'} Grade
+                <CardContent className="pt-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-primary/20">
+                      <AvatarFallback className="bg-primary/5 text-primary font-bold">
+                        {student.firstName?.charAt(0)}{student.lastName?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-lg font-headline">{student.firstName} {student.lastName}</CardTitle>
+                      <p className="text-xs text-muted-foreground font-bold uppercase">{student.id}</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2 border-t">
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                      Active Member
-                    </Badge>
+                  <div className="grid grid-cols-1 gap-2 border-t pt-4">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <Book className="h-3.5 w-3.5" />
+                      <span className="font-semibold">{student.collegeOrOffice || 'General'}</span>
+                    </div>
+                    {student.email && (
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5" />
+                        <span className="truncate">{student.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {student.isBlocked ? (
+                      <Badge variant="destructive" className="animate-pulse">Access Blocked</Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">Authorized</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -243,36 +267,36 @@ export default function StudentsDirectory() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Student Profile</DialogTitle>
-              <DialogDescription>Update details for {selectedStudent?.firstName}.</DialogDescription>
+              <DialogTitle>Edit Visitor Profile</DialogTitle>
+              <DialogDescription>Update institutional information.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveStudent} className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-id">Student ID</Label>
-                  <Input id="edit-id" value={formData.id} disabled className="bg-muted" />
+                  <Label>ID Number</Label>
+                  <Input value={formData.id} disabled className="bg-muted" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-grade">Grade Level</Label>
-                  <Input id="edit-grade" value={formData.gradeLevel} onChange={(e) => setFormData({...formData, gradeLevel: e.target.value})} />
+                  <Label>College / Office</Label>
+                  <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-firstName">First Name</Label>
-                  <Input id="edit-firstName" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
+                  <Label>First Name</Label>
+                  <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-lastName">Last Name</Label>
-                  <Input id="edit-lastName" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
+                  <Label>Last Name</Label>
+                  <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-email">Email Address</Label>
-                <Input id="edit-email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <Label>Email</Label>
+                <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
               </div>
               <DialogFooter>
-                <Button type="submit">Update Student</Button>
+                <Button type="submit">Update Profile</Button>
               </DialogFooter>
             </form>
           </DialogContent>

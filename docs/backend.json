@@ -1,112 +1,47 @@
+
 {
   "entities": {
     "Student": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Student",
       "type": "object",
-      "description": "Represents a student enrolled in the school system, used for library access management.",
+      "description": "Represents a library visitor (student, faculty, or employee).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Student entity. This is the student ID number used for check-in."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the student."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the student."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the student.",
-          "format": "email"
-        },
-        "gradeLevel": {
-          "type": "string",
-          "description": "The current grade level or year of the student."
-        }
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "collegeOrOffice": { "type": "string" },
+        "isBlocked": { "type": "boolean", "default": false }
       },
-      "required": [
-        "id",
-        "firstName",
-        "lastName"
-      ]
+      "required": ["id", "firstName", "lastName"]
     },
     "LibrarySession": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LibrarySession",
       "type": "object",
-      "description": "Records a single instance of a student's check-in and subsequent check-out at the library.",
+      "description": "Records a library visit session.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LibrarySession entity."
-        },
-        "studentId": {
-          "type": "string",
-          "description": "Reference to Student. (Relationship: Student 1:N LibrarySession)"
-        },
-        "checkInTime": {
-          "type": "string",
-          "description": "Timestamp when the student checked into the library.",
-          "format": "date-time"
-        },
-        "checkOutTime": {
-          "type": "string",
-          "description": "Timestamp when the student checked out of the library. This field is null if the student is currently checked in.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "checkInTime": { "type": "string", "format": "date-time" },
+        "checkOutTime": { "type": "string", "format": "date-time" },
+        "purpose": { "type": "string", "enum": ["Reading Books", "Thesis Research", "Computer Use", "Assignments", "Others"] },
+        "visitorName": { "type": "string" },
+        "collegeOrOffice": { "type": "string" }
       },
-      "required": [
-        "id",
-        "studentId",
-        "checkInTime"
-      ]
+      "required": ["id", "studentId", "checkInTime", "purpose"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous", "google.com"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/students/{studentId}",
-        "definition": {
-          "entityName": "Student",
-          "schema": {
-            "$ref": "#/backend/entities/Student"
-          },
-          "description": "Stores individual student profiles. The `{studentId}` wildcard represents the student's unique identification number (not a Firebase User ID). This collection enables direct lookup for check-in and profile viewing. Only authorized library staff can read and write to this collection.",
-          "params": [
-            {
-              "name": "studentId",
-              "description": "The unique student ID number of the student."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/librarySessions/{sessionId}",
-        "definition": {
-          "entityName": "LibrarySession",
-          "schema": {
-            "$ref": "#/backend/entities/LibrarySession"
-          },
-          "description": "Records individual library check-in and check-out events. Each document includes the `studentId` to link to the corresponding student. The `checkOutTime` field is null if the student is currently checked in, allowing for efficient queries for live occupancy. Only authorized library staff can read and write to this collection. Includes `studentId` as a denormalized data link to the Student entity.",
-          "params": [
-            {
-              "name": "sessionId",
-              "description": "The unique identifier for a library session event."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure for LibriGuard is designed with a strong emphasis on security, scalability, and debuggability, adhering to the core design principles.The primary data entities, `Student` and `LibrarySession`, are stored in top-level collections to simplify access control and enable efficient querying.\n\n**Authorization Independence (CRITICAL):**\nThis design prioritizes Authorization Independence by eliminating hierarchical authorization dependencies within security rules. Access decisions for `Student` and `LibrarySession` documents do not rely on fetching data from parent documents or other related collections. All authorization logic is kept explicit and local to the document being accessed or based on the authenticated user's global role.\n\nCrucially, for authenticated library staff, authorization would be handled via a Database Access Control (DBAC) mechanism. This involves a dedicated top-level collection (e.g., `/roles_libraryStaff/{request.auth.uid}`) where the mere existence of a document for `request.auth.uid` grants staff privileges. This strategy ensures that security rules do not require `get()` operations on `Student` or `LibrarySession` documents to determine a user's role, making rules atomic, faster, and easier to debug. **However, due to the strict `$ref` formatting requirements of the output schema (mandating references to `#/backend/entities/<EntityName>`), this critical `roles_libraryStaff` collection cannot be explicitly listed in the `firestorePaths` section below without a corresponding `LibraryStaffRole` entity schema being provided in the input.** Its conceptual necessity for secure rules remains paramount.\n\n**QAPs (Rules are not Filters):**\nThe structure is explicitly designed to support Queryable Access Patterns (QAPs), ensuring security rules do not act as data filters:\n*   **Live Library Occupancy View:** The `/librarySessions` collection allows for direct, efficient querying of all currently checked-in students. Library staff can perform a query like `collection('librarySessions').where('checkOutTime', '==', null)` to retrieve a real-time list of present students. Security rules would simply grant read access to authenticated staff for this collection, ensuring the query is performed on the server and not filtered by rules post-hoc.\n*   **Student Profile Lookup:** The `/students` collection allows staff to directly `get` a student profile by their `studentId` for check-in and lookup purposes. Staff can also `list` this collection (potentially with client-side search or server-side indexed queries) to find students.\n\n**Structural Segregation:** Both `/students` and `/librarySessions` collections maintain a homogeneous security posture: they are exclusively managed and accessed by authorized library staff. There is no mixing of public, private, or varying permission-level data within these collections, which greatly simplifies security rules.\n\n**Access Modeling:**\n*   **Student Data:** Student profiles are stored at `/students/{studentId}`. The document ID is the student's unique ID number, making lookups direct and intuitive.\n*   **Library Session Data:** Library check-in/check-out events are stored at `/librarySessions/{sessionId}`. Each session document includes the `studentId` to establish the relationship with the student. The `checkOutTime` field clearly denotes the session's state (null for active, timestamp for completed)."
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Visitor profiles."
+    },
+    "/librarySessions/{sessionId}": {
+      "schema": "LibrarySession",
+      "description": "Check-in/out records."
+    }
   }
 }
