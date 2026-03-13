@@ -195,7 +195,7 @@ export default function LandingPage() {
               Terminal ID: L-01
             </div>
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" /> System Live</span>
+              <span className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" /> System Live</span>
               <span className="opacity-50">Local Time: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>

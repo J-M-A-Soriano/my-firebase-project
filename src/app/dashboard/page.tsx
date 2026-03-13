@@ -79,13 +79,13 @@ export default function AdminDashboard() {
     return { total: filtered.length, chartData, pieData, filteredSessions: filtered };
   }, [sessions, timeRange]);
 
-  const COLORS = ['#107c40', '#32a852', '#1a5d1a', '#a1e070', '#568b56'];
+  const COLORS = ['#0f172a', '#1e293b', '#334155', '#475569', '#2563eb'];
 
   const generateReport = () => {
     if (!stats) return;
     const doc = new jsPDF();
     doc.setFontSize(22);
-    doc.setTextColor(16, 124, 64);
+    doc.setTextColor(15, 23, 42); // Navy Blue
     doc.text("NEU Library Analytics Report", 14, 25);
     
     doc.setFontSize(10);
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
       head: [['Visitor Name', 'Affiliation', 'Entry Timestamp', 'Activity Purpose']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillStyle: 'F', fillColor: [16, 124, 64] },
+      headStyles: { fillStyle: 'F', fillColor: [15, 23, 42] },
     });
 
     doc.save(`NEU_Library_Report_${format(new Date(), "yyyyMMdd")}.pdf`);
