@@ -33,22 +33,25 @@ git branch -M main
 git push -u origin main
 ```
 
-## 🌍 Step 2: Make it Live (Firebase App Hosting)
-GitHub stores your code, but to "run" the app as a website, you need a host. **Firebase App Hosting** is the best choice for this project:
+## 🌍 Step 2: Make it Live for FREE (Vercel Deployment)
+Because this app uses dynamic AI features (Genkit) and a database, it needs a "Server" to run. **Vercel** is the best free service for this:
 
-1. Go to the [Firebase Console](https://console.firebase.google.com/).
-2. Select your project.
-3. In the left sidebar, click **"App Hosting"**.
-4. Click **"Get Started"** and connect your GitHub account.
-5. Select the `neu-library-log` repository you just pushed to.
-6. Firebase will automatically build and deploy your app. Every time you push new code to GitHub, your live website will update automatically!
+1. Go to [vercel.com](https://vercel.com) and sign up with your GitHub account.
+2. Click **"Add New"** > **"Project"**.
+3. Import your `neu-library-log` repository.
+4. **Important Environment Variables:**
+   - In the "Environment Variables" section, add:
+     - `GEMINI_API_KEY`: (Your Google AI API Key for Genkit)
+5. Click **"Deploy"**.
+
+Your website will be live at a URL like `neu-library-log.vercel.app`. Every time you `git push` new changes to GitHub, the website will update automatically!
 
 ## 🖥️ Professional Kiosk Setup
 For the best experience on your physical terminal:
 
 ### 1. Dedicated Kiosk Mode (Chrome)
 To prevent users from exiting the app, launch Chrome using the kiosk flag:
-`chrome.exe --kiosk https://your-app-url.web.app`
+`chrome.exe --kiosk https://your-app-url.vercel.app`
 
 ### 2. Auto-Focus RFID
 The app is programmed to automatically capture RFID scans. Ensure no other pop-ups or browser notifications are active on the terminal machine.
