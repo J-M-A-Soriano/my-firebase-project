@@ -280,6 +280,10 @@ export default function LandingPage() {
       {/* Purpose Dialog - Redesigned */}
       <Dialog open={showPurposeDialog} onOpenChange={setShowPurposeDialog}>
         <DialogContent className="sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Select Purpose of Visit</DialogTitle>
+            <DialogDescription>Identify the main reason for your visit today.</DialogDescription>
+          </DialogHeader>
           <div className="bg-primary p-8 text-white space-y-2">
             <h3 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-3">
               <LogIn className="h-8 w-8" /> Welcome
