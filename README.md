@@ -10,18 +10,32 @@ This application is fully optimized for:
 - **Mozilla Firefox**
 - **Safari**
 
+## 🚀 Going Live (Deployment)
+This is a dynamic Next.js app. To make it "live" from GitHub:
+
+### 1. Push to GitHub
+Upload your project to a private or public repository on GitHub.
+
+### 2. Connect to a Hosting Provider
+Since this app uses Firebase and Next.js Server Actions, you should use:
+- **Firebase App Hosting (Recommended):** Go to the Firebase Console, select "App Hosting," and connect your GitHub repo. It will automatically build and deploy your site.
+- **Vercel:** Connect your GitHub repo to Vercel. It will handle the Next.js environment perfectly.
+
+### 3. Environment Variables
+Make sure to copy your Firebase configuration into the environment variables of your hosting provider so the database remains connected.
+
 ## 🖥️ Professional Kiosk Setup
-For the best engaging experience on your terminal, we recommend the following browser settings:
+For the best experience on your physical terminal:
 
 ### 1. Dedicated Kiosk Mode (Chrome)
-To prevent users from exiting the app or accessing other sites, launch Chrome using the kiosk flag:
+To prevent users from exiting the app, launch Chrome using the kiosk flag:
 `chrome.exe --kiosk https://your-app-url.com`
 
 ### 2. Auto-Focus RFID
 The app is programmed to automatically capture RFID scans. Ensure no other pop-ups or browser notifications are active on the terminal machine.
 
 ### 3. Fullscreen Shortcut
-Simply press **F11** once the page loads to hide all browser UI elements and provide a clean, "Intelligence Center" feel.
+Simply press **F11** once the page loads to hide all browser UI elements.
 
 ## 📊 Administrative Access
 - **Terminal ID:** L-01
