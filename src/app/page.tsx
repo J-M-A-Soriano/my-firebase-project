@@ -141,7 +141,7 @@ export default function LandingPage() {
       id: sessionId,
       studentId: currentVisitor.id,
       visitorName: `${currentVisitor.firstName} ${currentVisitor.lastName}`,
-      collegeOrOffice: currentVisitor.collegeOrOffice,
+      collegeOrOffice: currentVisitor.collegeOrOffice || "N/A", // Fixed: Ensure no undefined value
       checkInTime: serverTimestamp(),
       checkOutTime: null,
       purpose: selectedPurpose
@@ -149,7 +149,7 @@ export default function LandingPage() {
 
     toast({ 
       title: "Welcome to NEU Library!", 
-      description: `${currentVisitor.firstName} from ${currentVisitor.collegeOrOffice} checked in for ${selectedPurpose}.`,
+      description: `${currentVisitor.firstName} from ${currentVisitor.collegeOrOffice || "N/A"} checked in for ${selectedPurpose}.`,
     });
 
     setShowPurposeDialog(false);
