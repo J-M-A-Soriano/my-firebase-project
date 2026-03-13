@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,6 +11,7 @@ import { useAuth, useUser, useFirestore, initiateAnonymousSignIn } from "@/fireb
 import { doc, getDoc, collection, query, where, getDocs, serverTimestamp, limit } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { 
   Dialog, 
   DialogContent, 
