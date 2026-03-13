@@ -2,6 +2,8 @@
 
 A professional, high-performance visitor management system for the NEU Library. Designed for high-traffic RFID terminals and administrative oversight.
 
+**Live Application:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
+
 ## 🌐 Browser Compatibility
 This application is fully optimized for:
 - **Google Chrome** (Recommended for Kiosk mode)
@@ -44,14 +46,14 @@ Because this app uses dynamic AI features (Genkit) and a database, it needs a "S
      - `GEMINI_API_KEY`: (Your Google AI API Key for Genkit)
 5. Click **"Deploy"**.
 
-Your website will be live at a URL like `neu-library-log.vercel.app`. Every time you `git push` new changes to GitHub, the website will update automatically!
+Your website is now live at: **https://my-firebase-project-ten.vercel.app**
 
 ## 🖥️ Professional Kiosk Setup
 For the best experience on your physical terminal:
 
 ### 1. Dedicated Kiosk Mode (Chrome)
 To prevent users from exiting the app, launch Chrome using the kiosk flag:
-`chrome.exe --kiosk https://your-app-url.vercel.app`
+`chrome.exe --kiosk https://my-firebase-project-ten.vercel.app`
 
 ### 2. Auto-Focus RFID
 The app is programmed to automatically capture RFID scans. Ensure no other pop-ups or browser notifications are active on the terminal machine.
