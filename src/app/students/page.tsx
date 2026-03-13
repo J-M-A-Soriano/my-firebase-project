@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Mail, Book, Loader2, Users as UsersIcon, Plus, MoreVertical, Edit2, Trash2, Ban, ShieldCheck } from "lucide-react";
+import { Search, Mail, Book, Loader2, Users as UsersIcon, Plus, MoreVertical, Edit2, Trash2, Ban, ShieldCheck, Fingerprint, Building2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,6 @@ export default function VisitorDirectory() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
-  // Form State
   const [formData, setFormData] = useState({
     id: "",
     firstName: "",
@@ -116,20 +114,25 @@ export default function VisitorDirectory() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-12">
       <NavBar />
-      <main className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline">NEU Visitor Directory</h1>
-            <p className="text-muted-foreground">Manage student and staff library access profiles.</p>
+      <main className="container mx-auto py-10 px-6 max-w-7xl space-y-10">
+        
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black tracking-tight text-foreground font-headline uppercase italic">
+              Visitor <span className="text-primary not-italic">Hub</span>
+            </h1>
+            <p className="text-muted-foreground font-bold text-sm uppercase tracking-widest opacity-60">
+              Institutional Profile & Credential Management
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-4">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search name, ID, email..." 
-                className="pl-9 h-10 shadow-sm" 
+                placeholder="Search name, ID, affiliation..." 
+                className="pl-12 h-14 rounded-2xl border-2 font-bold bg-white shadow-xl focus-visible:border-primary focus-visible:ring-0 transition-all" 
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               />
@@ -137,43 +140,43 @@ export default function VisitorDirectory() {
             
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary shadow-lg">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Visitor
+                <Button className="h-14 px-8 rounded-2xl bg-primary text-white shadow-2xl hover:scale-105 transition-all font-black uppercase tracking-widest text-xs">
+                  <Plus className="mr-2 h-5 w-5" />
+                  New Visitor
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Library Visitor</DialogTitle>
-                  <DialogDescription>Create a profile for RFID/Email lookup.</DialogDescription>
+              <DialogContent className="rounded-[2.5rem] p-10">
+                <DialogHeader className="space-y-2">
+                  <DialogTitle className="text-3xl font-black italic uppercase">Add Library Visitor</DialogTitle>
+                  <DialogDescription className="font-bold text-muted-foreground">Manual profile creation for RFID/institutional email identification.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSaveStudent} className="space-y-4 py-4">
+                <form onSubmit={handleSaveStudent} className="space-y-6 py-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Student/Employee ID</Label>
-                      <Input placeholder="e.g. NEU-2023-01" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} required />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Student/Employee ID</Label>
+                      <Input placeholder="NEU-XXXX" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                     </div>
                     <div className="space-y-2">
-                      <Label>College / Office</Label>
-                      <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">College / Office</Label>
+                      <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>First Name</Label>
-                      <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">First Name</Label>
+                      <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Last Name</Label>
-                      <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Last Name</Label>
+                      <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Institutional Email</Label>
-                    <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Institutional Email</Label>
+                    <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
                   </div>
-                  <DialogFooter>
-                    <Button type="submit">Save Profile</Button>
+                  <DialogFooter className="pt-4">
+                    <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Create Profile</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -182,79 +185,83 @@ export default function VisitorDirectory() {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center py-24 gap-4"><Loader2 className="h-12 w-12 text-primary animate-spin" /></div>
+          <div className="flex flex-col items-center py-40 gap-4"><Loader2 className="h-16 w-16 text-primary animate-spin" /></div>
         ) : filteredStudents.length === 0 ? (
-          <div className="text-center py-24 bg-muted/20 rounded-3xl border-2 border-dashed">
-            <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold">No Results Found</h3>
+          <div className="text-center py-40 glass-card rounded-[3rem] border-4 border-dashed border-border/50">
+            <UsersIcon className="h-20 w-20 text-muted-foreground mx-auto mb-6 opacity-10" />
+            <h3 className="text-2xl font-black uppercase italic text-muted-foreground opacity-50 tracking-tighter">No Personnel Found</h3>
+            <p className="text-sm font-bold text-muted-foreground/40 mt-2">Try adjusting your search filters or add a new visitor manually.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredStudents.map((student: any) => (
               <Card key={student.id} className={cn(
-                "group transition-all duration-300 relative overflow-hidden",
-                student.isBlocked ? "border-destructive bg-destructive/5" : "hover:border-primary border-primary/10"
+                "group transition-all duration-500 rounded-[2rem] border-none shadow-xl overflow-hidden relative bg-white",
+                student.isBlocked ? "opacity-75 grayscale-[0.5]" : "hover:scale-[1.03] hover:shadow-2xl"
               )}>
                 <div className={cn(
-                  "h-1.5",
-                  student.isBlocked ? "bg-destructive" : "bg-primary"
+                  "h-2.5",
+                  student.isBlocked ? "bg-destructive animate-pulse" : "bg-primary"
                 )} />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/80 backdrop-blur shadow-sm">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="outline" size="icon" className="h-10 w-10 bg-white shadow-xl rounded-xl border-2">
+                        <MoreVertical className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => openEditDialog(student)}>
-                        <Edit2 className="mr-2 h-4 w-4" /> Edit Profile
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none">
+                      <DropdownMenuItem onClick={() => openEditDialog(student)} className="rounded-xl font-bold p-3">
+                        <Edit2 className="mr-3 h-4 w-4 text-primary" /> Edit Credentials
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => toggleBlockStatus(student)}
-                        className={student.isBlocked ? "text-primary" : "text-destructive"}
+                        className={cn("rounded-xl font-bold p-3", student.isBlocked ? "text-primary" : "text-destructive")}
                       >
-                        {student.isBlocked ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Ban className="mr-2 h-4 w-4" />}
-                        {student.isBlocked ? "Unblock Visitor" : "Block Visitor"}
+                        {student.isBlocked ? <ShieldCheck className="mr-3 h-4 w-4" /> : <Ban className="mr-3 h-4 w-4" />}
+                        {student.isBlocked ? "Restore Access" : "Block Access"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteStudent(student.id, `${student.firstName} ${student.lastName}`)}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
+                      <DropdownMenuItem className="rounded-xl font-bold p-3 text-destructive" onClick={() => handleDeleteStudent(student.id, `${student.firstName} ${student.lastName}`)}>
+                        <Trash2 className="mr-3 h-4 w-4" /> Purge Profile
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
                 
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-14 w-14 border-2 border-primary/20">
-                      <AvatarFallback className="bg-primary/5 text-primary font-bold">
+                <CardContent className="p-8 space-y-6">
+                  <div className="flex items-center gap-6">
+                    <Avatar className="h-20 w-20 border-4 border-muted rounded-[1.5rem] shadow-inner">
+                      <AvatarFallback className="bg-primary/5 text-primary font-black text-2xl">
                         {student.firstName?.charAt(0)}{student.lastName?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <CardTitle className="text-lg font-headline">{student.firstName} {student.lastName}</CardTitle>
-                      <p className="text-xs text-muted-foreground font-bold uppercase">{student.id}</p>
+                    <div className="space-y-1">
+                      <CardTitle className="text-xl font-black italic uppercase tracking-tighter leading-tight">{student.firstName} {student.lastName}</CardTitle>
+                      <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                        <Fingerprint className="h-3 w-3" /> {student.id}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-2 border-t pt-4">
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <Book className="h-3.5 w-3.5" />
-                      <span className="font-semibold">{student.collegeOrOffice || 'General'}</span>
+                  <div className="grid grid-cols-1 gap-4 border-t border-dashed pt-6">
+                    <div className="flex items-center gap-3 text-[11px] font-bold text-muted-foreground uppercase">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      {student.collegeOrOffice || 'General Affiliation'}
                     </div>
                     {student.email && (
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <Mail className="h-3.5 w-3.5" />
-                        <span className="truncate">{student.email}</span>
+                      <div className="flex items-center gap-3 text-[11px] font-bold text-muted-foreground uppercase truncate">
+                        <Mail className="h-4 w-4 text-primary" />
+                        {student.email}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2">
+                  <div className="flex items-center justify-between pt-2">
                     {student.isBlocked ? (
-                      <Badge variant="destructive" className="animate-pulse">Access Blocked</Badge>
+                      <Badge variant="destructive" className="bg-destructive text-white border-none font-black text-[10px] uppercase px-3 py-1.5 rounded-xl shadow-lg">Access Terminated</Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">Authorized</Badge>
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-2 border-primary/20 font-black text-[10px] uppercase px-3 py-1.5 rounded-xl">Authorized Status</Badge>
                     )}
                   </div>
                 </CardContent>
@@ -263,40 +270,40 @@ export default function VisitorDirectory() {
           </div>
         )}
 
-        {/* Edit Dialog */}
+        {/* Edit Dialog - Redesigned */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Visitor Profile</DialogTitle>
-              <DialogDescription>Update institutional information.</DialogDescription>
+          <DialogContent className="rounded-[2.5rem] p-10">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-3xl font-black italic uppercase">Update Visitor Profile</DialogTitle>
+              <DialogDescription className="font-bold">Modify identity and institutional credentials.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSaveStudent} className="space-y-4 py-4">
+            <form onSubmit={handleSaveStudent} className="space-y-6 py-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>ID Number</Label>
-                  <Input value={formData.id} disabled className="bg-muted" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Permanent ID</Label>
+                  <Input value={formData.id} disabled className="h-12 rounded-xl font-bold bg-muted/50 border-none cursor-not-allowed" />
                 </div>
                 <div className="space-y-2">
-                  <Label>College / Office</Label>
-                  <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">College / Office</Label>
+                  <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>First Name</Label>
-                  <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} required />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">First Name</Label>
+                  <Input value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Last Name</Label>
-                  <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} required />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Last Name</Label>
+                  <Input value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Email</Label>
+                <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
               </div>
-              <DialogFooter>
-                <Button type="submit">Update Profile</Button>
+              <DialogFooter className="pt-4">
+                <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Save Changes</Button>
               </DialogFooter>
             </form>
           </DialogContent>
