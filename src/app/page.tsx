@@ -1,8 +1,9 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, UserPlus, XCircle, LogIn, CheckCircle2 } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, UserPlus, LogIn, CheckCircle2, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,13 +21,6 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const ADMIN_CODE = "ADMIN123";
 const PURPOSES = [
@@ -43,6 +37,7 @@ export default function LandingPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const [idInput, setIdInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,10 +49,21 @@ export default function LandingPage() {
   // Registration State
   const [regData, setRegData] = useState({ firstName: "", lastName: "", collegeOrOffice: "" });
 
+  // Auto-focus logic for RFID readers
   useEffect(() => {
     if (!user && !isUserLoading) {
       initiateAnonymousSignIn(auth);
     }
+    
+    // Initial focus
+    inputRef.current?.focus();
+
+    // Re-focus whenever clicking anywhere on the screen (Kiosk Mode)
+    const handleGlobalClick = () => {
+      inputRef.current?.focus();
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
   }, [user, isUserLoading, auth]);
 
   const handleKioskSubmit = async (e: React.FormEvent) => {
@@ -92,6 +98,7 @@ export default function LandingPage() {
 
         if (data.isBlocked) {
           toast({ variant: "destructive", title: "Access Denied", description: "This visitor has been blocked by the Administrator." });
+          setIdInput("");
           setIsProcessing(false);
           return;
         }
@@ -183,28 +190,34 @@ export default function LandingPage() {
             NEU Library <span className="text-primary">Log</span>
           </h1>
           <p className="text-xl text-muted-foreground">
-            Tap RFID or Enter Institutional ID/Email
+            Tap RFID Card or Enter Institutional ID
           </p>
         </div>
 
         <Card className="glass-card shadow-2xl border-primary/20 p-4">
           <CardHeader>
-            <CardTitle className="text-2xl">Visitor Terminal</CardTitle>
-            <CardDescription>Enter credentials for library entry/exit</CardDescription>
+            <div className="flex items-center justify-center gap-2 text-primary font-bold mb-2">
+              <Scan className="h-5 w-5 animate-pulse" />
+              RFID Terminal Active
+            </div>
+            <CardTitle className="text-2xl">Visitor Entry</CardTitle>
+            <CardDescription>Place your card near the reader</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleKioskSubmit} className="space-y-6">
               <div className="relative">
                 <Input 
-                  placeholder="ID Number or Email"
+                  ref={inputRef}
+                  placeholder="Scan ID or Type ID/Email"
                   value={idInput}
                   onChange={(e) => setIdInput(e.target.value)}
-                  className="h-16 text-2xl text-center font-bold border-2 focus-visible:ring-primary shadow-inner"
+                  className="h-20 text-3xl text-center font-bold border-2 focus-visible:ring-primary shadow-inner bg-muted/30"
                   autoFocus
                   disabled={isProcessing}
+                  autoComplete="off"
                 />
                 {isProcessing && (
-                  <div className="absolute right-4 top-5">
+                  <div className="absolute right-4 top-7">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   </div>
                 )}
@@ -214,7 +227,7 @@ export default function LandingPage() {
                 className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 shadow-lg active:scale-[0.98] transition-all"
                 disabled={!idInput.trim() || isProcessing}
               >
-                {isProcessing ? "Verifying..." : "Tap / Enter"}
+                {isProcessing ? "Verifying..." : "Confirm Identification"}
               </Button>
             </form>
           </CardContent>
@@ -223,7 +236,7 @@ export default function LandingPage() {
         <div className="pt-8 opacity-60 flex flex-col items-center gap-2">
           <div className="flex items-center gap-2 text-sm font-medium">
             <ShieldCheck className="h-5 w-5" />
-            Secure Entry Monitoring System
+            Secure University Monitoring
           </div>
           <p className="text-xs">University ID / Institutional Email Integration Active</p>
         </div>
@@ -275,7 +288,7 @@ export default function LandingPage() {
           <DialogHeader>
             <DialogTitle>First-Time Visitor Detected</DialogTitle>
             <DialogDescription>
-              Profile for <span className="font-bold text-primary">{idInput}</span> not found. Please provide details.
+              Profile for <span className="font-bold text-primary">{idInput}</span> not found. Please provide your details to register.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -298,7 +311,7 @@ export default function LandingPage() {
             <Button variant="outline" onClick={() => setIsRegistering(false)}>Cancel</Button>
             <Button onClick={handleRegisterAndCheckIn} disabled={!regData.firstName || !regData.lastName || !regData.collegeOrOffice}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Register & Continue
+              Register & Check-In
             </Button>
           </DialogFooter>
         </DialogContent>
