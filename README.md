@@ -2,7 +2,7 @@
 
 A professional, high-performance visitor management system for the NEU Library. Optimized for high-traffic RFID terminals and administrative oversight.
 
-**Production URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
+**MyPersonalProject URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
 
 ---
 
