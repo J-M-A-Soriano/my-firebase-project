@@ -46,6 +46,7 @@ export default function LandingPage() {
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
   // Strictly guarded to ensure administrators are never accidentally redirected
   useEffect(() => {
+    // Only redirect if we have a user, loading is finished, and we are SURE they are NOT an admin
     if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
       router.replace("/welcome");
     }
@@ -55,6 +56,8 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
+      // Explicitly release the lock after successful sign-in so buttons become interactive
+      setIsActionPending(false);
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -67,7 +70,6 @@ export default function LandingPage() {
       });
       setIsActionPending(false);
     }
-    // Note: isActionPending(false) is handled by the redirect effect or manual release if login fails
   };
 
   const handleEnterAsVisitor = async () => {
@@ -97,6 +99,7 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await signOut(auth);
+      // Clear any local caches if necessary (handled by useAdmin hook usually)
       router.replace("/");
     } catch (error) {
       toast({ title: "Sign Out Failed", variant: "destructive" });
@@ -161,7 +164,7 @@ export default function LandingPage() {
                 </Button>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                  {isAdmin ? (
+                  {!isAdminLoading && isAdmin ? (
                     <>
                       <Button
                         asChild
@@ -184,15 +187,10 @@ export default function LandingPage() {
                         </div>
                       </Button>
                     </>
-                  ) : isAdminLoading ? (
-                    <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
-                      <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Verifying Authority...</p>
-                    </div>
                   ) : (
                     <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Finalizing Handshake...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Verifying Authority...</p>
                     </div>
                   )}
                   
