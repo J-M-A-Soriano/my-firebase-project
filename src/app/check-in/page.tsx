@@ -85,7 +85,7 @@ export default function CheckInKiosk() {
         setStep("REGISTER");
       }
     } catch (err) {
-      toast({ title: "System Error", description: "Could not verify ID. Please retry.", variant: "destructive" });
+      toast({ title: "System Error", description: "Could not verify ID.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -127,140 +127,139 @@ export default function CheckInKiosk() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-10">
       <NavBar />
-      <main className="container mx-auto py-16 px-6 max-w-4xl">
-        <div className="space-y-16">
+      <main className="container mx-auto py-10 px-6 max-w-3xl">
+        <div className="space-y-10">
           
           {/* Step Indicators */}
-          <div className="flex justify-center items-center gap-6">
+          <div className="flex justify-center items-center gap-4">
             {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
               if (s === "REGISTER" && step !== "REGISTER") return null;
               const isActive = step === s;
               const isPast = ["IDENTIFY", "REGISTER", "INTENT", "WELCOME"].indexOf(step) > idx;
               return (
-                <div key={s} className="flex items-center gap-6">
+                <div key={s} className="flex items-center gap-4">
                   <div className={cn(
-                    "h-16 w-16 rounded-[1.5rem] flex items-center justify-center font-black transition-all duration-500 border-4",
-                    isActive ? "step-active border-primary" : isPast ? "bg-accent text-accent-foreground border-accent" : "bg-white text-muted-foreground border-muted"
+                    "h-10 w-10 rounded-xl flex items-center justify-center font-black transition-all duration-500 border-2",
+                    isActive ? "step-active border-primary text-sm" : isPast ? "bg-accent text-white border-accent text-sm" : "bg-white text-muted-foreground border-muted text-sm"
                   )}>
                     {idx + 1}
                   </div>
-                  {isActive && <span className="text-xs font-black uppercase tracking-widest text-primary italic">{s}</span>}
-                  {idx < 3 && <div className="h-1 w-12 bg-muted rounded-full" />}
+                  {isActive && <span className="text-[10px] font-black uppercase tracking-widest text-primary italic">{s}</span>}
+                  {idx < 3 && <div className="h-0.5 w-8 bg-muted rounded-full" />}
                 </div>
               );
             })}
           </div>
 
-          <div className="animate-in fade-in slide-in-from-bottom-12 duration-700">
+          <div className="animate-in fade-in slide-in-from-bottom-6 duration-500">
             {step === "IDENTIFY" && (
-              <Card className="kiosk-card p-16">
-                <div className="text-center space-y-6 mb-16">
-                  <h2 className="text-5xl font-black italic uppercase tracking-tighter">Enter <span className="text-primary not-italic">Identity</span></h2>
-                  <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.4em] opacity-60">Student ID or Institutional Email</p>
+              <Card className="kiosk-card p-10 rounded-[2rem]">
+                <div className="text-center space-y-3 mb-10">
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">Enter <span className="text-primary not-italic">Identity</span></h2>
+                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Student ID or Institutional Email</p>
                 </div>
-                <form onSubmit={handleIdentification} className="space-y-10">
+                <form onSubmit={handleIdentification} className="space-y-6">
                   <Input 
                     placeholder="e.g. 2023-100456"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="h-28 text-3xl font-black uppercase tracking-widest rounded-[2.5rem] border-4 border-muted focus-visible:border-primary pl-12 text-center"
+                    className="h-20 text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-muted focus-visible:border-primary px-8 text-center"
                     autoFocus
                   />
                   <Button 
                     disabled={!identifier || isLoading}
-                    className="w-full h-24 rounded-[2.5rem] bg-primary text-white text-2xl font-black uppercase tracking-widest shadow-2xl kiosk-button"
+                    className="w-full h-16 rounded-2xl bg-primary text-white text-lg font-black uppercase tracking-widest shadow-lg kiosk-button"
                   >
-                    {isLoading ? <Loader2 className="h-12 w-12 animate-spin" /> : "Verify Identity"}
+                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "Verify Identity"}
                   </Button>
                 </form>
               </Card>
             )}
 
             {step === "REGISTER" && (
-              <Card className="kiosk-card p-16">
-                <div className="flex items-center gap-8 mb-16">
-                  <div className="h-20 w-20 bg-primary/10 rounded-[2rem] flex items-center justify-center">
-                    <UserPlus className="h-10 w-10 text-primary" />
+              <Card className="kiosk-card p-10 rounded-[2rem]">
+                <div className="flex items-center gap-6 mb-10">
+                  <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <UserPlus className="h-7 w-7 text-primary" />
                   </div>
-                  <div className="space-y-2">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Initial <span className="text-primary not-italic">Record</span></h2>
-                    <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">Building Profile for {identifier}</p>
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Initial <span className="text-primary not-italic">Record</span></h2>
+                    <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-60">Building Profile for {identifier}</p>
                   </div>
                 </div>
-                <form onSubmit={handleRegistration} className="space-y-10">
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest ml-2">First Name</Label>
-                      <Input value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="h-16 rounded-2xl border-2 font-bold px-6" required />
+                <form onSubmit={handleRegistration} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">First Name</Label>
+                      <Input value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="h-12 rounded-xl border-2 font-bold px-4" required />
                     </div>
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest ml-2">Last Name</Label>
-                      <Input value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="h-16 rounded-2xl border-2 font-bold px-6" required />
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Last Name</Label>
+                      <Input value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="h-12 rounded-xl border-2 font-bold px-4" required />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest ml-2">Visitor Class</Label>
-                      <div className="flex gap-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Class</Label>
+                      <div className="flex gap-2">
                         <Button 
                           type="button" 
                           variant={regType === "Student" ? "default" : "outline"}
                           onClick={() => setRegType("Student")}
-                          className="flex-1 h-16 rounded-2xl font-black uppercase text-xs"
+                          className="flex-1 h-12 rounded-xl font-black uppercase text-[9px]"
                         >
-                          <GraduationCap className="mr-3 h-5 w-5" /> Student
+                          Student
                         </Button>
                         <Button 
                           type="button" 
                           variant={regType === "Staff" ? "default" : "outline"}
                           onClick={() => setRegType("Staff")}
-                          className="flex-1 h-16 rounded-2xl font-black uppercase text-xs"
+                          className="flex-1 h-12 rounded-xl font-black uppercase text-[9px]"
                         >
-                          <Briefcase className="mr-3 h-5 w-5" /> Staff
+                          Staff
                         </Button>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase tracking-widest ml-2">College/Affiliation</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">College/Affiliation</Label>
                       <Select value={regCollege} onValueChange={setRegCollege}>
-                        <SelectTrigger className="h-16 rounded-2xl border-2 font-black uppercase text-xs px-6">
+                        <SelectTrigger className="h-12 rounded-xl border-2 font-black uppercase text-[9px] px-4">
                           <SelectValue placeholder="Select Unit" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl p-4">
-                          <SelectItem value="CAS" className="font-bold py-3">College of Arts & Sciences</SelectItem>
-                          <SelectItem value="CBA" className="font-bold py-3">College of Business Admin</SelectItem>
-                          <SelectItem value="CED" className="font-bold py-3">College of Education</SelectItem>
-                          <SelectItem value="COE" className="font-bold py-3">College of Engineering</SelectItem>
-                          <SelectItem value="CS" className="font-bold py-3">College of Computer Studies</SelectItem>
-                          {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-3">{c.name}</SelectItem>)}
+                        <SelectContent className="rounded-xl border-none shadow-xl p-2">
+                          <SelectItem value="CAS" className="font-bold py-2 text-xs">CAS</SelectItem>
+                          <SelectItem value="CBA" className="font-bold py-2 text-xs">CBA</SelectItem>
+                          <SelectItem value="COE" className="font-bold py-2 text-xs">COE</SelectItem>
+                          <SelectItem value="CS" className="font-bold py-2 text-xs">CS</SelectItem>
+                          {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-xs">{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
-                  <Button className="w-full h-20 rounded-[2rem] bg-primary text-white font-black uppercase tracking-widest shadow-xl kiosk-button">
-                    Initialize & Proceed <ChevronRight className="ml-3 h-6 w-6" />
+                  <Button className="w-full h-14 rounded-xl bg-primary text-white font-black uppercase tracking-widest shadow-md kiosk-button">
+                    Initialize & Proceed
                   </Button>
                 </form>
               </Card>
             )}
 
             {step === "INTENT" && (
-              <Card className="kiosk-card p-16">
-                <div className="flex items-center justify-between mb-16">
-                  <div className="space-y-2">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Select <span className="text-primary not-italic">Intent</span></h2>
-                    <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">Identity Confirmed: {visitor?.firstName} {visitor?.lastName}</p>
+              <Card className="kiosk-card p-10 rounded-[2rem]">
+                <div className="flex items-center justify-between mb-10">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Select <span className="text-primary not-italic">Intent</span></h2>
+                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">{visitor?.firstName} {visitor?.lastName}</p>
                   </div>
-                  <div className="h-20 w-20 bg-accent/20 rounded-[2rem] flex items-center justify-center border-4 border-accent">
-                    <UserCheck className="h-10 w-10 text-primary" />
+                  <div className="h-12 w-12 bg-accent/20 rounded-2xl flex items-center justify-center border-2 border-accent">
+                    <UserCheck className="h-6 w-6 text-primary" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {INTENT_OPTIONS.map((intent) => {
                     const Icon = intent.icon;
                     return (
@@ -268,11 +267,11 @@ export default function CheckInKiosk() {
                         key={intent.id}
                         variant="outline"
                         onClick={() => handleIntent(intent.name)}
-                        className="h-36 rounded-[2.5rem] border-4 border-muted hover:border-primary hover:bg-primary/5 group transition-all duration-300"
+                        className="h-24 rounded-2xl border-2 border-muted hover:border-primary hover:bg-primary/5 group transition-all"
                       >
-                        <div className="flex flex-col items-center gap-4">
-                          <Icon className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <span className="text-sm font-black uppercase tracking-widest">{intent.name}</span>
+                        <div className="flex flex-col items-center gap-2">
+                          <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">{intent.name}</span>
                         </div>
                       </Button>
                     );
@@ -282,19 +281,19 @@ export default function CheckInKiosk() {
             )}
 
             {step === "WELCOME" && (
-              <Card className="kiosk-card p-24 text-center space-y-16 success-glow border-[12px] border-white">
-                <div className="inline-flex items-center justify-center p-16 bg-primary text-white rounded-[4rem] shadow-2xl">
-                  <CheckCircle2 className="h-32 w-32" />
+              <Card className="kiosk-card p-16 text-center space-y-10 success-glow border-4 border-white rounded-[2.5rem]">
+                <div className="inline-flex items-center justify-center p-8 bg-primary text-white rounded-[2.5rem] shadow-xl">
+                  <CheckCircle2 className="h-16 w-16" />
                 </div>
-                <div className="space-y-6">
-                  <h1 className="text-8xl font-black italic uppercase tracking-tighter leading-none">
+                <div className="space-y-4">
+                  <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">
                     Welcome to <br /><span className="text-primary not-italic">NEU Library!</span>
                   </h1>
-                  <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.8em] opacity-60">Institutional Entry Logged</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.6em] opacity-60">Access Logged</p>
                 </div>
-                <div className="pt-12 border-t-4 border-dashed border-muted">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-3">
-                    <CalendarDays className="h-5 w-5" /> System Resets in 5 Seconds
+                <div className="pt-8 border-t-2 border-dashed border-muted">
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
+                    <CalendarDays className="h-4 w-4" /> Resetting in 5 Seconds
                   </p>
                 </div>
               </Card>

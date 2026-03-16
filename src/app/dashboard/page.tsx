@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -140,14 +139,13 @@ export default function IntelligenceCenter() {
   const generateReport = () => {
     if (!stats) return;
     const doc = new jsPDF();
-    doc.setFontSize(22);
+    doc.setFontSize(18);
     doc.setTextColor(81, 151, 99); 
-    doc.text("NEULibrary Operational Intelligence Audit", 14, 25);
+    doc.text("NEULibrary Operational Intelligence", 14, 25);
     
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(100);
     doc.text(`Generated: ${format(new Date(), "PPpp")}`, 14, 32);
-    doc.text(`Parameters: Range:${timeRange} | College:${filterCollege} | Class:${filterType}`, 14, 38);
 
     const tableData = stats.filteredSessions.map(s => [
       s.visitorName || s.visitorId || "Unknown",
@@ -158,12 +156,12 @@ export default function IntelligenceCenter() {
     ]);
 
     (doc as any).autoTable({
-      startY: 48,
-      head: [['Identity', 'College/Office', 'Timestamp', 'Activity', 'Class']],
+      startY: 40,
+      head: [['Identity', 'Unit', 'Timestamp', 'Activity', 'Class']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [81, 151, 99], fontSize: 9, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 8 },
+      headStyles: { fillColor: [81, 151, 99], fontSize: 8, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 7 },
     });
 
     doc.save(`NEULIBRARY_REPORT_${format(new Date(), "yyyyMMdd")}.pdf`);
@@ -171,146 +169,106 @@ export default function IntelligenceCenter() {
 
   if (isAdminLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-10 bg-background">
-        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-10 bg-background">
-        <Card className="max-w-md w-full p-10 text-center space-y-6 rounded-[3rem] border-none shadow-2xl">
-          <KeyRound className="h-16 w-16 text-destructive mx-auto opacity-20" />
-          <h2 className="text-3xl font-black uppercase italic">Access Denied</h2>
-          <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">System Administrator Credentials Required</p>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <Card className="max-w-md w-full p-8 text-center space-y-4 rounded-[2rem] border-none shadow-xl">
+          <KeyRound className="h-12 w-12 text-destructive mx-auto opacity-20" />
+          <h2 className="text-2xl font-black uppercase italic">Access Denied</h2>
+          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest opacity-60">Admin Credentials Required</p>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-12">
       <NavBar />
-      <main className="container mx-auto py-16 px-8 max-w-7xl space-y-16">
+      <main className="container mx-auto py-10 px-6 max-w-7xl space-y-10">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 border-b-2 border-white pb-12">
-          <div className="space-y-4">
-            <h1 className="text-7xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-muted pb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase italic leading-none">
               Intelligence <span className="text-primary not-italic">Center</span>
             </h1>
-            <p className="text-muted-foreground font-black text-xs uppercase tracking-[0.6em] opacity-40">
-              Institutional Behavioral Analytics & Traffic Oversight
+            <p className="text-muted-foreground font-black text-[9px] uppercase tracking-[0.4em] opacity-40">
+              Institutional Behavioral Analytics
             </p>
           </div>
-          <Button onClick={generateReport} className="h-16 px-10 rounded-[2rem] bg-primary text-white shadow-2xl hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px] border-8 border-white">
-            <FileDown className="mr-3 h-5 w-5" />
-            Generate Intelligence Audit
+          <Button onClick={generateReport} className="h-12 px-6 rounded-xl bg-primary text-white shadow-lg hover:scale-105 transition-all font-black uppercase tracking-widest text-[9px]">
+            <FileDown className="mr-2 h-4 w-4" />
+            Audit Report
           </Button>
         </div>
 
-        {/* High-Impact Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:translate-y-[-10px] transition-all duration-500">
-            <div className="h-4 bg-primary w-full" />
-            <CardContent className="p-10">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Aggregate Daily Traffic</p>
-                  <h3 className="text-6xl font-black text-foreground tabular-nums">{stats?.totalToday || 0}</h3>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { label: "Today's Traffic", val: stats?.totalToday || 0, icon: UsersRound, color: "bg-primary" },
+            { label: "Recent Occupancy", val: stats?.lastHourCount || 0, icon: Clock, color: "bg-accent" },
+            { label: "Active Unit", val: stats?.mostActiveCollege, icon: Building2, color: "bg-primary", isText: true },
+            { label: "Staff : Student", val: `${stats?.staffCount} : ${stats?.studentCount}`, icon: TrendingUp, color: "bg-primary", isRatio: true }
+          ].map((item, i) => (
+            <Card key={i} className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden hover:translate-y-[-4px] transition-all">
+              <div className={`h-2 ${item.color} w-full`} />
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
+                    <h3 className={`font-black text-foreground ${item.isText ? 'text-xl' : 'text-4xl'} uppercase italic`}>{item.val}</h3>
+                  </div>
+                  <div className="h-14 w-14 bg-muted/30 rounded-2xl flex items-center justify-center">
+                    <item.icon className={`h-7 w-7 ${item.color.replace('bg-', 'text-')}`} />
+                  </div>
                 </div>
-                <div className="h-24 w-24 bg-primary/5 rounded-[2rem] flex items-center justify-center border-4 border-white shadow-inner">
-                  <UsersRound className="h-12 w-12 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:translate-y-[-10px] transition-all duration-500">
-            <div className="h-4 bg-accent w-full" />
-            <CardContent className="p-10">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Peak Hour Occupancy</p>
-                  <h3 className="text-6xl font-black text-foreground tabular-nums">{stats?.lastHourCount || 0}</h3>
-                </div>
-                <div className="h-24 w-24 bg-accent/5 rounded-[2rem] flex items-center justify-center border-4 border-white shadow-inner">
-                  <Clock className="h-12 w-12 text-accent" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:translate-y-[-10px] transition-all duration-500">
-            <div className="h-4 bg-primary w-full" />
-            <CardContent className="p-10">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Most Active Academic Unit</p>
-                  <h3 className="text-2xl font-black text-foreground uppercase italic leading-tight truncate max-w-[180px]">{stats?.mostActiveCollege}</h3>
-                </div>
-                <div className="h-24 w-24 bg-primary/5 rounded-[2rem] flex items-center justify-center border-4 border-white shadow-inner">
-                  <Building2 className="h-12 w-12 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden hover:translate-y-[-10px] transition-all duration-500 border-[10px] border-white">
-            <CardContent className="p-10 h-full flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <Badge className="bg-white/20 text-white border-none font-black text-[9px] uppercase tracking-[0.2em] px-4 py-2">Staff to Student Ratio</Badge>
-                <TrendingUp className="h-6 w-6 text-accent" />
-              </div>
-              <div className="mt-8 flex items-baseline gap-4">
-                <h3 className="text-5xl font-black text-white">{stats?.staffCount}</h3>
-                <span className="text-xs font-black uppercase opacity-40">:</span>
-                <h3 className="text-5xl font-black text-accent">{stats?.studentCount}</h3>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Dynamic Filters Hub */}
-        <Card className="rounded-[3.5rem] border-none shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] bg-white/60 backdrop-blur-3xl overflow-hidden border-8 border-white">
-          <CardHeader className="p-12 pb-6 border-b-2 border-muted/20">
-            <CardTitle className="text-[11px] font-black uppercase tracking-[0.5em] text-muted-foreground flex items-center gap-4">
-              <Filter className="h-5 w-5 text-accent" /> Operational Intelligence Filters
+        {/* Filters Hub */}
+        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden border-2 border-white">
+          <CardHeader className="p-8 pb-4 border-b border-muted/20">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
+              <Filter className="h-4 w-4 text-accent" /> Intelligence Filters
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: "Temporal Horizon", value: timeRange, setter: setTimeRange, options: [
-                { v: "day", l: "Today (24h Window)" },
-                { v: "week", l: "Weekly Aggregate" },
-                { v: "month", l: "Monthly Aggregate" }
+              { label: "Timeframe", value: timeRange, setter: setTimeRange, options: [
+                { v: "day", l: "Today" }, { v: "week", l: "This Week" }, { v: "month", l: "This Month" }
               ]},
-              { label: "Academic Unit (College)", value: filterCollege, setter: setFilterCollege, options: [
-                { v: "all", l: "Global (All Units)" },
+              { label: "Academic Unit", value: filterCollege, setter: setFilterCollege, options: [
+                { v: "all", l: "All Units" },
                 ...(colleges?.map(c => ({ v: c.name, l: c.name })) || [])
               ]},
-              { label: "Activity Objective", value: filterReason, setter: setFilterReason, options: [
+              { label: "Objective", value: filterReason, setter: setFilterReason, options: [
                 { v: "all", l: "All Activities" },
                 { v: "Research", l: "Research" },
-                { v: "Individual Study", l: "Individual Study" },
-                { v: "Group Project", l: "Group Project" },
-                { v: "Book Borrowing/Return", l: "Library Services" }
+                { v: "Individual Study", l: "Study" },
+                { v: "Group Project", l: "Projects" }
               ]},
-              { label: "Employment Status", value: filterType, setter: setFilterType, options: [
+              { label: "Class", value: filterType, setter: setFilterType, options: [
                 { v: "all", l: "All Classes" },
                 { v: "Student", l: "Student" },
-                { v: "Staff", l: "Employee/Staff" }
+                { v: "Staff", l: "Staff" }
               ]}
             ].map((f, i) => (
-              <div key={i} className="space-y-5">
-                <label className="text-[10px] font-black uppercase opacity-40 ml-2 tracking-[0.2em]">{f.label}</label>
+              <div key={i} className="space-y-2">
+                <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">{f.label}</label>
                 <Select value={f.value} onValueChange={f.setter}>
-                  <SelectTrigger className="h-16 rounded-2xl border-4 border-white shadow-xl bg-white font-black text-xs uppercase tracking-widest hover:border-accent transition-all px-8">
+                  <SelectTrigger className="h-10 rounded-xl border border-muted bg-white font-black text-[10px] uppercase tracking-widest px-4">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-3xl border-none shadow-2xl p-6">
+                  <SelectContent className="rounded-xl border-none shadow-xl">
                     {f.options.map(o => (
-                      <SelectItem key={o.v} value={o.v} className="font-bold py-4 uppercase text-[10px] tracking-widest rounded-xl mb-1">{o.l}</SelectItem>
+                      <SelectItem key={o.v} value={o.v} className="font-bold py-2 uppercase text-[9px]">{o.l}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -319,43 +277,43 @@ export default function IntelligenceCenter() {
           </CardContent>
         </Card>
 
-        {/* Analytics Visualization Hub */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <Card className="rounded-[4rem] border-none shadow-2xl bg-white p-12 border-8 border-white">
-            <CardHeader className="pb-16 text-center">
-              <CardTitle className="text-4xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-6">
-                <Activity className="h-10 w-10 text-primary" /> Temporal Density
+        {/* Charts Hub */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8 border-4 border-white">
+            <CardHeader className="pb-8 text-center">
+              <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-3">
+                <Activity className="h-6 w-6 text-primary" /> Temporal Density
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[450px]">
+            <CardContent className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.chartData}>
-                  <CartesianGrid strokeDasharray="6 6" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" fontSize={11} fontWeight="900" tickLine={false} axisLine={false} />
-                  <YAxis fontSize={11} fontWeight="900" tickLine={false} axisLine={false} />
-                  <ChartTooltip cursor={{ fill: '#f7f7f7', radius: 12 }} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[20, 20, 0, 0]} />
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" fontSize={9} fontWeight="900" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={9} fontWeight="900" tickLine={false} axisLine={false} />
+                  <ChartTooltip cursor={{ fill: '#f7f7f7', radius: 8 }} />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[4rem] border-none shadow-2xl bg-white p-12 border-8 border-white">
-            <CardHeader className="pb-16 text-center">
-              <CardTitle className="text-4xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-6">
-                <PieIcon className="h-10 w-10 text-accent" /> Objective Vectors
+          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8 border-4 border-white">
+            <CardHeader className="pb-8 text-center">
+              <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-3">
+                <PieIcon className="h-6 w-6 text-accent" /> Objective Vectors
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[450px]">
+            <CardContent className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats?.pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={110}
-                    outerRadius={160}
-                    paddingAngle={10}
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
                     stroke="none"
                   >
@@ -364,7 +322,7 @@ export default function IntelligenceCenter() {
                     ))}
                   </Pie>
                   <ChartTooltip />
-                  <Legend verticalAlign="bottom" height={48} formatter={(value) => <span className="text-[10px] font-black uppercase tracking-[0.2em] ml-4 text-muted-foreground">{value}</span>} />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>

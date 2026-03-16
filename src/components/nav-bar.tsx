@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -36,112 +35,111 @@ export function NavBar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-4 border-white bg-white/80 backdrop-blur-3xl shadow-sm">
-      <div className="container mx-auto px-10 max-w-7xl">
-        <div className="flex h-28 items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full border-b-2 border-white bg-white/80 backdrop-blur-3xl shadow-sm">
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="flex h-20 items-center justify-between">
           
-          <Link href="/" className="flex items-center gap-6 group">
-            <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-primary text-white shadow-2xl group-hover:rotate-6 transition-all duration-500 border-4 border-white">
-              <BookOpen className="h-9 w-9" />
+          <Link href="/" className="flex items-center gap-4 group">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white shadow-lg group-hover:rotate-3 transition-all duration-500 border-2 border-white">
+              <BookOpen className="h-6 w-6" />
             </div>
             <div className="flex flex-col">
-              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">NEULibrary</span>
-              <span className="text-[9px] font-black uppercase tracking-[0.6em] opacity-40">Intelligence Systems</span>
+              <span className="text-2xl font-black italic uppercase tracking-tighter text-primary leading-none">NEULibrary</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] opacity-40">Intelligence Systems</span>
             </div>
           </Link>
           
-          <div className="hidden lg:flex items-center bg-muted/30 p-2.5 rounded-[2.5rem] border-4 border-white shadow-inner">
+          <div className="hidden lg:flex items-center bg-muted/30 p-1.5 rounded-2xl border-2 border-white shadow-inner">
             <Link
               href="/"
               className={cn(
-                "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                pathname === "/" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                pathname === "/" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <Home className="h-4 w-4" />
+              <Home className="h-3.5 w-3.5" />
               Portal
             </Link>
             
             <Link
               href="/check-in"
               className={cn(
-                "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                pathname === "/check-in" ? "bg-accent text-white shadow-xl" : "text-muted-foreground hover:text-accent"
+                "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                pathname === "/check-in" ? "bg-accent text-white shadow-md" : "text-muted-foreground hover:text-accent"
               )}
             >
-              <Monitor className="h-4 w-4" />
+              <Monitor className="h-3.5 w-3.5" />
               Terminal
             </Link>
 
             {isAdmin && (
               <>
-                <div className="h-8 w-[2px] bg-muted mx-4" />
+                <div className="h-6 w-[1.5px] bg-muted mx-2" />
                 <Link
                   href="/dashboard"
                   className={cn(
-                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/dashboard" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/dashboard" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
-                  <LayoutDashboard className="h-4 w-4" />
+                  <LayoutDashboard className="h-3.5 w-3.5" />
                   Analytics
                 </Link>
                 <Link
                   href="/students"
                   className={cn(
-                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/students" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/students" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
-                  <Users className="h-4 w-4" />
+                  <Users className="h-3.5 w-3.5" />
                   Visitors
                 </Link>
                 <Link
                   href="/insights"
                   className={cn(
-                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/insights" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/insights" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
-                  <BrainCircuit className="h-4 w-4" />
+                  <BrainCircuit className="h-3.5 w-3.5" />
                   AI Hub
                 </Link>
               </>
             )}
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
             {user ? (
-              <div className="flex items-center gap-8 pl-10 border-l-4 border-muted/50">
+              <div className="flex items-center gap-4 pl-6 border-l-2 border-muted/50">
                 <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4" />
-                    {isAdmin ? 'System Admin' : 'Academic Member'}
+                  <span className="text-[9px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    {isAdmin ? 'Admin' : 'Member'}
                   </span>
-                  <span className="text-[9px] text-muted-foreground font-black opacity-40 uppercase tracking-[0.3em]">{user.email?.split('@')[0]}</span>
+                  <span className="text-[7px] text-muted-foreground font-black opacity-40 uppercase tracking-[0.2em]">{user.email?.split('@')[0]}</span>
                 </div>
                 {isAdmin && (
-                  <Button variant="ghost" size="icon" asChild className="h-14 w-14 text-primary hover:bg-primary/10 rounded-2xl border-4 border-white shadow-lg" title="Switch to Greeting View">
-                    <Link href="/welcome"><LayoutTemplate className="h-7 w-7" /></Link>
+                  <Button variant="ghost" size="icon" asChild className="h-10 w-10 text-primary hover:bg-primary/10 rounded-xl border-2 border-white shadow-md" title="Switch View">
+                    <Link href="/welcome"><LayoutTemplate className="h-5 w-5" /></Link>
                   </Button>
                 )}
                 
-                {/* Upgraded Logout Button with Text Label */}
                 <Button 
                   variant="outline" 
                   onClick={handleSignOut}
                   disabled={isLoggingOut}
-                  className="h-14 rounded-2xl border-2 border-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-all px-6 font-black uppercase tracking-widest text-[10px]"
+                  className="h-10 rounded-xl border border-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-all px-4 font-black uppercase tracking-widest text-[9px]"
                 >
-                  {isLoggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
-                  Sign Out
+                  {isLoggingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="mr-1.5 h-3.5 w-3.5" />}
+                  Exit
                 </Button>
               </div>
             ) : (
-              <Button asChild className="font-black uppercase tracking-widest text-[11px] rounded-[1.5rem] px-12 h-16 shadow-2xl bg-primary flex items-center gap-3">
+              <Button asChild className="font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-10 shadow-lg bg-primary flex items-center gap-2">
                 <Link href="/">
-                  <ShieldCheck className="h-4 w-4" />
-                  Secure Login
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Login
                 </Link>
               </Button>
             )}
