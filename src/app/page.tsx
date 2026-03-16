@@ -49,13 +49,9 @@ export default function LandingPage() {
   // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing to the verification hub
   useEffect(() => {
     const handleIdentityVerification = async () => {
-      // Wait for auth and admin status to resolve
       if (isUserLoading || isAdminLoading || !user) return;
-
-      // CRITICAL: Ensure we are operating on the correct verified ID for this specific session
       if (verifiedUid !== user.uid) return;
 
-      // ROUTE TO UNIFIED CHECK-IN FLOW ONLY FOR DEFINITIVE NON-ADMINS
       if (isAdmin === false) {
         router.replace("/check-in");
       }
@@ -75,10 +71,18 @@ export default function LandingPage() {
       }
       
       console.error("Auth Error:", err);
+
+      let description = `Error: ${err.code || err.message}. Ensure Google Auth is enabled.`;
+      
+      if (err.code === 'auth/unauthorized-domain') {
+        const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'your-domain.com';
+        description = `Domain Unauthorized. Go to Firebase Console > Authentication > Settings > Authorized domains and add: ${currentDomain}`;
+      }
+
       toast({
         variant: "destructive",
         title: "Authentication Protocol Fault",
-        description: `Error: ${err.code || err.message}. Ensure Google Auth is enabled and domains are whitelisted.`,
+        description: description,
       });
       setIsActionPending(false);
     }

@@ -45,14 +45,20 @@ Integrated with **Google Genkit AI**, the system provides deep insights into lib
 - **Intelligence:** Google Genkit AI (Gemini 2.5 Flash)
 - **UI Framework:** ShadCN UI + Tailwind CSS
 
-## 🚀 Institutional Setup (Mandatory)
+## 🛠️ Mandatory Configuration (Self-Fix Guide)
 
-To enable the institutional entry protocol and resolve authentication faults (`auth/operation-not-allowed`):
+If you encounter `auth/operation-not-allowed` or `auth/unauthorized-domain`:
 
-1. **Firebase Console**: Open your project at [console.firebase.google.com](https://console.firebase.google.com/).
-2. **Authentication**: Enable the **Google** provider in the "Sign-in method" tab.
-3. **Project ID**: Ensure the `src/firebase/config.ts` matches your current Firebase Project settings (`studio-3230754876-e6aa7`).
-4. **Admin Registry**: To grant dynamic admin access beyond hardcoded emails, add the user's UID to the `admin_users` collection in Firestore.
+1. **Enable Google Provider**:
+   - Go to [Firebase Console](https://console.firebase.google.com/) -> **Authentication** -> **Sign-in method**.
+   - Enable **Google** and save.
+
+2. **Whitelist Your Domain**:
+   - Go to **Authentication** -> **Settings** -> **Authorized domains**.
+   - Add the domain shown in your browser's address bar (e.g., `studio-XXX.firebaseapp.com`).
+
+3. **Admin Registry**:
+   - To grant admin access to accounts not listed in `firestore.rules`, add the user's UID as a document in the `admin_users` collection in Firestore.
 
 ---
 *Developed for the NEU Library Intelligence Systems.*
