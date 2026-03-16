@@ -31,7 +31,7 @@ export function useAdmin() {
   // Identity Persistence Key
   const cacheKey = user ? `neu_lib_is_admin_${user.uid}` : null;
 
-  // Initialize with the synchronous check result to prevent UI flicker
+  // Initialize with synchronous check if available to prevent UI flicker
   const [isAdmin, setIsAdmin] = useState<boolean>(isHardcoded);
   const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(isHardcoded);
@@ -51,7 +51,7 @@ export function useAdmin() {
       // 2. Identity Synchronization Check
       if (verifiedUid === user.uid && !isAdminLoading) return;
 
-      // 3. Fast-Path: Institutional Recognition
+      // 3. Fast-Path: Institutional Recognition (Hardcoded)
       if (isHardcoded) {
         setIsAdmin(true);
         setIsSuperAdmin(true);
@@ -70,7 +70,7 @@ export function useAdmin() {
           setIsAdmin(cached === 'true');
           setIsAdminLoading(false);
           setVerifiedUid(user.uid);
-          // Continue to verify in background...
+          // Continue to verify dynamic registry in background...
         }
       }
 
@@ -79,12 +79,13 @@ export function useAdmin() {
         return;
       }
 
-      // 5. Registry Path: Dynamic Verification
+      // 5. Registry Path: Dynamic Verification (Firestore)
       try {
         const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
         const status = adminDoc.exists();
         
         setIsAdmin(status);
+        setIsSuperAdmin(isHardcoded);
         setIsAdminLoading(false);
         setVerifiedUid(user.uid);
 
@@ -102,6 +103,11 @@ export function useAdmin() {
       verifyAuthority();
     } else {
       setIsAdminLoading(true);
+      // If we know they are hardcoded, we can show admin state early
+      if (isHardcoded) {
+        setIsAdmin(true);
+        setIsAdminLoading(false);
+      }
     }
   }, [user, isUserLoading, db, isHardcoded, cacheKey, verifiedUid, isAdminLoading]);
 

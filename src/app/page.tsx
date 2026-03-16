@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   BookOpen, ShieldCheck, Loader2, Mail, 
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth, useUser, initiateGoogleSignIn, useFirestore } from "@/firebase";
+import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -40,25 +40,35 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Sync action pending state with auth state to prevent deadlocks
+  useEffect(() => {
+    if (user && isActionPending) {
+      setIsActionPending(false);
+    }
+  }, [user, isActionPending]);
+
   // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing to the verification hub
   useEffect(() => {
     const handleIdentityVerification = async () => {
-      // SECURITY GUARD: Wait for full identity verification
-      if (isUserLoading || isAdminLoading || isActionPending || !user || isAdmin !== false || verifiedUid !== user.uid) return;
+      // Wait for auth and admin status to resolve
+      if (isUserLoading || isAdminLoading || !user) return;
 
-      // ROUTE TO UNIFIED CHECK-IN FLOW
-      // This ensures standard visitors provide their "Intent" and verify affiliation
-      router.replace("/check-in");
+      // Ensure we are operating on the correct verified ID
+      if (verifiedUid !== user.uid) return;
+
+      // ROUTE TO UNIFIED CHECK-IN FLOW FOR NON-ADMINS
+      if (isAdmin === false) {
+        router.replace("/check-in");
+      }
     };
 
     handleIdentityVerification();
-  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, isActionPending, router]);
+  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, router]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // Logic in useEffect handles routing after successful login
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -74,7 +84,6 @@ export default function LandingPage() {
   };
 
   const handleEnterAsVisitor = async () => {
-    // Admin simulation: route to the unified entry flow
     router.push("/check-in");
   };
 
@@ -150,7 +159,6 @@ export default function LandingPage() {
                     <>
                       <Button
                         asChild
-                        disabled={isActionPending}
                         className="h-24 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.03] transition-all"
                       >
                         <Link href="/dashboard" className="flex flex-col items-center justify-center gap-2">
@@ -160,7 +168,6 @@ export default function LandingPage() {
                       </Button>
                       <Button
                         onClick={handleEnterAsVisitor}
-                        disabled={isActionPending}
                         className="h-24 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-black uppercase tracking-widest shadow-xl hover:bg-white/20 hover:scale-[1.03] transition-all cursor-pointer"
                       >
                         <div className="flex flex-col items-center justify-center gap-2">
@@ -179,7 +186,6 @@ export default function LandingPage() {
                   <Button 
                     variant="ghost" 
                     onClick={handleSignOut}
-                    disabled={isActionPending}
                     className="h-10 col-span-2 text-white/40 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[8px] mt-2"
                   >
                     <LogOut className="mr-2 h-3 w-3" /> Sign Out / Switch Identity
@@ -199,7 +205,7 @@ export default function LandingPage() {
           </CardContent>
 
           <div className="p-4 bg-black/20 flex items-center justify-between text-[8px] font-black uppercase tracking-[0.4em] text-white/30 z-10">
-            <span>Core v3.5</span>
+            <span>Core v3.6</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
               Unified REDIRECTION Handshake Active
