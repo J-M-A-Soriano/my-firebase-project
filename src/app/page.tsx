@@ -10,10 +10,11 @@ import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview Institutional Landing Portal & Authentication Gateway.
- * Routes users based on institutional role (Admin vs Regular).
+ * Highly polished interface based on provided design specifications.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -61,9 +62,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background selection:bg-primary/20">
-      <div className="max-w-4xl w-full space-y-12 relative z-10">
+      <div className="max-w-5xl w-full space-y-12 relative z-10">
         
-        <div className="text-center space-y-4">
+        {/* Institutional Branding */}
+        <div className="text-center space-y-4 mb-8">
           <div className="inline-flex items-center justify-center p-8 bg-primary text-white rounded-[2.5rem] shadow-2xl transform -rotate-1 border-4 border-white">
             <BookOpen className="h-12 w-12" />
           </div>
@@ -77,84 +79,86 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card className="glass-card overflow-hidden border-none rounded-[3.5rem] shadow-2xl bg-white/95 backdrop-blur-3xl">
-            <div className="bg-primary p-5 flex items-center justify-between px-10 text-[10px] font-black uppercase tracking-widest text-primary-foreground/90">
-              <div className="flex items-center gap-3">
-                <ShieldAlert className="h-4 w-4 text-accent" />
-                Auth Vector
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+          
+          {/* Highlight: Secure Login Card */}
+          <Card className="border-none rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] bg-white overflow-hidden transition-all duration-500 hover:translate-y-[-8px]">
+            <div className="bg-[#0f172a] p-6 flex items-center gap-4 px-12 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+              <ShieldAlert className="h-4 w-4 text-primary-foreground/60" />
+              AUTH VECTOR
             </div>
-            <CardContent className="p-12 space-y-10">
-              <div className="space-y-3 text-center">
-                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Secure Login</h2>
-                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Admin & Personal Access</p>
+            <CardContent className="p-16 space-y-12 text-center">
+              <div className="space-y-3">
+                <h2 className="text-5xl font-black text-foreground uppercase tracking-tight italic leading-tight">SECURE LOGIN</h2>
+                <p className="text-muted-foreground text-[11px] font-black uppercase tracking-[0.4em] opacity-40">ADMIN & PERSONAL ACCESS</p>
               </div>
 
               <Button 
                 onClick={handleGoogleLogin}
-                className="w-full h-24 text-sm font-black bg-primary text-white hover:bg-primary/90 shadow-2xl rounded-[2rem] group transition-all"
+                className="w-full h-28 text-sm font-black bg-[#0f172a] text-white hover:bg-black shadow-[0_25px_50px_-12px_rgba(15,23,42,0.3)] rounded-[2.5rem] group transition-all"
                 disabled={isProcessing || isUserLoading || isAdminLoading}
               >
                 {isProcessing || isUserLoading || isAdminLoading ? (
                   <Loader2 className="h-10 w-10 animate-spin" />
                 ) : (
-                  <>
-                    <Mail className="mr-4 h-6 w-6" />
+                  <div className="flex items-center justify-center gap-4">
+                    <Mail className="h-6 w-6" />
                     SIGN IN WITH GOOGLE
-                    <ArrowRight className="ml-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
-                  </>
+                  </div>
                 )}
               </Button>
               
-              <div className="flex items-center justify-center gap-6 pt-4">
-                <div className="flex items-center gap-2 text-[9px] font-black opacity-30 uppercase tracking-widest">
-                  <ShieldCheck className="h-3 w-3" /> Secure Auth
+              <div className="flex items-center justify-center gap-8 pt-4 opacity-30">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                  <ShieldCheck className="h-3.5 w-3.5" /> SECURE AUTH
                 </div>
-                <div className="flex items-center gap-2 text-[9px] font-black opacity-30 uppercase tracking-widest">
-                  <Fingerprint className="h-3 w-3" /> Encrypted
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                  <Fingerprint className="h-3.5 w-3.5" /> ENCRYPTED
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="glass-card overflow-hidden border-none rounded-[3.5rem] shadow-2xl bg-white/95 backdrop-blur-3xl border-4 border-primary/5">
-            <div className="bg-accent p-5 flex items-center justify-between px-10 text-[10px] font-black uppercase tracking-widest text-white">
-              <div className="flex items-center gap-3">
+          {/* Secondary: Access Entry Card */}
+          <Card className="border-none rounded-[4rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] bg-white overflow-hidden opacity-90 transition-all duration-500 hover:opacity-100 hover:translate-y-[-4px]">
+            <div className="bg-[#3b82f6] p-6 flex items-center justify-between px-12 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+              <div className="flex items-center gap-4">
                 <MonitorCheck className="h-4 w-4" />
-                Terminal Mode
+                TERMINAL MODE
               </div>
-              <span className="opacity-50">{localTime || "--:--"}</span>
+              <span className="font-mono text-[11px] tabular-nums">{localTime || "--:--"}</span>
             </div>
-            <CardContent className="p-12 space-y-10">
-              <div className="space-y-3 text-center">
-                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Access Entry</h2>
-                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Visitor Identification Terminal</p>
+            <CardContent className="p-16 space-y-12 text-center">
+              <div className="space-y-3">
+                <h2 className="text-4xl font-black text-foreground uppercase tracking-tight italic leading-tight">ACCESS ENTRY</h2>
+                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] opacity-40">VISITOR IDENTIFICATION TERMINAL</p>
               </div>
 
               <Button 
                 asChild
                 variant="outline"
-                className="w-full h-24 text-sm font-black border-4 border-primary/10 rounded-[2rem] group hover:bg-primary hover:text-white hover:border-primary shadow-xl transition-all"
+                className="w-full h-24 text-[11px] font-black border-4 border-muted/30 rounded-[2.5rem] group hover:bg-primary hover:text-white hover:border-primary shadow-lg transition-all"
               >
                 <Link href="/check-in">
-                  <MonitorCheck className="mr-4 h-6 w-6" />
-                  OPEN ENTRY TERMINAL
-                  <ArrowRight className="ml-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                  <div className="flex items-center justify-center gap-4">
+                    <MonitorCheck className="h-5 w-5" />
+                    OPEN ENTRY TERMINAL
+                  </div>
                 </Link>
               </Button>
 
-              <div className="p-4 bg-muted/20 rounded-2xl">
-                <p className="text-[9px] font-black text-center text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
-                  Standard terminal for Student & Staff check-in. Requires institutional ID verification.
+              <div className="px-8 pt-4">
+                <p className="text-[10px] font-black text-center text-muted-foreground uppercase tracking-[0.2em] leading-loose opacity-40">
+                  STANDARD TERMINAL FOR STUDENT & STAFF CHECK-IN. REQUIRES INSTITUTIONAL ID VERIFICATION.
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <p className="text-center text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-30">
-          Professional Security Infrastructure • NEU IT Solutions
+        {/* Footer Audit */}
+        <p className="text-center text-[11px] font-black text-muted-foreground uppercase tracking-[0.6em] opacity-20 pt-12">
+          ADVANCING KNOWLEDGE THROUGH SECURE VERIFICATION • NEU IT INFRASTRUCTURE
         </p>
       </div>
     </div>
