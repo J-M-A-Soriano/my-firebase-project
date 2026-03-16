@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -13,22 +14,39 @@ export function useAdmin() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   
-  // Use a local cache to provide an "instant" identity handshake for returning users
+  const hardcodedAdmins = useMemo(() => [
+    'jcesperanza@neu.edu.ph', 
+    'johnmichaelsoriano76@gmail.com', 
+    'johnmichaelsoriano151@gmail.com',
+    'admin@neu.edu.ph'
+  ], []);
+
+  // Use a local cache to provide an "instant" identity handshake
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      const userEmail = (user?.email || '').toLowerCase();
+      const isHardcoded = hardcodedAdmins.includes(userEmail);
+      if (isHardcoded) return true;
       return localStorage.getItem('neu_lib_is_admin') === 'true';
     }
     return false;
   });
   
-  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
-
-  const hardcodedAdmins = [
-    'jcesperanza@neu.edu.ph', 
-    'johnmichaelsoriano76@gmail.com', 
-    'johnmichaelsoriano151@gmail.com'
-  ];
+  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const userEmail = (user?.email || '').toLowerCase();
+      // If they are hardcoded or we have a cached 'false', we are not "loading"
+      if (hardcodedAdmins.includes(userEmail)) return false;
+      const cached = localStorage.getItem('neu_lib_is_admin');
+      return cached === null;
+    }
+    return true;
+  });
+  
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(() => {
+    const userEmail = (user?.email || '').toLowerCase();
+    return hardcodedAdmins.includes(userEmail);
+  });
 
   useEffect(() => {
     async function verifyAuthority() {
@@ -42,10 +60,10 @@ export function useAdmin() {
         return;
       }
 
-      // 1. FAST PATH: Institutional Hardcode (Instant)
       const userEmail = (user.email || '').toLowerCase();
       const superAdminStatus = hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
       
+      // Fast-path: SuperAdmin check is synchronous and instant
       if (superAdminStatus) {
         setIsSuperAdmin(true);
         setIsAdmin(true);
@@ -54,16 +72,14 @@ export function useAdmin() {
         return;
       }
 
-      // 2. CACHED PATH: Check if we already know this user is NOT an admin
-      // This prevents the "Launching..." spinner for regular students
-      const cachedStatus = localStorage.getItem('neu_lib_is_admin');
+      // Check cache again to see if we can finish early
+      const cachedStatus = typeof window !== 'undefined' ? localStorage.getItem('neu_lib_is_admin') : null;
       if (cachedStatus === 'false') {
         setIsAdmin(false);
         setIsAdminLoading(false);
-        // We still continue to verify in background in case they were promoted
       }
 
-      // 3. REGISTRY PATH: Dynamic Verification (Background Sync)
+      // Registry Path: Background Sync for dynamic admins
       try {
         const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
         const status = adminDoc.exists();
@@ -77,7 +93,7 @@ export function useAdmin() {
     }
 
     verifyAuthority();
-  }, [user, isUserLoading, db]);
+  }, [user, isUserLoading, db, hardcodedAdmins]);
 
   return { 
     isAdmin, 

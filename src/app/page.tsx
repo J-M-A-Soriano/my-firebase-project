@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -46,7 +47,7 @@ export default function LandingPage() {
   // Now uses cached identity status for instant redirection
   useEffect(() => {
     if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
-      router.push("/welcome");
+      router.replace("/welcome");
     }
   }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, router]);
 
@@ -64,6 +65,7 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
+    } finally {
       setIsActionPending(false);
     }
   };
@@ -85,7 +87,6 @@ export default function LandingPage() {
       addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
       router.push("/welcome");
     } catch (error) {
-      console.error("Visit log failed:", error);
       router.push("/welcome");
     } finally {
       setIsActionPending(false);
@@ -105,7 +106,7 @@ export default function LandingPage() {
     }
   };
 
-  const isGlobalLoading = isUserLoading; // Only block on core auth, let admin status sync in background
+  const isGlobalLoading = isUserLoading; 
   const showTerminal = !user && !isGlobalLoading;
 
   return (
@@ -139,7 +140,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isGlobalLoading ? "Verifying Credentials..." : user ? `Identity: ${user.email}` : "Institutional Google Account Required"}
+                {isGlobalLoading ? "Connecting..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -185,14 +186,14 @@ export default function LandingPage() {
                       </Button>
                     </>
                   ) : isAdminLoading ? (
-                    <div className="col-span-2 flex flex-col items-center py-6">
+                    <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Verifying Authority...</p>
                     </div>
                   ) : (
-                    <div className="col-span-2 flex flex-col items-center py-6">
+                    <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Redirecting to Portal...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Portal Redirection...</p>
                     </div>
                   )}
                   
