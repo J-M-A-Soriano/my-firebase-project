@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -41,6 +40,16 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+
+const ACADEMIC_UNITS = [
+  "College of Informatics and Computing Studies (CICS)",
+  "College of Engineering and Architecture (CEA)",
+  "College of Arts and Sciences (CAS)",
+  "College of Business Administration (CBA)",
+  "College of Education (CED)",
+  "Medical & Health Sciences",
+  "Other Specialized Colleges"
+];
 
 /**
  * @fileOverview Intelligence Center - High-fidelity behavioral analytics dashboard.
@@ -88,7 +97,7 @@ export default function IntelligenceCenter() {
   }, [db, user, isAdmin]);
 
   const { data: sessions, isLoading: sessionsLoading } = useCollection(sessionsQuery);
-  const { data: colleges } = useCollection(collegesQuery);
+  const { data: dynamicColleges } = useCollection(collegesQuery);
   const { data: visitReasons } = useCollection(reasonsQuery);
 
   // Sync DateRange with Quick Presets
@@ -293,11 +302,14 @@ export default function IntelligenceCenter() {
                 <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   <SelectItem value="all" className="text-[9px] font-black uppercase">All Units</SelectItem>
-                  <SelectItem value="CAS" className="text-[9px] font-black uppercase">CAS</SelectItem>
-                  <SelectItem value="CBA" className="text-[9px] font-black uppercase">CBA</SelectItem>
-                  {colleges?.map(c => (
+                  {ACADEMIC_UNITS.map(unit => (
+                    <SelectItem key={unit} value={unit} className="text-[9px] font-black uppercase">
+                      {unit}
+                    </SelectItem>
+                  ))}
+                  {dynamicColleges?.map(c => (
                     <SelectItem key={c.id} value={c.name} className="text-[9px] font-black uppercase">{c.name}</SelectItem>
                   ))}
                 </SelectContent>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -37,6 +36,16 @@ import {
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+const ACADEMIC_UNITS = [
+  "College of Informatics and Computing Studies (CICS)",
+  "College of Engineering and Architecture (CEA)",
+  "College of Arts and Sciences (CAS)",
+  "College of Business Administration (CBA)",
+  "College of Education (CED)",
+  "Medical & Health Sciences",
+  "Other Specialized Colleges"
+];
 
 export default function VisitorDirectory() {
   const db = useFirestore();
@@ -155,7 +164,7 @@ export default function VisitorDirectory() {
                   New Visitor
                 </Button>
               </DialogTrigger>
-              <DialogContent className="rounded-[2.5rem] p-10">
+              <DialogContent className="rounded-[2.5rem] p-10 max-w-2xl">
                 <DialogHeader className="space-y-2">
                   <DialogTitle className="text-3xl font-black italic uppercase">Add Library Visitor</DialogTitle>
                   <DialogDescription className="font-bold text-muted-foreground">Manual profile creation for RFID/institutional identification.</DialogDescription>
@@ -192,7 +201,16 @@ export default function VisitorDirectory() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">College / Office</Label>
-                    <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                    <Select value={formData.collegeOrOffice} onValueChange={(val) => setFormData({...formData, collegeOrOffice: val})}>
+                      <SelectTrigger className="h-12 rounded-xl font-bold bg-muted/30 border-none">
+                        <SelectValue placeholder="Select Academic Unit" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {ACADEMIC_UNITS.map(unit => (
+                          <SelectItem key={unit} value={unit} className="text-[10px] font-bold uppercase">{unit}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <DialogFooter className="pt-4">
                     <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Create Profile</Button>
@@ -287,7 +305,7 @@ export default function VisitorDirectory() {
         )}
 
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="rounded-[2.5rem] p-10">
+          <DialogContent className="rounded-[2.5rem] p-10 max-w-2xl">
             <DialogHeader className="space-y-2">
               <DialogTitle className="text-3xl font-black italic uppercase">Update Visitor Profile</DialogTitle>
               <DialogDescription className="font-bold">Modify identity and institutional credentials.</DialogDescription>
@@ -324,7 +342,16 @@ export default function VisitorDirectory() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">College / Office</Label>
-                <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                <Select value={formData.collegeOrOffice} onValueChange={(val) => setFormData({...formData, collegeOrOffice: val})}>
+                  <SelectTrigger className="h-12 rounded-xl font-bold bg-muted/30 border-none">
+                    <SelectValue placeholder="Select Academic Unit" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {ACADEMIC_UNITS.map(unit => (
+                      <SelectItem key={unit} value={unit} className="text-[10px] font-bold uppercase">{unit}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <DialogFooter className="pt-4">
                 <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Save Changes</Button>

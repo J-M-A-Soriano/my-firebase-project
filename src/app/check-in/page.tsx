@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,9 +31,18 @@ const INTENT_OPTIONS = [
   { id: "computer-lab", name: "Computer Lab Use", icon: MousePointer2 },
 ];
 
+const ACADEMIC_UNITS = [
+  "College of Informatics and Computing Studies (CICS)",
+  "College of Engineering and Architecture (CEA)",
+  "College of Arts and Sciences (CAS)",
+  "College of Business Administration (CBA)",
+  "College of Education (CED)",
+  "Medical & Health Sciences",
+  "Other Specialized Colleges"
+];
+
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Supports both anonymous kiosk entry and authenticated institutional sessions.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -59,7 +67,7 @@ export default function CheckInHub() {
     if (!db) return null;
     return collection(db, 'colleges');
   }, [db]);
-  const { data: colleges } = useCollection(collegesQuery);
+  const { data: dynamicColleges } = useCollection(collegesQuery);
 
   // AUTHENTICATED HANDSHAKE: Automatically identify users logging in via personal accounts
   useEffect(() => {
@@ -108,7 +116,6 @@ export default function CheckInHub() {
     if (step === "WELCOME" || step === "BLOCKED") {
       const timer = setTimeout(() => {
         if (user && !isAdmin) {
-          // Standard visitors go back to landing after log out
           signOut(auth).then(() => router.replace("/"));
         } else {
           resetKiosk();
@@ -292,12 +299,13 @@ export default function CheckInHub() {
                       <SelectTrigger className="h-12 rounded-xl border-2 font-black uppercase text-[9px] px-4">
                         <SelectValue placeholder="Select Affiliation" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-xl p-2">
-                        <SelectItem value="CAS" className="font-bold py-2 text-xs">CAS</SelectItem>
-                        <SelectItem value="CBA" className="font-bold py-2 text-xs">CBA</SelectItem>
-                        <SelectItem value="COE" className="font-bold py-2 text-xs">COE</SelectItem>
-                        <SelectItem value="CS" className="font-bold py-2 text-xs">CS</SelectItem>
-                        {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-xs">{c.name}</SelectItem>)}
+                      <SelectContent className="rounded-xl border-none shadow-xl p-2 max-h-[300px]">
+                        {ACADEMIC_UNITS.map(unit => (
+                          <SelectItem key={unit} value={unit} className="font-bold py-2 text-[10px] uppercase">
+                            {unit}
+                          </SelectItem>
+                        ))}
+                        {dynamicColleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-[10px] uppercase">{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
