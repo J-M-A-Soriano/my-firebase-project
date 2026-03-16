@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,6 +9,7 @@ import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAdmin } from "@/hooks/use-admin";
 
 /**
  * @fileOverview High-impact Verification Gateway.
@@ -19,6 +19,7 @@ export default function WelcomePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { isAdmin } = useAdmin();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -26,8 +27,6 @@ export default function WelcomePage() {
   }, []);
 
   if (!mounted || isUserLoading) return null;
-
-  const isAdmin = user?.email === 'jcesperanza@neu.edu.ph';
 
   const handleLogout = async () => {
     await signOut(auth);

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,8 +23,9 @@ export function useAdmin() {
         return;
       }
 
-      // 1. Institutional Super-Admin Check
-      const isSuperAdmin = user.email === 'jcesperanza@neu.edu.ph';
+      // 1. Institutional Super-Admin Check (Hardcoded authorized accounts)
+      const hardcodedAdmins = ['jcesperanza@neu.edu.ph', 'johnmichaelsoriano76@gmail.com'];
+      const isSuperAdmin = hardcodedAdmins.includes(user.email || '');
       
       if (isSuperAdmin) {
         setIsAdmin(true);
