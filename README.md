@@ -1,4 +1,3 @@
-
 # NEU Library Log - System Specifications
 
 A professional, institutional-grade visitor management system for the NEU Library. Engineered for high-traffic terminals, granular administrative oversight, and real-time behavioral analytics.
@@ -13,7 +12,7 @@ The NEU Library Log provides a secure, digital gateway for academic access. Desi
 ## 🔑 Access Control & Authorization
 The system utilizes Google Institutional Authentication for all entry points.
 - **Administrative Authority:** Automatically granted to authorized institutional accounts (specifically `jcesperanza@neu.edu.ph`).
-- **Regular Access:** Standard students and visitors are routed to a verification confirmation interface.
+- **Regular Access:** Standard students and visitors are routed to a high-impact verification confirmation interface greeting them with: **"Welcome to NEU Library!"**
 - **Secure Switching:** Administrative users can safely simulate regular visitor sessions for audit purposes via the secondary navigation.
 
 ## 📊 Intelligence Center Specifications
@@ -26,7 +25,7 @@ The administrative dashboard provides a high-fidelity "Intelligence Center" view
 
 ## 🚀 Institutional Activation (Crucial)
 
-To resolve the `auth/operation-not-allowed` error and enable system access, the following administrative action is required in the Google Cloud/Firebase Console:
+To enable system access and resolve authentication protocol faults, the following administrative action is required in the Google Cloud/Firebase Console:
 
 1. **Access Console**: Open your project in the [Firebase Console](https://console.firebase.google.com/).
 2. **Navigate to Auth**: Select **Authentication** from the "Build" menu in the left sidebar.

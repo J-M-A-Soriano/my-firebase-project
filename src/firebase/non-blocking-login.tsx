@@ -6,12 +6,13 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  UserCredential,
 } from 'firebase/auth';
 
-/** Initiate Google Sign-In (non-blocking). */
-export function initiateGoogleSignIn(authInstance: Auth): void {
+/** Initiate Google Sign-In. Returns the promise for professional error handling in the UI. */
+export function initiateGoogleSignIn(authInstance: Auth): Promise<UserCredential> {
   const provider = new GoogleAuthProvider();
-  signInWithPopup(authInstance, provider);
+  return signInWithPopup(authInstance, provider);
 }
 
 /** Initiate anonymous sign-in (non-blocking). */

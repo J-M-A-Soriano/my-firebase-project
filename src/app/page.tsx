@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,6 +38,7 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
+      // Direct hardcode for institutional owner account as per specifications
       const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       
@@ -57,9 +57,15 @@ export default function LandingPage() {
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
     try {
-      initiateGoogleSignIn(auth);
+      await initiateGoogleSignIn(auth);
     } catch (err: any) {
-      console.error("Auth Exception:", err);
+      // Professional handling of common authentication vectors
+      if (err.code === 'auth/popup-closed-by-user') {
+        // Silent reset: user cancelled the action intentionally
+        setIsProcessing(false);
+        return;
+      }
+
       if (err.code === 'auth/operation-not-allowed') {
         toast({
           variant: "destructive",
