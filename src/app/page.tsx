@@ -3,13 +3,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, Mail, ArrowRight, Fingerprint, Scan, ShieldAlert } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, Mail, ArrowRight, Fingerprint, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth, useUser, useFirestore, initiateGoogleSignIn } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * @fileOverview Institutional Landing Portal & Authentication Gateway.
+ * Routes users based on institutional role (Admin vs regular).
+ */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -39,7 +43,7 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
-      // Direct authority for the institutional owner
+      // Direct authority for the institutional owner (Hardcoded Super-Admin)
       const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       
@@ -49,7 +53,6 @@ export default function LandingPage() {
         router.push("/welcome");
       }
     } catch (err) {
-      // Default to regular visitor welcome for any authentication faults
       router.push("/welcome");
     } finally {
       setIsProcessing(false);
@@ -65,21 +68,12 @@ export default function LandingPage() {
         setIsProcessing(false);
         return;
       }
-
-      if (err.code === 'auth/operation-not-allowed') {
-        toast({
-          variant: "destructive",
-          title: "Protocol Fault",
-          description: "Google Sign-In is not enabled. Please refer to System Specifications.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "System failed to initialize secure login vector.",
-        });
-      }
       setIsProcessing(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication Protocol Fault",
+        description: "Failed to initialize secure institutional login vector.",
+      });
     }
   };
 
@@ -88,7 +82,7 @@ export default function LandingPage() {
       <div className="max-w-2xl w-full space-y-12 relative z-10">
         
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center p-6 bg-primary text-white rounded-[2.5rem] shadow-2xl transform -rotate-2">
+          <div className="inline-flex items-center justify-center p-8 bg-primary text-white rounded-[2.5rem] shadow-2xl transform -rotate-1 border-4 border-white">
             <BookOpen className="h-12 w-12" />
           </div>
           <div className="space-y-1">
@@ -101,11 +95,11 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <Card className="glass-card overflow-hidden border-none rounded-[3rem] shadow-2xl bg-white/90 backdrop-blur-2xl">
-          <div className="bg-primary p-4 flex items-center justify-between px-10 text-[10px] font-black uppercase tracking-widest text-primary-foreground/90">
+        <Card className="glass-card overflow-hidden border-none rounded-[3.5rem] shadow-[0_0_100px_-20px_rgba(0,0,0,0.1)] bg-white/95 backdrop-blur-3xl">
+          <div className="bg-primary p-5 flex items-center justify-between px-10 text-[10px] font-black uppercase tracking-widest text-primary-foreground/90">
             <div className="flex items-center gap-3">
               <ShieldAlert className="h-4 w-4 text-accent" />
-              Portal Status: Operational
+              Operational Protocol: Active
             </div>
             <div className="flex items-center gap-6">
               <span className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" /> SYSTEM READY</span>
@@ -113,34 +107,34 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <CardContent className="p-12 space-y-12">
+          <CardContent className="p-14 space-y-14">
             <div className="space-y-4 text-center">
-              <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Secure Access</h2>
-              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Institutional Credentials Required</p>
+              <h2 className="text-4xl font-black text-foreground uppercase tracking-tight italic">Secure Access</h2>
+              <p className="text-muted-foreground text-[11px] font-black uppercase tracking-[0.3em] opacity-50">Institutional Verification Required</p>
             </div>
 
             <div className="space-y-8">
               <Button 
                 onClick={handleGoogleLogin}
-                className="w-full h-20 text-xl font-black bg-primary text-white hover:bg-primary/90 shadow-2xl rounded-3xl group transition-all"
+                className="w-full h-24 text-xl font-black bg-primary text-white hover:bg-primary/90 shadow-2xl rounded-[2rem] group transition-all"
                 disabled={isProcessing}
               >
                 {isProcessing ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <Loader2 className="h-10 w-10 animate-spin" />
                 ) : (
                   <>
-                    <Mail className="mr-4 h-6 w-6" />
+                    <Mail className="mr-5 h-7 w-7" />
                     LOGIN WITH INSTITUTIONAL ACCOUNT
-                    <ArrowRight className="ml-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-all" />
+                    <ArrowRight className="ml-5 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
                   </>
                 )}
               </Button>
               
-              <div className="flex items-center justify-center gap-8 border-t pt-8">
-                <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
+              <div className="flex items-center justify-center gap-10 border-t pt-10">
+                <div className="flex items-center gap-3 text-[10px] font-black opacity-30 uppercase tracking-widest">
                   <ShieldCheck className="h-4 w-4" /> Secure Auth
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
+                <div className="flex items-center gap-3 text-[10px] font-black opacity-30 uppercase tracking-widest">
                   <Fingerprint className="h-4 w-4" /> Encrypted Sync
                 </div>
               </div>
@@ -148,7 +142,7 @@ export default function LandingPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-30">
+        <p className="text-center text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-30">
           Professional Security Infrastructure • NEU IT Solutions
         </p>
       </div>
