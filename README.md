@@ -24,22 +24,18 @@ The administrative dashboard provides a high-fidelity "Intelligence Center" view
 - **Visitor Class Vectors:** Differentiate between Student Class and Staff/Employee vectors.
 - **Audit Generation:** One-click generation of PDF intelligence reports with active filter parameters.
 
-## 🚀 Professional Deployment Guide
+## 🚀 Institutional Activation (Crucial)
 
-To ensure system functionality, follow these institutional setup steps:
+To resolve the `auth/operation-not-allowed` error and enable system access, the following administrative action is required in the Google Cloud/Firebase Console:
 
-1. **GitHub Synchronization**:
-   - Ensure the project is synced to your institutional repository.
-   - Any push to the `main` branch will automatically trigger a production build.
-
-2. **Vercel Live Deployment**:
-   - The application is configured to run on Vercel for dynamic scaling.
-   - Ensure all Firebase environment variables are mirrored in the Vercel project settings.
-
-3. **Authentication Activation**:
-   - **Crucial:** Go to the Firebase Console.
-   - Navigate to **Authentication > Sign-in method**.
-   - Enable the **Google** provider. Without this step, the `auth/operation-not-allowed` error will persist at the terminal.
+1. **Access Console**: Open your project in the [Firebase Console](https://console.firebase.google.com/).
+2. **Navigate to Auth**: Select **Authentication** from the "Build" menu in the left sidebar.
+3. **Enable Provider**: 
+   - Click the **Sign-in method** tab.
+   - Click **Add new provider**.
+   - Select **Google**.
+   - Toggle the switch to **Enable**.
+   - Configure the **Project support email** and click **Save**.
 
 ## ⚙️ Architecture Profile
 - **Engine:** Next.js 15 (App Router)

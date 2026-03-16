@@ -57,15 +57,20 @@ export default function LandingPage() {
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
     try {
-      // Direct call to trigger sign-in
       initiateGoogleSignIn(auth);
     } catch (err: any) {
-      console.error(err);
+      console.error("Auth Exception:", err);
       if (err.code === 'auth/operation-not-allowed') {
         toast({
           variant: "destructive",
-          title: "Configuration Required",
-          description: "Google Sign-In is not enabled in the Firebase Console. Please contact IT.",
+          title: "Protocol Fault: Auth Not Enabled",
+          description: "Google Sign-In provider is disabled in the Firebase Console. Please refer to System Specifications.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "System Error",
+          description: "Authentication vector failed to initialize. Please retry.",
         });
       }
       setIsProcessing(false);
