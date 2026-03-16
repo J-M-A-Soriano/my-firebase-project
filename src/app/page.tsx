@@ -21,7 +21,7 @@ import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Optimized with High-Performance Identity Caching for zero-latency entry.
+ * Optimized with High-Performance Identity Caching and User-Context Guards.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -46,8 +46,11 @@ export default function LandingPage() {
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
   // Strictly guarded to ensure administrators are never accidentally redirected
   useEffect(() => {
-    // Only redirect if we have a user, loading is finished, and we are SURE they are NOT an admin
-    if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
+    // SECURITY GUARD: Never redirect if we are still verifying administrative authority
+    if (isUserLoading || isAdminLoading || isActionPending) return;
+
+    // Only redirect if we have a confirmed user and we are ABSOLUTELY SURE they are NOT an admin
+    if (user && isAdmin === false) {
       router.replace("/welcome");
     }
   }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, router]);
@@ -99,7 +102,6 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await signOut(auth);
-      // Clear any local caches if necessary (handled by useAdmin hook usually)
       router.replace("/");
     } catch (error) {
       toast({ title: "Sign Out Failed", variant: "destructive" });
