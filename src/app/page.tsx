@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -66,7 +67,7 @@ export default function LandingPage() {
                 <BookOpen className="h-6 w-6 text-accent" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black italic uppercase tracking-tighter leading-none">Libriguard</span>
+                <span className="text-xl font-black italic uppercase tracking-tighter leading-none">NEULibrary</span>
                 <span className="text-[9px] font-black uppercase tracking-[0.4em] opacity-40">Intelligence Systems</span>
               </div>
             </div>

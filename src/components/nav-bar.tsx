@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -31,7 +32,7 @@ export function NavBar() {
               <BookOpen className="h-9 w-9" />
             </div>
             <div className="flex flex-col">
-              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">Libriguard</span>
+              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">NEULibrary</span>
               <span className="text-[9px] font-black uppercase tracking-[0.6em] opacity-40">Intelligence Systems</span>
             </div>
           </Link>

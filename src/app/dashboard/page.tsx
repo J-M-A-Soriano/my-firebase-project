@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -131,7 +132,7 @@ export default function IntelligenceCenter() {
     const doc = new jsPDF();
     doc.setFontSize(22);
     doc.setTextColor(81, 151, 99); 
-    doc.text("Libriguard Operational Intelligence Audit", 14, 25);
+    doc.text("NEULibrary Operational Intelligence Audit", 14, 25);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -155,7 +156,7 @@ export default function IntelligenceCenter() {
       bodyStyles: { fontSize: 8 },
     });
 
-    doc.save(`LIBRIGUARD_REPORT_${format(new Date(), "yyyyMMdd")}.pdf`);
+    doc.save(`NEULIBRARY_REPORT_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
 
   return (
