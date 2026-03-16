@@ -1,10 +1,9 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { NavBar } from "@/components/nav-bar";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,10 +35,11 @@ export default function CheckInPage() {
   const [selectedRole, setSelectedRole] = useState<"Student" | "Staff">("Student");
   const [selectedPurpose, setSelectedPurpose] = useState<string>("General Visit");
 
+  // Defer query until user is authenticated to prevent permission errors
   const reasonsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return collection(db, 'reasonsForVisit');
-  }, [db]);
+  }, [db, user]);
 
   const { data: purposes } = useCollection(reasonsQuery);
 
@@ -176,7 +176,7 @@ export default function CheckInPage() {
                       <div className="flex items-center gap-8">
                         <Avatar className="h-32 w-32 rounded-[2.5rem] ring-8 ring-primary/5 shadow-inner">
                           <AvatarFallback className="text-4xl font-black bg-primary/10 text-primary">
-                            {foundStudent.firstName.charAt(0)}{foundStudent.lastName.charAt(0)}
+                            {foundStudent.firstName?.charAt(0)}{foundStudent.lastName?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">

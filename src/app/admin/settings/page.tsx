@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, UserPlus, Trash2, Loader2, KeyRound, Fingerprint } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, deleteDoc } from "firebase/firestore";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useAdmin } from "@/hooks/use-admin";
@@ -21,15 +20,17 @@ import { Badge } from "@/components/ui/badge";
  */
 export default function AdminSettingsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   const [newAdminUid, setNewAdminUid] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
+  // Defer query until user is authenticated to prevent permission errors
   const adminsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return collection(db, 'admin_users');
-  }, [db]);
+  }, [db, user]);
 
   const { data: adminRegistry, isLoading } = useCollection(adminsQuery);
 
