@@ -5,32 +5,26 @@ import { useRouter } from "next/navigation";
 import { 
   BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, 
   MonitorCheck, ArrowRight, LockKeyhole, UserCheck, 
-  Eye, LayoutDashboard, UserRound
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth, useUser, initiateGoogleSignIn, useFirestore } from "@/firebase";
+import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { collection, serverTimestamp } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Features a high-impact Auth Vector Hero and persona selection for admins.
  */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
-  const db = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isAdminLoading, isSuperAdmin, simulationMode, setSimulationMode } = useAdmin();
+  const { isAdmin, isAdminLoading } = useAdmin();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoggingVisit, setIsLoggingVisit] = useState(false);
   const [localTime, setLocalTime] = useState("");
 
   useEffect(() => {
@@ -58,35 +52,7 @@ export default function LandingPage() {
     }
   };
 
-  const handleEnterAsVisitor = async () => {
-    if (!user || !db) return;
-    setIsLoggingVisit(true);
-
-    // Set simulation mode to ensure regular user UI
-    setSimulationMode(true);
-
-    // Automatically log the visit for the database/dashboard
-    const logPayload = {
-      visitorId: user.uid,
-      visitorName: user.displayName || "Authorized Admin",
-      visitorType: "Staff", // Admins log as Staff/Member
-      collegeOrOffice: "Administration",
-      checkInTime: serverTimestamp(),
-      purpose: "Admin Audit/Visit"
-    };
-
-    try {
-      addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
-      router.push("/welcome");
-    } catch (error) {
-      console.error("Visit logging failed:", error);
-      router.push("/welcome");
-    } finally {
-      setIsLoggingVisit(false);
-    }
-  };
-
-  // Only show the terminal to unauthenticated users or those in simulation mode
+  // Terminal is shown only to non-admins
   const showTerminal = !isAdmin && !isAdminLoading;
 
   return (
@@ -108,24 +74,17 @@ export default function LandingPage() {
                 <span className="text-[7px] font-black uppercase tracking-[0.4em] text-white/40">Intelligence Systems</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {simulationMode && (
-                <Badge className="bg-accent text-white border-none text-[8px] font-black uppercase px-3 py-1 animate-pulse flex items-center gap-1.5">
-                  <Eye className="h-3 w-3" /> Simulation Mode
-                </Badge>
-              )}
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
-                <ShieldCheck className="h-3 w-3 text-accent" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-white">Authorized Access</span>
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+              <ShieldCheck className="h-3 w-3 text-accent" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white">Authorized Access</span>
             </div>
           </div>
 
           <CardContent className="p-10 md:p-14 space-y-10 z-10">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none text-white">
-                {user ? (simulationMode ? "AUDIT" : "SYSTEM") : "SECURE"} <br /> 
-                <span className="text-accent not-italic">{user ? (simulationMode ? "PORTAL" : "ACCESS") : "LOGIN"}</span>
+                {user ? "SYSTEM" : "SECURE"} <br /> 
+                <span className="text-accent not-italic">{user ? "ACCESS" : "LOGIN"}</span>
               </h1>
               <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.4em] ml-1">
                 {user ? `Identified: ${user.email}` : "Institutional Credential Required"}
@@ -150,31 +109,16 @@ export default function LandingPage() {
                 </Button>
               ) : (
                 <div className="flex flex-col md:flex-row gap-4 w-full">
-                  {(isAdmin || isSuperAdmin) && !simulationMode ? (
-                    <>
-                      <Button
-                        asChild
-                        className="h-14 flex-1 px-8 rounded-2xl bg-accent text-white text-base font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
-                      >
-                        <Link href="/dashboard">
-                          <LayoutDashboard className="mr-3 h-5 w-5" />
-                          Intelligence Center
-                        </Link>
-                      </Button>
-                      <Button
-                        onClick={handleEnterAsVisitor}
-                        disabled={isLoggingVisit}
-                        variant="outline"
-                        className="h-14 flex-1 px-8 rounded-2xl border-2 border-white/20 bg-white/5 text-white text-base font-black uppercase tracking-widest hover:bg-white/10 transition-all"
-                      >
-                        {isLoggingVisit ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                          <>
-                            <UserRound className="mr-3 h-5 w-5" />
-                            Enter as Visitor
-                          </>
-                        )}
-                      </Button>
-                    </>
+                  {isAdmin ? (
+                    <Button
+                      asChild
+                      className="h-14 flex-1 px-8 rounded-2xl bg-accent text-white text-base font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                    >
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-3 h-5 w-5" />
+                        Intelligence Center
+                      </Link>
+                    </Button>
                   ) : (
                     <Button
                       asChild

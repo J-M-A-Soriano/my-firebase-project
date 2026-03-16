@@ -5,23 +5,20 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   BookOpen, LayoutDashboard, BrainCircuit, Users, 
-  LogOut, ShieldCheck, LayoutTemplate, 
-  Loader2, Eye, EyeOff, Settings
+  LogOut, ShieldCheck, Settings, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
   const { user } = useUser();
-  const { isAdmin, isSuperAdmin, simulationMode, setSimulationMode } = useAdmin();
+  const { isAdmin } = useAdmin();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -34,14 +31,6 @@ export function NavBar() {
     } finally {
       setIsLoggingOut(false);
     }
-  };
-
-  const toggleSimulation = (checked: boolean) => {
-    setSimulationMode(checked);
-    // Force a small delay then redirect to landing to reset view
-    setTimeout(() => {
-      router.push("/");
-    }, 100);
   };
 
   return (
@@ -105,30 +94,13 @@ export function NavBar() {
               </div>
             )}
 
-            {isSuperAdmin && (
-              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-accent/5 border border-accent/20 rounded-xl">
-                <div className="flex flex-col items-end">
-                  <Label htmlFor="sim-mode" className="text-[7px] font-black uppercase tracking-widest text-accent mb-1 flex items-center gap-1">
-                    {simulationMode ? <EyeOff className="h-2 w-2" /> : <Eye className="h-2 w-2" />}
-                    Simulation Mode
-                  </Label>
-                  <Switch 
-                    id="sim-mode" 
-                    checked={simulationMode} 
-                    onCheckedChange={toggleSimulation}
-                    className="h-4 w-8 data-[state=checked]:bg-accent"
-                  />
-                </div>
-              </div>
-            )}
-
             <div className="flex items-center gap-4">
               {user ? (
                 <div className="flex items-center gap-4 pl-4 border-l-2 border-muted/50">
                   <div className="hidden sm:flex flex-col items-end">
                     <span className="text-[8px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
                       <ShieldCheck className="h-3 w-3" />
-                      {isAdmin ? 'Admin' : simulationMode ? 'Audit (User)' : 'Member'}
+                      {isAdmin ? 'Admin' : 'Member'}
                     </span>
                     <span className="text-[6px] text-muted-foreground font-black opacity-40 uppercase tracking-[0.2em]">{user.email?.split('@')[0]}</span>
                   </div>
