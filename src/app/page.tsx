@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, 
-  MonitorCheck, ArrowRight, LockKeyhole, UserCheck, 
+  BookOpen, ShieldCheck, Loader2, Mail, 
+  MonitorCheck, ArrowRight, UserCheck, 
   LayoutDashboard, LogOut, GraduationCap, Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Implements Persona Choice for Administrators (Admin vs Regular Visitor).
+ * Implements persona selection for authenticated Administrators.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function LandingPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const { isAdmin, isAdminLoading } = useAdmin();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isActionPending, setIsActionPending] = useState(false);
   const [localTime, setLocalTime] = useState("");
 
   useEffect(() => {
@@ -42,11 +42,12 @@ export default function LandingPage() {
   }, []);
 
   const handleGoogleLogin = async () => {
-    setIsProcessing(true);
+    setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
+      // Processing state will reset upon auth state change re-render
     } catch (err: any) {
-      setIsProcessing(false);
+      setIsActionPending(false);
       if (err.code === 'auth/popup-closed-by-user') return;
 
       toast({
@@ -59,12 +60,12 @@ export default function LandingPage() {
 
   const handleEnterAsVisitor = async () => {
     if (!user || !db) return;
-    setIsProcessing(true);
+    setIsActionPending(true);
 
     const logPayload = {
       visitorId: user.uid,
       visitorName: user.displayName || user.email || "Authorized Administrator",
-      visitorType: "Staff", // Admins log as Staff/Teacher for analytics
+      visitorType: "Staff", 
       collegeOrOffice: "Administration",
       checkInTime: serverTimestamp(),
       purpose: "Administrative Audit"
@@ -77,24 +78,25 @@ export default function LandingPage() {
       console.error("Visit log failed:", error);
       router.push("/welcome");
     } finally {
-      setIsProcessing(false);
+      setIsActionPending(false);
     }
   };
 
   const handleSignOut = async () => {
-    setIsProcessing(true);
+    setIsActionPending(true);
     try {
       await signOut(auth);
       router.replace("/");
     } catch (error) {
       toast({ title: "Sign Out Failed", variant: "destructive" });
     } finally {
-      setIsProcessing(false);
+      setIsActionPending(false);
     }
   };
 
-  // Terminal is shown only to non-admins or unauthenticated users
+  // Show terminal only if user is not an admin or not logged in
   const showTerminal = !isAdmin && !isAdminLoading;
+  const isGlobalLoading = isUserLoading || isAdminLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
@@ -128,7 +130,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {user ? `Account: ${user.email}` : "Institutional Google Account Required"}
+                {isGlobalLoading ? "Verifying Authority..." : user ? `Account: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -137,9 +139,9 @@ export default function LandingPage() {
                 <Button
                   onClick={handleGoogleLogin}
                   className="w-full md:w-fit h-12 px-10 rounded-xl bg-white text-primary text-sm font-black uppercase tracking-widest shadow-xl hover:bg-accent hover:text-white transition-all hover:scale-[1.02]"
-                  disabled={isProcessing || isUserLoading || isAdminLoading}
+                  disabled={isActionPending || isGlobalLoading}
                 >
-                  {isProcessing || isUserLoading || isAdminLoading ? (
+                  {isActionPending || isGlobalLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <div className="flex items-center gap-4">
@@ -154,21 +156,22 @@ export default function LandingPage() {
                     <>
                       <Button
                         asChild
-                        className="h-14 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.03] transition-all"
+                        disabled={isActionPending}
+                        className="h-20 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.03] transition-all"
                       >
-                        <Link href="/dashboard" className="flex flex-col items-center justify-center gap-1">
-                          <LayoutDashboard className="h-5 w-5" />
-                          <span className="text-[10px]">Intelligence Center</span>
+                        <Link href="/dashboard" className="flex flex-col items-center justify-center gap-2">
+                          <LayoutDashboard className="h-6 w-6" />
+                          <span className="text-[10px] tracking-widest">Intelligence Center</span>
                         </Link>
                       </Button>
                       <Button
                         onClick={handleEnterAsVisitor}
-                        disabled={isProcessing}
-                        className="h-14 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-black uppercase tracking-widest shadow-xl hover:bg-white/20 hover:scale-[1.03] transition-all"
+                        disabled={isActionPending}
+                        className="h-20 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-black uppercase tracking-widest shadow-xl hover:bg-white/20 hover:scale-[1.03] transition-all cursor-pointer"
                       >
-                        <div className="flex flex-col items-center justify-center gap-1">
-                          <UserCheck className="h-5 w-5" />
-                          <span className="text-[10px]">Visitor Welcome</span>
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <UserCheck className="h-6 w-6" />
+                          <span className="text-[10px] tracking-widest">Visitor Welcome</span>
                         </div>
                       </Button>
                     </>
@@ -187,9 +190,10 @@ export default function LandingPage() {
                   <Button 
                     variant="ghost" 
                     onClick={handleSignOut}
+                    disabled={isActionPending}
                     className="h-10 col-span-2 text-white/40 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[8px] mt-2"
                   >
-                    <LogOut className="mr-2 h-3 w-3" /> Sign Out / Change Account
+                    <LogOut className="mr-2 h-3 w-3" /> Sign Out / Switch Identity
                   </Button>
                 </div>
               )}
@@ -209,7 +213,7 @@ export default function LandingPage() {
             <span>Core v3.2</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
-              Secure Link
+              Connection Secure
             </span>
           </div>
 
