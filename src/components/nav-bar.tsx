@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert, ShieldCheck, Settings, Home } from "lucide-react";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldCheck, Settings, Home, LayoutTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
@@ -18,9 +17,6 @@ const navItems = [
   { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
-/**
- * @fileOverview Navigation controller with administrative authority checks.
- */
 export function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -34,30 +30,30 @@ export function NavBar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-3xl shadow-sm">
+    <nav className="sticky top-0 z-50 w-full border-b-4 border-white bg-white/80 backdrop-blur-3xl shadow-sm">
       <div className="container mx-auto px-10 max-w-7xl">
-        <div className="flex h-24 items-center justify-between">
+        <div className="flex h-28 items-center justify-between">
           
           <Link href="/" className="flex items-center gap-6 group">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-primary text-white shadow-2xl group-hover:rotate-6 transition-all duration-500">
-              <BookOpen className="h-8 w-8" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-primary text-white shadow-2xl group-hover:rotate-6 transition-all duration-500 border-4 border-white">
+              <BookOpen className="h-9 w-9" />
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">NEU LOG</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40">Intelligence Systems</span>
+              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">LibriGuard</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.6em] opacity-40">Intelligence Systems</span>
             </div>
           </Link>
           
-          <div className="hidden lg:flex items-center bg-muted/40 p-2 rounded-[2rem] border-2 border-white shadow-inner">
+          <div className="hidden lg:flex items-center bg-muted/30 p-2.5 rounded-[2.5rem] border-4 border-white shadow-inner">
             <Link
               href="/"
               className={cn(
-                "flex items-center gap-3 rounded-[1.25rem] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest transition-all",
+                "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
                 pathname === "/" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
               )}
             >
               <Home className="h-4 w-4" />
-              Home
+              Portal
             </Link>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -70,10 +66,10 @@ export function NavBar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-[1.25rem] px-8 py-3.5 text-[11px] font-black uppercase tracking-widest transition-all",
+                    "flex items-center gap-3 rounded-[1.5rem] px-10 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
                     isActive 
                       ? "bg-primary text-white shadow-xl scale-105" 
-                      : "text-muted-foreground hover:text-primary hover:bg-white/50"
+                      : "text-muted-foreground hover:text-primary hover:bg-white/60"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -85,31 +81,30 @@ export function NavBar() {
 
           <div className="flex items-center gap-8">
             {user ? (
-              <div className="flex items-center gap-8 pl-8 border-l-2">
+              <div className="flex items-center gap-8 pl-10 border-l-4 border-muted/50">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <ShieldCheck className="h-3 w-3" />
-                    {isAdmin ? 'System Administrator' : 'Authorized Visitor'}
+                    <ShieldCheck className="h-4 w-4" />
+                    {isAdmin ? 'System Admin' : 'Academic Member'}
                   </span>
-                  <span className="text-[9px] text-muted-foreground font-black opacity-40 uppercase tracking-[0.2em]">Institutional ID: {user.email?.split('@')[0]}</span>
+                  <span className="text-[9px] text-muted-foreground font-black opacity-40 uppercase tracking-[0.3em]">{user.email?.split('@')[0]}</span>
                 </div>
                 {isAdmin && (
-                  <Button variant="ghost" size="icon" asChild className="h-12 w-12 text-primary hover:bg-primary/10 rounded-2xl border-2 border-primary/5 hover:border-primary/20" title="Switch to Regular Access View">
-                    <Link href="/welcome"><ShieldAlert className="h-6 w-6" /></Link>
+                  <Button variant="ghost" size="icon" asChild className="h-14 w-14 text-primary hover:bg-primary/10 rounded-2xl border-4 border-white shadow-lg" title="Switch to Greeting View">
+                    <Link href="/welcome"><LayoutTemplate className="h-7 w-7" /></Link>
                   </Button>
                 )}
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={handleSignOut}
-                  className="h-12 w-12 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all"
-                  title="Secure Portal Exit"
+                  className="h-14 w-14 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all"
                 >
-                  <LogOut className="h-6 w-6" />
+                  <LogOut className="h-7 w-7" />
                 </Button>
               </div>
             ) : (
-              <Button asChild variant="default" className="font-black uppercase tracking-widest text-[11px] rounded-2xl px-10 h-14 shadow-2xl">
+              <Button asChild className="font-black uppercase tracking-widest text-[11px] rounded-[1.5rem] px-12 h-16 shadow-2xl bg-primary">
                 <Link href="/">Secure Login</Link>
               </Button>
             )}
