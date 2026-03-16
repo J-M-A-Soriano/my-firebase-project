@@ -1,15 +1,15 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Users, FileDown, TrendingUp, Filter, PieChart as PieIcon, 
-  Activity, Calendar as CalendarIcon, GraduationCap, 
-  Briefcase, Building2, LayoutDashboard, Search, Clock, UsersRound
+  FileDown, TrendingUp, Filter, PieChart as PieIcon, 
+  Activity, Building2, Clock, UsersRound, Loader2, KeyRound
 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
@@ -25,32 +25,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdmin } from "@/hooks/use-admin";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export default function IntelligenceCenter() {
+  const router = useRouter();
   const db = useFirestore();
   const { user } = useUser();
+  const { isAdmin, isAdminLoading } = useAdmin();
   const [timeRange, setTimeRange] = useState("day");
   const [filterReason, setFilterReason] = useState("all");
   const [filterCollege, setFilterCollege] = useState("all");
   const [filterType, setFilterType] = useState("all");
 
+  // Autonomous Access Control
+  useEffect(() => {
+    if (!isAdminLoading && !isAdmin) {
+      router.replace("/");
+    }
+  }, [isAdmin, isAdminLoading, router]);
+
   const sessionsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !isAdmin) return null;
     return query(
       collection(db, 'libraryVisits'),
       orderBy('checkInTime', 'desc'),
       limit(2000)
     );
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const collegesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !isAdmin) return null;
     return collection(db, 'colleges');
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
-  const { data: sessions, isLoading } = useCollection(sessionsQuery);
+  const { data: sessions, isLoading: sessionsLoading } = useCollection(sessionsQuery);
   const { data: colleges } = useCollection(collegesQuery);
 
   const stats = useMemo(() => {
@@ -158,6 +168,26 @@ export default function IntelligenceCenter() {
 
     doc.save(`NEULIBRARY_REPORT_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
+
+  if (isAdminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-10 bg-background">
+        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-10 bg-background">
+        <Card className="max-w-md w-full p-10 text-center space-y-6 rounded-[3rem] border-none shadow-2xl">
+          <KeyRound className="h-16 w-16 text-destructive mx-auto opacity-20" />
+          <h2 className="text-3xl font-black uppercase italic">Access Denied</h2>
+          <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">System Administrator Credentials Required</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">

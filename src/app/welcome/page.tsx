@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard } from "lucide-react";
+import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard, Loader2 } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -22,16 +23,30 @@ export default function AuthorizedGreeting() {
   const router = useRouter();
   const { isAdmin } = useAdmin();
   const [mounted, setMounted] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || isUserLoading) return null;
+  if (!mounted || isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-10 bg-background">
+        <Loader2 className="h-16 w-16 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push("/");
+    setIsLoggingOut(true);
+    try {
+      await signOut(auth);
+      router.replace("/");
+    } catch (error) {
+      console.error("Authentication teardown failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -94,10 +109,11 @@ export default function AuthorizedGreeting() {
                 )}
                 <Button 
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                   variant="outline" 
                   className="flex-1 h-24 rounded-[2rem] border-4 border-muted font-black uppercase tracking-widest text-xs hover:bg-destructive hover:text-white hover:border-destructive transition-all kiosk-button"
                 >
-                  <LogOut className="mr-4 h-7 w-7" />
+                  {isLoggingOut ? <Loader2 className="mr-4 h-7 w-7 animate-spin" /> : <LogOut className="mr-4 h-7 w-7" />}
                   Secure Portal Exit
                 </Button>
               </div>

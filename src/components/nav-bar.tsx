@@ -1,9 +1,14 @@
 
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldCheck, Settings, Home, LayoutTemplate, Monitor } from "lucide-react";
+import { 
+  BookOpen, LayoutDashboard, BrainCircuit, Users, 
+  LogOut, ShieldCheck, Home, Monitor, LayoutTemplate, 
+  Loader2 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
@@ -16,10 +21,18 @@ export function NavBar() {
   const auth = useAuth();
   const { user } = useUser();
   const { isAdmin } = useAdmin();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut(auth);
-    router.push("/");
+    setIsLoggingOut(true);
+    try {
+      await signOut(auth);
+      router.replace("/");
+    } catch (error) {
+      console.error("Authentication teardown failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -116,9 +129,10 @@ export function NavBar() {
                   variant="ghost" 
                   size="icon" 
                   onClick={handleSignOut}
+                  disabled={isLoggingOut}
                   className="h-14 w-14 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all"
                 >
-                  <LogOut className="h-7 w-7" />
+                  {isLoggingOut ? <Loader2 className="h-6 w-6 animate-spin" /> : <LogOut className="h-7 w-7" />}
                 </Button>
               </div>
             ) : (
