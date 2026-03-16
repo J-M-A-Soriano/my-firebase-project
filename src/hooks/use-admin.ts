@@ -6,18 +6,24 @@ import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * @fileOverview Centralized Administrative Authority Hook.
- * Implements dual-verification: Institutional Hardcode + Firestore Registry.
- * Optimized for performance: Bypasses network calls for hardcoded super-admins.
+ * Implements a High-Performance Identity Caching System (localStorage) 
+ * to eliminate verification latency for returning institutional users.
  */
 export function useAdmin() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  
+  // Use a local cache to provide an "instant" identity handshake for returning users
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('neu_lib_is_admin') === 'true';
+    }
+    return false;
+  });
+  
   const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
 
-  // Hardcoded authorized accounts (Institutional Super-Admins)
-  // These accounts bypass Firestore lookups for instant persona selection
   const hardcodedAdmins = [
     'jcesperanza@neu.edu.ph', 
     'johnmichaelsoriano76@gmail.com', 
@@ -26,19 +32,17 @@ export function useAdmin() {
 
   useEffect(() => {
     async function verifyAuthority() {
-      // If Firebase Auth is still loading, we must wait
       if (isUserLoading) return;
 
-      // If no user is logged in, reset states
       if (!user || !db) {
         setIsAdmin(false);
         setIsSuperAdmin(false);
         setIsAdminLoading(false);
+        if (typeof window !== 'undefined') localStorage.removeItem('neu_lib_is_admin');
         return;
       }
 
-      // 1. FAST PATH: Check institutional hardcode (Super-Admins)
-      // This is local and instantaneous, eliminating "Launching..." latency
+      // 1. FAST PATH: Institutional Hardcode (Instant)
       const userEmail = (user.email || '').toLowerCase();
       const superAdminStatus = hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
       
@@ -46,17 +50,27 @@ export function useAdmin() {
         setIsSuperAdmin(true);
         setIsAdmin(true);
         setIsAdminLoading(false);
-        return; // Exit early to avoid unnecessary Firestore lookup
+        if (typeof window !== 'undefined') localStorage.setItem('neu_lib_is_admin', 'true');
+        return;
       }
 
-      // 2. REGISTRY PATH: Check Firestore for dynamic administrators
-      // Only reached if the user is not a hardcoded super-admin
+      // 2. CACHED PATH: Check if we already know this user is NOT an admin
+      // This prevents the "Launching..." spinner for regular students
+      const cachedStatus = localStorage.getItem('neu_lib_is_admin');
+      if (cachedStatus === 'false') {
+        setIsAdmin(false);
+        setIsAdminLoading(false);
+        // We still continue to verify in background in case they were promoted
+      }
+
+      // 3. REGISTRY PATH: Dynamic Verification (Background Sync)
       try {
         const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
-        setIsAdmin(adminDoc.exists());
+        const status = adminDoc.exists();
+        setIsAdmin(status);
+        if (typeof window !== 'undefined') localStorage.setItem('neu_lib_is_admin', status.toString());
       } catch (error) {
         console.error("Authority verification failed:", error);
-        setIsAdmin(false);
       } finally {
         setIsAdminLoading(false);
       }

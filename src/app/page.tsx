@@ -20,7 +20,7 @@ import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Implements persona selection for authenticated Administrators and auto-entry for visitors.
+ * Optimized with High-Performance Identity Caching for zero-latency entry.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function LandingPage() {
   }, []);
 
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
-  // Explicitly guard against redirecting administrators
+  // Now uses cached identity status for instant redirection
   useEffect(() => {
     if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
       router.push("/welcome");
@@ -66,8 +66,6 @@ export default function LandingPage() {
       });
       setIsActionPending(false);
     }
-    // Note: isActionPending is reset via component state updates upon re-render
-    // but we ensure a finally block or explicit reset for resilience
   };
 
   const handleEnterAsVisitor = async () => {
@@ -98,6 +96,7 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await signOut(auth);
+      if (typeof window !== 'undefined') localStorage.removeItem('neu_lib_is_admin');
       router.replace("/");
     } catch (error) {
       toast({ title: "Sign Out Failed", variant: "destructive" });
@@ -106,14 +105,13 @@ export default function LandingPage() {
     }
   };
 
-  const isGlobalLoading = isUserLoading || isAdminLoading;
+  const isGlobalLoading = isUserLoading; // Only block on core auth, let admin status sync in background
   const showTerminal = !user && !isGlobalLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full">
 
-        {/* Persona Selection / Secure Gateway Hero */}
         <Card className={cn(
           "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none",
           showTerminal ? "lg:col-span-7" : "lg:col-span-10"
@@ -141,7 +139,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isGlobalLoading ? "Verifying Authority..." : user ? `Identity: ${user.email}` : "Institutional Google Account Required"}
+                {isGlobalLoading ? "Verifying Credentials..." : user ? `Identity: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -186,10 +184,15 @@ export default function LandingPage() {
                         </div>
                       </Button>
                     </>
+                  ) : isAdminLoading ? (
+                    <div className="col-span-2 flex flex-col items-center py-6">
+                      <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Verifying Authority...</p>
+                    </div>
                   ) : (
                     <div className="col-span-2 flex flex-col items-center py-6">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Launching Verification Gateway...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Redirecting to Portal...</p>
                     </div>
                   )}
                   
@@ -226,7 +229,6 @@ export default function LandingPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {/* Kiosk Mode Hub */}
         {showTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
             <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">
