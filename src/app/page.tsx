@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -41,8 +42,13 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // AUTO-ENTRY PROTOCOL: Redirect non-admins automatically
+  // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
   useEffect(() => {
+    // Only redirect if:
+    // 1. User is authenticated
+    // 2. Admin verification is complete
+    // 3. User is NOT an admin
+    // 4. No manual action is currently pending
     if (user && !isAdminLoading && !isAdmin && !isActionPending) {
       router.push("/welcome");
     }
@@ -52,17 +58,18 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // State is handled by the identity effects
+      // Logic continues via the identity effects
     } catch (err: any) {
-      setIsActionPending(false);
-      if (err.code === 'auth/popup-closed-by-user') return;
+      if (err.code === 'auth/popup-closed-by-user') {
+        setIsActionPending(false);
+        return;
+      }
 
       toast({
         variant: "destructive",
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
-    } finally {
       setIsActionPending(false);
     }
   };
@@ -103,14 +110,14 @@ export default function LandingPage() {
     }
   };
 
-  const showTerminal = !isAdmin && !isAdminLoading;
   const isGlobalLoading = isUserLoading || isAdminLoading;
+  const showTerminal = !isAdmin && !isAdminLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full">
 
-        {/* Left Section: SECURE LOGIN HERO */}
+        {/* Left Section: SECURE LOGIN HERO / PERSONA SELECTION */}
         <Card className={cn(
           "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none",
           showTerminal ? "lg:col-span-7" : "lg:col-span-10"
@@ -138,7 +145,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isGlobalLoading ? "Verifying Authority..." : user ? `Account: ${user.email}` : "Institutional Google Account Required"}
+                {isGlobalLoading ? "Verifying Authority..." : user ? `Authorized: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -186,7 +193,7 @@ export default function LandingPage() {
                   ) : (
                     <div className="col-span-2 flex flex-col items-center py-6 animate-pulse">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Initializing Visitor Portal...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Launching Verification Gateway...</p>
                     </div>
                   )}
                   
@@ -223,7 +230,7 @@ export default function LandingPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {/* Right Section: TERMINAL ACTION */}
+        {/* Right Section: TERMINAL ACTION (Only for non-admins) */}
         {showTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
             <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">
