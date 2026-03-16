@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  CalendarDays, School
+  CalendarDays, ShieldAlert, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -19,7 +19,7 @@ import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-b
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-type KioskStep = "IDENTIFY" | "REGISTER" | "INTENT" | "WELCOME";
+type KioskStep = "IDENTIFY" | "REGISTER" | "INTENT" | "WELCOME" | "BLOCKED";
 
 const INTENT_OPTIONS = [
   { id: "research", name: "Research", icon: Search },
@@ -29,6 +29,10 @@ const INTENT_OPTIONS = [
   { id: "computer-lab", name: "Computer Lab Use", icon: MousePointer2 },
 ];
 
+/**
+ * @fileOverview Check-In Kiosk - Terminal for institutional access logging.
+ * Features real-time security handshake and blocking enforcement.
+ */
 export default function CheckInKiosk() {
   const { toast } = useToast();
   const db = useFirestore();
@@ -50,8 +54,8 @@ export default function CheckInKiosk() {
   const { data: colleges } = useCollection(collegesQuery);
 
   useEffect(() => {
-    if (step === "WELCOME") {
-      const timer = setTimeout(() => resetKiosk(), 5000);
+    if (step === "WELCOME" || step === "BLOCKED") {
+      const timer = setTimeout(() => resetKiosk(), step === "BLOCKED" ? 8000 : 5000);
       return () => clearTimeout(timer);
     }
   }, [step]);
@@ -79,13 +83,25 @@ export default function CheckInKiosk() {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
+        
+        // SECURITY HANDSHAKE: TERMINATE ACCESS IF BLOCKED
+        if (data.isBlocked) {
+          setStep("BLOCKED");
+          toast({ 
+            title: "Access Denied", 
+            description: "Institutional privileges have been suspended. Please see the library administrator.",
+            variant: "destructive" 
+          });
+          return;
+        }
+
         setVisitor({ ...data, id: docSnap.id });
         setStep("INTENT");
       } else {
         setStep("REGISTER");
       }
     } catch (err) {
-      toast({ title: "System Error", description: "Could not verify identity. Please check terminal connection.", variant: "destructive" });
+      toast({ title: "System Error", description: "Identity handshake failed. Check terminal uplink.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +119,8 @@ export default function CheckInKiosk() {
       type: regType || "Student",
       collegeOrOffice: regCollege,
       email: normalizedId.includes("@") ? normalizedId.toLowerCase() : "",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isBlocked: false
     };
 
     setDocumentNonBlocking(doc(db, 'students', normalizedId), newProfile, { merge: true });
@@ -114,7 +131,6 @@ export default function CheckInKiosk() {
   const handleIntent = (purpose: string) => {
     if (!db) return;
 
-    // Robust data sanitization for Firestore write
     const logPayload = {
       visitorId: visitor?.id || identifier || "UNKNOWN",
       visitorName: `${visitor?.firstName || ""} ${visitor?.lastName || ""}`.trim() || "Anonymous Visitor",
@@ -137,6 +153,7 @@ export default function CheckInKiosk() {
           <div className="flex justify-center items-center gap-4">
             {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
               if (s === "REGISTER" && step !== "REGISTER") return null;
+              if (step === "BLOCKED") return null;
               const isActive = step === s;
               const isPast = ["IDENTIFY", "REGISTER", "INTENT", "WELCOME"].indexOf(step) > idx;
               return (
@@ -158,12 +175,12 @@ export default function CheckInKiosk() {
             {step === "IDENTIFY" && (
               <Card className="kiosk-card p-10 rounded-[2rem]">
                 <div className="text-center space-y-3 mb-10">
-                  <h2 className="text-3xl font-black italic uppercase tracking-tighter">Enter <span className="text-primary not-italic">Identity</span></h2>
-                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Student ID or Institutional Email</p>
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">Access <span className="text-foreground not-italic">Identification</span></h2>
+                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Institutional ID / RFID Verification</p>
                 </div>
                 <form onSubmit={handleIdentification} className="space-y-6">
                   <Input 
-                    placeholder="e.g. 24-11657-926"
+                    placeholder="Enter ID Number..."
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="h-20 text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-muted focus-visible:border-primary px-8 text-center"
@@ -187,7 +204,7 @@ export default function CheckInKiosk() {
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-2xl font-black italic uppercase tracking-tighter">Initial <span className="text-primary not-italic">Record</span></h2>
-                    <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-60">Building Profile for {identifier}</p>
+                    <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-60">New profile detected for {identifier}</p>
                   </div>
                 </div>
                 <form onSubmit={handleRegistration} className="space-y-6">
@@ -203,7 +220,7 @@ export default function CheckInKiosk() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Class</Label>
+                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Classification</Label>
                     <div className="flex gap-2">
                       {["Student", "Teacher", "Staff"].map((type) => (
                         <Button 
@@ -220,10 +237,10 @@ export default function CheckInKiosk() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">College/Affiliation</Label>
+                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Academic Unit</Label>
                     <Select value={regCollege} onValueChange={setRegCollege}>
                       <SelectTrigger className="h-12 rounded-xl border-2 font-black uppercase text-[9px] px-4">
-                        <SelectValue placeholder="Select Unit" />
+                        <SelectValue placeholder="Select Affiliation" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-none shadow-xl p-2">
                         <SelectItem value="CAS" className="font-bold py-2 text-xs">CAS</SelectItem>
@@ -246,8 +263,8 @@ export default function CheckInKiosk() {
               <Card className="kiosk-card p-10 rounded-[2rem]">
                 <div className="flex items-center justify-between mb-10">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Select <span className="text-primary not-italic">Intent</span></h2>
-                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">{visitor?.firstName} {visitor?.lastName}</p>
+                    <h2 className="text-2xl font-black italic uppercase tracking-tighter text-primary">Select <span className="text-foreground not-italic">Intent</span></h2>
+                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">Identity Confirmed: {visitor?.firstName} {visitor?.lastName}</p>
                   </div>
                   <div className="h-12 w-12 bg-accent/20 rounded-2xl flex items-center justify-center border-2 border-accent">
                     <UserCheck className="h-6 w-6 text-primary" />
@@ -288,11 +305,30 @@ export default function CheckInKiosk() {
                   <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">
                     Welcome to <br /><span className="text-primary not-italic">NEU Library!</span>
                   </h1>
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.6em] opacity-60">Access Logged</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.6em] opacity-60">Access Transaction Logged</p>
                 </div>
                 <div className="pt-8 border-t-2 border-dashed border-muted">
                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-                    <CalendarDays className="h-4 w-4" /> Resetting in 5 Seconds
+                    <CalendarDays className="h-4 w-4" /> Resetting Terminal in 5 Seconds
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {step === "BLOCKED" && (
+              <Card className="kiosk-card p-16 text-center space-y-10 border-4 border-destructive rounded-[2.5rem] bg-destructive/5 animate-pulse">
+                <div className="inline-flex items-center justify-center p-8 bg-destructive text-white rounded-[2.5rem] shadow-xl">
+                  <ShieldAlert className="h-16 w-16" />
+                </div>
+                <div className="space-y-4">
+                  <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none text-destructive">
+                    Access <br /><span className="not-italic">Denied</span>
+                  </h1>
+                  <p className="text-[10px] font-black text-destructive uppercase tracking-[0.4em]">Institutional Privileges Terminated</p>
+                </div>
+                <div className="pt-8 border-t-2 border-dashed border-destructive/20">
+                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-relaxed">
+                    Account flag: Suspended Authority. <br />Please report to the Intelligence Center.
                   </p>
                 </div>
               </Card>

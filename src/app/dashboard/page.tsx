@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   FileDown, TrendingUp, Filter, PieChart as PieIcon, 
-  Activity, Building2, Clock, UsersRound, Loader2, KeyRound, Calendar as CalendarIcon,
+  Activity, Building2, Clock, UsersRound, Loader2, Calendar as CalendarIcon,
   Table as TableIcon
 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, subHours, subDays } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subHours } from "date-fns";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -42,6 +42,9 @@ import "jspdf-autotable";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
+/**
+ * @fileOverview Intelligence Center - High-fidelity behavioral analytics dashboard.
+ */
 export default function IntelligenceCenter() {
   const router = useRouter();
   const db = useFirestore();
@@ -56,7 +59,7 @@ export default function IntelligenceCenter() {
   });
   const [filterReason, setFilterReason] = useState("all");
   const [filterCollege, setFilterCollege] = useState("all");
-  const [filterClass, setFilterClass] = useState("all"); // "all", "Student", "Employee"
+  const [filterClass, setFilterClass] = useState("all"); 
 
   // Access Control
   useEffect(() => {
@@ -74,6 +77,11 @@ export default function IntelligenceCenter() {
     );
   }, [db, user, isAdmin]);
 
+  const reasonsQuery = useMemoFirebase(() => {
+    if (!db || !user || !isAdmin) return null;
+    return collection(db, 'reasonsForVisit');
+  }, [db, user, isAdmin]);
+
   const collegesQuery = useMemoFirebase(() => {
     if (!db || !user || !isAdmin) return null;
     return collection(db, 'colleges');
@@ -81,6 +89,7 @@ export default function IntelligenceCenter() {
 
   const { data: sessions, isLoading: sessionsLoading } = useCollection(sessionsQuery);
   const { data: colleges } = useCollection(collegesQuery);
+  const { data: visitReasons } = useCollection(reasonsQuery);
 
   // Sync DateRange with Quick Presets
   useEffect(() => {
@@ -216,16 +225,16 @@ export default function IntelligenceCenter() {
           </Button>
         </div>
 
-        {/* Filters Hub */}
+        {/* Intelligence Filters */}
         <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
           <CardHeader className="p-8 pb-4 border-b bg-muted/10">
             <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
-              <Filter className="h-4 w-4 text-accent" /> Intelligence Filters
+              <Filter className="h-4 w-4 text-accent" /> Analysis Vectors
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="space-y-2">
-              <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Timeframe Preset</label>
+              <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Timeframe</label>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
                   <SelectValue />
@@ -240,7 +249,7 @@ export default function IntelligenceCenter() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Custom Date Range</label>
+              <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Custom Dates</label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -253,12 +262,9 @@ export default function IntelligenceCenter() {
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date?.from ? (
                       date.to ? (
-                        <>
-                          {format(date.from, "LLL dd, y")} -{" "}
-                          {format(date.to, "LLL dd, y")}
-                        </>
+                        <>{format(date.from, "LLL dd")} - {format(date.to, "LLL dd")}</>
                       ) : (
-                        format(date.from, "LLL dd, y")
+                        format(date.from, "LLL dd")
                       )
                     ) : (
                       <span>Pick a range</span>
@@ -299,6 +305,23 @@ export default function IntelligenceCenter() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Visit Purpose</label>
+              <Select value={filterReason} onValueChange={setFilterReason}>
+                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-[9px] font-black uppercase">All Purposes</SelectItem>
+                  <SelectItem value="Research" className="text-[9px] font-black uppercase">Research</SelectItem>
+                  <SelectItem value="Study" className="text-[9px] font-black uppercase">Study</SelectItem>
+                  {visitReasons?.map(r => (
+                    <SelectItem key={r.id} value={r.name} className="text-[9px] font-black uppercase">{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Class</label>
               <Select value={filterClass} onValueChange={setFilterClass}>
                 <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
@@ -314,13 +337,13 @@ export default function IntelligenceCenter() {
           </CardContent>
         </Card>
 
-        {/* Stats Cards */}
+        {/* Operational Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Aggregate Traffic", val: stats?.total || 0, icon: UsersRound, color: "bg-primary" },
             { label: "Live Occupancy (1h)", val: stats?.lastHourCount || 0, icon: Clock, color: "bg-accent" },
-            { label: "Active Academic Unit", val: stats?.activeUnit || "N/A", icon: Building2, color: "bg-primary", isText: true },
-            { label: "Employee : Student", val: `${stats?.employeeCount} : ${stats?.studentCount}`, icon: TrendingUp, color: "bg-primary", isRatio: true }
+            { label: "Intensity Unit", val: stats?.activeUnit || "N/A", icon: Building2, color: "bg-primary", isText: true },
+            { label: "Employee : Student", val: `${stats?.employeeCount} : ${stats?.studentCount}`, icon: TrendingUp, color: "bg-primary" }
           ].map((item, i) => (
             <Card key={i} className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
               <div className={`h-2 ${item.color} w-full`} />
@@ -339,7 +362,7 @@ export default function IntelligenceCenter() {
           ))}
         </div>
 
-        {/* Charts Section */}
+        {/* Behavioral Visualization */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8">
             <CardHeader className="pb-8">
@@ -351,7 +374,7 @@ export default function IntelligenceCenter() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.chartData}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" fontSize={9} fontWeight="900" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="name" fontSize={9} fontStyle="italic" fontWeight="900" tickLine={false} axisLine={false} />
                   <YAxis fontSize={9} fontWeight="900" tickLine={false} axisLine={false} />
                   <ChartTooltip cursor={{ fill: '#f7f7f7', radius: 8 }} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
@@ -391,21 +414,21 @@ export default function IntelligenceCenter() {
           </Card>
         </div>
 
-        {/* Visitor List Section */}
+        {/* Log Inspection */}
         <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
           <CardHeader className="p-8 pb-4 border-b bg-muted/10">
             <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-              <TableIcon className="h-6 w-6 text-primary" /> Live Access Log
+              <TableIcon className="h-6 w-6 text-primary" /> Institutional Access Log
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-muted/5">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Visitor Name</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Institutional ID</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Academic Unit</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Check-in Time</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Visitor</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">ID</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Unit</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Time</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest">Purpose</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Role</TableHead>
                 </TableRow>
@@ -414,23 +437,21 @@ export default function IntelligenceCenter() {
                 {stats?.filteredSessions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-[10px] font-black uppercase tracking-[0.3em] opacity-30">
-                      No Records in Specified Window
+                      No Records Found in Analysis Window
                     </TableCell>
                   </TableRow>
                 ) : (
                   stats?.filteredSessions.map((session) => (
                     <TableRow key={session.id} className="hover:bg-muted/5 transition-colors">
                       <TableCell className="text-xs font-bold py-4">
-                        <div className="flex flex-col">
-                          <span className="uppercase italic tracking-tight">{session.visitorName || "N/A"}</span>
-                        </div>
+                        <span className="uppercase italic tracking-tight">{session.visitorName || "N/A"}</span>
                       </TableCell>
                       <TableCell className="text-[10px] font-black opacity-60 tracking-widest">{session.visitorId || "N/A"}</TableCell>
                       <TableCell className="text-[10px] font-black uppercase tracking-widest text-primary/80">{session.collegeOrOffice || "N/A"}</TableCell>
                       <TableCell className="text-[10px] font-bold text-muted-foreground">
                         {session.checkInTime ? format(session.checkInTime.toDate(), "PP | hh:mm a") : "N/A"}
                       </TableCell>
-                      <TableCell className="text-[10px] font-black uppercase tracking-widest">
+                      <TableCell>
                         <Badge variant="outline" className="border-primary/10 bg-primary/5 text-[8px] font-black py-0.5 px-2">
                           {session.purpose || "General"}
                         </Badge>
