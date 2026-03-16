@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -53,10 +52,10 @@ export default function LandingPage() {
       // Wait for auth and admin status to resolve
       if (isUserLoading || isAdminLoading || !user) return;
 
-      // Ensure we are operating on the correct verified ID
+      // CRITICAL: Ensure we are operating on the correct verified ID for this specific session
       if (verifiedUid !== user.uid) return;
 
-      // ROUTE TO UNIFIED CHECK-IN FLOW FOR NON-ADMINS
+      // ROUTE TO UNIFIED CHECK-IN FLOW ONLY FOR DEFINITIVE NON-ADMINS
       if (isAdmin === false) {
         router.replace("/check-in");
       }
@@ -69,6 +68,7 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
+      // isActionPending is reset by the useEffect above once user is detected
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -133,7 +133,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isUserLoading || isActionPending ? "Verifying Identity..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
+                {isUserLoading || isActionPending || isAdminLoading ? "Verifying Identity..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 

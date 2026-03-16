@@ -10,6 +10,8 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.email == 'jcesperanza@neu.edu.ph' ||
         request.auth.token.email == 'johnmichaelsoriano76@gmail.com' ||
+        request.auth.token.email == 'johnmichaelsoriano151@gmail.com' ||
+        request.auth.token.email == 'admin@neu.edu.ph' ||
         exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
       );
     }
