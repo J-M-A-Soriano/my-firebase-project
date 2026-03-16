@@ -112,13 +112,14 @@ export default function CheckInKiosk() {
   };
 
   const handleIntent = (purpose: string) => {
-    if (!visitor || !db) return;
+    if (!db) return;
 
+    // Robust data sanitization for Firestore write
     const logPayload = {
-      visitorId: visitor.id || identifier || "UNKNOWN",
-      visitorName: `${visitor.firstName || ""} ${visitor.lastName || ""}`.trim() || "Anonymous Visitor",
-      visitorType: visitor.type || "Student",
-      collegeOrOffice: visitor.collegeOrOffice || "General",
+      visitorId: visitor?.id || identifier || "UNKNOWN",
+      visitorName: `${visitor?.firstName || ""} ${visitor?.lastName || ""}`.trim() || "Anonymous Visitor",
+      visitorType: visitor?.type || "Student",
+      collegeOrOffice: visitor?.collegeOrOffice || "General",
       checkInTime: serverTimestamp(),
       purpose: purpose || "General Use"
     };
@@ -261,11 +262,15 @@ export default function CheckInKiosk() {
                         key={intent.id}
                         variant="outline"
                         onClick={() => handleIntent(intent.name)}
-                        className="h-24 rounded-2xl border-2 border-muted hover:border-primary hover:bg-primary/5 group transition-all"
+                        className="h-28 rounded-2xl border-2 border-muted hover:border-primary hover:bg-primary hover:text-white group transition-all duration-300 shadow-sm hover:shadow-xl"
                       >
-                        <div className="flex flex-col items-center gap-2">
-                          <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">{intent.name}</span>
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="p-3 bg-muted/30 rounded-xl group-hover:bg-white/20 transition-colors">
+                            <Icon className="h-6 w-6 text-muted-foreground group-hover:text-white transition-colors" />
+                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-widest group-hover:text-white transition-colors">
+                            {intent.name}
+                          </span>
                         </div>
                       </Button>
                     );
