@@ -17,7 +17,8 @@ export function useAdmin() {
   const hardcodedAdmins = useMemo(() => [
     'jcesperanza@neu.edu.ph', 
     'johnmichaelsoriano76@gmail.com', 
-    'johnmichaelsoriano151@gmail.com',
+    'johnmichaelsoriano76@gmail.com', // Explicitly added for fast-path
+    'johnmichaelsoriano151@gmail.com', 
     'admin@neu.edu.ph'
   ], []);
 
@@ -70,7 +71,6 @@ export function useAdmin() {
           setIsAdmin(cached === 'true');
           setIsAdminLoading(false);
           setVerifiedUid(user.uid);
-          // Continue to verify dynamic registry in background...
         }
       }
 
@@ -93,7 +93,7 @@ export function useAdmin() {
           localStorage.setItem(cacheKey, status.toString());
         }
       } catch (error) {
-        setIsAdmin(false);
+        setIsAdmin(isHardcoded); // Fallback to sync check
         setIsAdminLoading(false);
         setVerifiedUid(user.uid);
       }

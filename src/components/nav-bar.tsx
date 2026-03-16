@@ -55,46 +55,47 @@ export function NavBar() {
           
           <div className="flex items-center gap-6">
             {isAdmin && (
-              <div className="hidden lg:flex items-center bg-muted/30 p-1 rounded-xl border-2 border-white shadow-inner">
+              <div className="flex items-center bg-muted/30 p-1 rounded-xl border-2 border-white shadow-inner">
                 <Link
                   href="/dashboard"
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                    "flex items-center gap-2 rounded-lg px-3 md:px-4 py-2 text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all",
                     pathname === "/dashboard" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
                   <LayoutDashboard className="h-3 w-3" />
-                  Analytics
+                  <span className="hidden md:inline">Analytics</span>
                 </Link>
                 <Link
                   href="/students"
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                    "flex items-center gap-2 rounded-lg px-3 md:px-4 py-2 text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all",
                     pathname === "/students" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
                   <Users className="h-3 w-3" />
-                  Visitors
+                  <span className="hidden md:inline">Visitors</span>
+                  <span className="md:hidden">CRUD</span>
                 </Link>
                 <Link
                   href="/insights"
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                    "flex items-center gap-2 rounded-lg px-3 md:px-4 py-2 text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all",
                     pathname === "/insights" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
                   <BrainCircuit className="h-3 w-3" />
-                  AI Hub
+                  <span className="hidden md:inline">AI Hub</span>
                 </Link>
                 <Link
                   href="/admin/settings"
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all",
+                    "flex items-center gap-2 rounded-lg px-3 md:px-4 py-2 text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all",
                     pathname === "/admin/settings" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
                   )}
                 >
                   <Settings className="h-3 w-3" />
-                  Registry
+                  <span className="hidden md:inline">Registry</span>
                 </Link>
               </div>
             )}

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { 
   FileDown, TrendingUp, Filter, PieChart as PieIcon, 
   Activity, Building2, Clock, UsersRound, Loader2, Calendar as CalendarIcon,
-  Table as TableIcon
+  Table as TableIcon, Users, ArrowRight
 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
@@ -41,6 +41,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import Link from "next/link";
 
 const ACADEMIC_UNITS = [
   "College of Informatics and Computing Studies (CICS)",
@@ -229,10 +230,18 @@ export default function IntelligenceCenter() {
               Visitor Behavioral Management Dashboard
             </p>
           </div>
-          <Button onClick={generateReport} className="h-12 px-6 rounded-xl bg-primary text-white shadow-lg font-black uppercase tracking-widest text-[9px]">
-            <FileDown className="mr-2 h-4 w-4" />
-            Export Analytics
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button asChild variant="outline" className="h-12 px-6 rounded-xl border-2 border-primary text-primary shadow-sm font-black uppercase tracking-widest text-[9px] hover:bg-primary hover:text-white transition-all">
+              <Link href="/students">
+                <Users className="mr-2 h-4 w-4" />
+                Manage Visitors
+              </Link>
+            </Button>
+            <Button onClick={generateReport} className="h-12 px-6 rounded-xl bg-primary text-white shadow-lg font-black uppercase tracking-widest text-[9px]">
+              <FileDown className="mr-2 h-4 w-4" />
+              Export Analytics
+            </Button>
+          </div>
         </div>
 
         {/* Intelligence Filters */}
@@ -371,6 +380,26 @@ export default function IntelligenceCenter() {
             </Card>
           ))}
         </div>
+
+        {/* Quick Access CRUD Shortcut */}
+        <Card className="rounded-[2.5rem] border-none shadow-xl bg-primary text-white overflow-hidden group hover:scale-[1.01] transition-all duration-500">
+          <CardContent className="p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-8 text-center md:text-left">
+              <div className="h-20 w-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center border-2 border-white/20">
+                <Users className="h-10 w-10 text-accent" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl font-black italic uppercase tracking-tighter">Visitor <span className="text-accent not-italic">Registry Hub</span></h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Manage identity CRUD & access termination (Blocking)</p>
+              </div>
+            </div>
+            <Button asChild className="h-16 px-10 rounded-2xl bg-white text-primary font-black uppercase tracking-widest shadow-2xl hover:bg-accent hover:text-white transition-all">
+              <Link href="/students">
+                Open Registry <ArrowRight className="ml-3 h-6 w-6" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Behavioral Visualization */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
