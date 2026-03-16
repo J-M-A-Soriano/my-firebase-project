@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdmin } from "@/hooks/use-admin";
+import { cn } from "@/lib/utils";
 
+/**
+ * @fileOverview Institutional Verification Gateway.
+ * Displays the requested "Welcome to NEU Library!" greeting for authorized users.
+ */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
