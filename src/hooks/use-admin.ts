@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 /**
  * @fileOverview Centralized Administrative Authority Hook.
  * Implements dual-verification: Institutional Hardcode + Firestore Registry.
+ * Optimized for performance: Bypasses network calls for hardcoded super-admins.
  */
 export function useAdmin() {
   const { user, isUserLoading } = useUser();
@@ -20,7 +21,10 @@ export function useAdmin() {
 
   useEffect(() => {
     async function verifyAuthority() {
+      // If Firebase Auth is still loading, we must wait
       if (isUserLoading) return;
+
+      // If no user is logged in, reset states
       if (!user || !db) {
         setIsAdmin(false);
         setIsSuperAdmin(false);
@@ -28,24 +32,29 @@ export function useAdmin() {
         return;
       }
 
-      // Case-insensitive email check for institutional resilience
+      // 1. FAST PATH: Check institutional hardcode (Super-Admins)
+      // This is local and instantaneous, eliminating "Launching..." latency
       const userEmail = (user.email || '').toLowerCase();
       const superAdminStatus = hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
-      setIsSuperAdmin(superAdminStatus);
       
-      let registryAdmin = false;
-      try {
-        const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
-        registryAdmin = adminDoc.exists();
-      } catch (error) {
-        console.error("Authority verification failed:", error);
+      if (superAdminStatus) {
+        setIsSuperAdmin(true);
+        setIsAdmin(true);
+        setIsAdminLoading(false);
+        return; // Exit early to avoid unnecessary Firestore lookup
       }
 
-      // Final authority check
-      const finalAdminStatus = superAdminStatus || registryAdmin;
-      
-      setIsAdmin(finalAdminStatus);
-      setIsAdminLoading(false);
+      // 2. REGISTRY PATH: Check Firestore for dynamic administrators
+      // Only reached if the user is not a hardcoded super-admin
+      try {
+        const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
+        setIsAdmin(adminDoc.exists());
+      } catch (error) {
+        console.error("Authority verification failed:", error);
+        setIsAdmin(false);
+      } finally {
+        setIsAdminLoading(false);
+      }
     }
 
     verifyAuthority();
