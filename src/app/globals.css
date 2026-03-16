@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 132 27% 95%; /* #EEF5EF */
-    --foreground: 136 30% 15%;
+    --background: 210 20% 98%; /* Light Institutional Gray */
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 136 30% 15%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 136 30% 15%;
-    --primary: 136 30% 46%; /* #519763 */
-    --primary-foreground: 132 27% 98%;
-    --secondary: 132 20% 90%;
-    --secondary-foreground: 136 30% 20%;
-    --muted: 132 15% 92%;
-    --muted-foreground: 136 10% 40%;
-    --accent: 94 65% 66%; /* #A1E070 */
-    --accent-foreground: 136 30% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 136 15% 85%;
-    --input: 136 15% 85%;
-    --ring: 136 30% 46%;
-    --radius: 1.5rem;
+    --popover-foreground: 222 47% 11%;
+    --primary: 222 47% 11%; /* Auth Vector Navy #0F172A */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 221 83% 53%; /* Terminal Mode Blue #3B82F6 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 1.5rem; /* 24px rounded corners */
   }
 }
 
@@ -33,18 +33,30 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(136, 30%, 46%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(94, 65%, 66%, 0.05) 0px, transparent 50%);
+    background-image:
+      radial-gradient(at 0% 0%, hsla(222, 47%, 11%, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(221, 83%, 53%, 0.03) 0px, transparent 50%);
   }
 }
 
 .kiosk-card {
-  @apply bg-white/90 backdrop-blur-xl border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-[3rem];
+  @apply bg-white border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-[2rem] transition-all duration-500;
 }
 
 .kiosk-button {
-  @apply transition-all duration-300 active:scale-95 hover:shadow-lg;
+  @apply transition-all duration-300 active:scale-95 hover:shadow-xl;
+}
+
+.auth-hero {
+  @apply bg-primary text-white overflow-hidden relative;
+}
+
+.terminal-accent {
+  @apply border-2 border-accent/20 bg-accent/5 hover:bg-accent/10 hover:border-accent transition-all;
+}
+
+.step-active {
+  @apply bg-accent text-white scale-110 shadow-xl;
 }
 
 .success-glow {
@@ -52,14 +64,6 @@
 }
 
 @keyframes glow {
-  from { box-shadow: 0 0 20px -5px hsla(136, 30%, 46%, 0.3); }
-  to { box-shadow: 0 0 40px 5px hsla(94, 65%, 66%, 0.4); }
-}
-
-.step-active {
-  @apply bg-primary text-white scale-110 shadow-xl;
-}
-
-.step-inactive {
-  @apply bg-white text-muted-foreground border-2 border-muted;
+  from { box-shadow: 0 0 20px -5px hsla(221, 83%, 53%, 0.3); }
+  to { box-shadow: 0 0 40px 5px hsla(221, 83%, 53%, 0.5); }
 }
