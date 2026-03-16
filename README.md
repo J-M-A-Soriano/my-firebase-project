@@ -1,42 +1,39 @@
-# NEU Library Log - Intelligence Center
+# NEU Library Log - Enterprise Intelligence Center
 
-A professional, high-performance visitor management system for the NEU Library. Optimized for high-traffic RFID terminals and administrative oversight.
+A high-performance, institutional visitor management system for the NEU Library. Engineered for high-traffic terminals, granular administrative oversight, and real-time behavioral analytics.
 
 **My Personal Project URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
 
 ---
 
-## 🌐 Browser Certification
-The system is certified for deployment on modern Chromium-based engines. For maximum reliability, the following environments are recommended:
-- **Google Chrome Enterprise** (Stable Channel)
-- **Microsoft Edge** (Chromium Engine)
-- **Opera One**
+## 🏛️ Institutional Overview
+The NEU Library Log provides a secure, digital gateway for academic access. Designed with role-based synchronization, the platform ensures that administrative staff can monitor facility intensity while students experience a seamless, verified entry process.
 
-## 🖥️ Terminal Deployment & Configuration
-To maintain terminal integrity and prevent unauthorized user navigation, the following deployment standards must be applied:
+## 🔑 Access Control & Authorization
+The system utilizes Google Institutional Authentication for all entry points.
+- **Administrative Authority:** Automatically granted to authorized institutional accounts (e.g., `jcesperanza@neu.edu.ph`).
+- **Regular Access:** Standard students and visitors are routed to a verification confirmation interface.
+- **Secure Switching:** Administrative users can safely simulate regular visitor sessions for audit purposes via the secondary navigation.
 
-### 1. Sandbox Environment (Chrome Kiosk Mode)
-For dedicated terminals, launch the browser using the following command-line flags to initiate a sandboxed session:
-`chrome.exe --kiosk --incognito https://my-firebase-project-ten.vercel.app`
+## 📊 Intelligence Center Specifications
+The administrative dashboard provides a high-fidelity "Intelligence Center" view:
+- **Temporal Horizon Analysis:** Filter visitor intensity by Day, Week, or Month.
+- **Academic Unit Slicing:** Isolate data streams by specific Colleges or Departments.
+- **Objective Variance:** Categorize traffic by visit purposes (e.g., Thesis Research, Reading).
+- **Visitor Class Vectors:** Differentiate between Student Class and Staff/Employee vectors.
+- **Audit Generation:** One-click generation of PDF intelligence reports with active filter parameters.
 
-### 2. Hardware Integration (RFID/HID)
-The system utilizes standard HID (Human Interface Device) drivers. 
-- **Compatibility:** Plug-and-play compatible with all ISO/IEC 14443A RFID readers.
-- **Input Sync:** The primary authentication field is globally focused to ensure zero-latency scanning.
+## 🛠️ Deployment & Terminal Standards
+For maximum operational integrity in kiosk environments:
+- **Browser:** Certified for Google Chrome Enterprise or Microsoft Edge (Chromium).
+- **Environment:** Launch in `--kiosk` mode to prevent navigation leakage.
+- **Calibration:** Optimized for 1920x1080 resolution.
+- **Security:** AES-256 encrypted real-time synchronization via Google Firebase.
 
-### 3. Display Calibration
-- **Resolution:** Optimized for 1920x1080 Full HD displays.
-- **Interface:** Toggle **F11** for chrome-less operation.
-
-## 📊 Administrative Specifications
-- **Hardware ID:** TERMINAL-L01 (Main Entry)
-- **System Authority:** Authenticated Library Staff only.
-- **Security Override:** `ADMIN123`
-- **Analytics Access:** Intelligence Hub restricted via Firebase Authentication.
-
-## 🛠️ System Architecture
-- **Core Framework:** Next.js 15 (App Router / React 19)
-- **Database Engine:** Google Firebase Firestore (Real-time NoSQL)
-- **Logic Layer:** Google Genkit (Generative AI Pattern Analysis)
-- **Document Generation:** jsPDF Engine with AutoTable extensions
-- **Design System:** Tailwind CSS / Shadcn UI Component Library
+## ⚙️ Architecture Profile
+- **Engine:** Next.js 15 (App Router)
+- **Database:** Google Cloud Firestore (Real-time NoSQL)
+- **Identity:** Firebase Authentication (RBAC Implementation)
+- **Analytics:** Recharts Visualization Engine
+- **Reporting:** jsPDF Technical Engine
+- **Intelligence:** Google Genkit AI Integration

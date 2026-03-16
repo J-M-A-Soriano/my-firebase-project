@@ -1,265 +1,85 @@
-
 {
   "entities": {
     "College": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "College",
       "type": "object",
-      "description": "Represents an academic college or department within the university.",
+      "description": "Academic department metadata.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the College entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the college or department (e.g., 'College of Engineering')."
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "ReasonForVisit": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ReasonForVisit",
       "type": "object",
-      "description": "Defines a predefined category for why a visitor is entering the library.",
+      "description": "Visit categorization.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ReasonForVisit entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The descriptive name of the reason for visiting (e.g., 'Academic Study', 'Group Project', 'Event')."
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "Student": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Student",
       "type": "object",
-      "description": "Represents a student enrolled in the university who can visit the library.",
+      "description": "Student profile data.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Student entity."
-        },
-        "studentId": {
-          "type": "string",
-          "description": "The unique official student ID used for check-in (e.g., '2023-0001')."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the student."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the student."
-        },
-        "email": {
-          "type": "string",
-          "description": "The student's email address.",
-          "format": "email"
-        },
-        "collegeId": {
-          "type": "string",
-          "description": "Reference to College. (Relationship: College 1:N Student)"
-        }
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "collegeOrOffice": { "type": "string" },
+        "isBlocked": { "type": "boolean" }
       },
-      "required": [
-        "id",
-        "studentId",
-        "firstName",
-        "lastName",
-        "collegeId"
-      ]
-    },
-    "Staff": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Staff",
-      "type": "object",
-      "description": "Represents a staff member or teacher of the university, who can be a library visitor or system administrator.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Staff entity."
-        },
-        "staffId": {
-          "type": "string",
-          "description": "The unique official staff ID or employee number."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the staff member."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the staff member."
-        },
-        "email": {
-          "type": "string",
-          "description": "The staff member's email address, often used as their login identifier for external authentication.",
-          "format": "email"
-        },
-        "isTeacher": {
-          "type": "boolean",
-          "description": "Indicates if the staff member holds a teaching role."
-        },
-        "collegeId": {
-          "type": "string",
-          "description": "Reference to College. Optional, as not all staff may be primarily affiliated with a specific college. (Relationship: College 1:N Staff)"
-        }
-      },
-      "required": [
-        "id",
-        "staffId",
-        "firstName",
-        "lastName",
-        "email",
-        "isTeacher"
-      ]
+      "required": ["id", "firstName", "lastName"]
     },
     "LibraryVisit": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LibraryVisit",
       "type": "object",
-      "description": "Records a single entry and exit event for a visitor (student or staff) in the library.",
+      "description": "Transactional log of entry/exit.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LibraryVisit entity."
-        },
-        "checkInTime": {
-          "type": "string",
-          "description": "The timestamp when the visitor checked into the library.",
-          "format": "date-time"
-        },
-        "checkOutTime": {
-          "type": "string",
-          "description": "The timestamp when the visitor checked out of the library. Null if currently checked in.",
-          "format": "date-time"
-        },
-        "visitorType": {
-          "type": "string",
-          "description": "Indicates the type of visitor ('Student' or 'Staff'). This determines which entity 'visitorId' refers to."
-        },
-        "visitorId": {
-          "type": "string",
-          "description": "Reference to the Student or Staff entity, based on 'visitorType'. (Relationship: Student 1:N LibraryVisit, Staff 1:N LibraryVisit)"
-        },
-        "reasonForVisitId": {
-          "type": "string",
-          "description": "Reference to ReasonForVisit. (Relationship: ReasonForVisit 1:N LibraryVisit)"
-        }
+        "id": { "type": "string" },
+        "checkInTime": { "type": "string", "format": "date-time" },
+        "checkOutTime": { "type": "string", "format": "date-time" },
+        "visitorType": { "type": "string", "enum": ["Student", "Staff"] },
+        "visitorId": { "type": "string" },
+        "visitorName": { "type": "string" },
+        "collegeOrOffice": { "type": "string" },
+        "purpose": { "type": "string" }
       },
-      "required": [
-        "id",
-        "checkInTime",
-        "visitorType",
-        "visitorId",
-        "reasonForVisitId"
-      ]
+      "required": ["id", "checkInTime", "visitorType", "visitorId", "purpose"]
     },
     "AdminRole": {
       "title": "AdminRole",
       "type": "object",
-      "description": "Role marker for Admin access.",
-      "properties": {}
-    },
-    "RegularUserRole": {
-      "title": "RegularUserRole",
-      "type": "object",
-      "description": "Role marker for Regular User access.",
+      "description": "Administrative authority marker.",
       "properties": {}
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous",
-      "google.com"
-    ]
+    "providers": ["google.com"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/colleges/{collegeId}",
-        "definition": {
-          "entityName": "College",
-          "schema": {
-            "$ref": "#/backend/entities/College"
-          },
-          "description": "Master data collection for academic colleges."
-        }
-      },
-      {
-        "path": "/reasonsForVisit/{reasonId}",
-        "definition": {
-          "entityName": "ReasonForVisit",
-          "schema": {
-            "$ref": "#/backend/entities/ReasonForVisit"
-          },
-          "description": "Master data collection for predefined reasons for library visits."
-        }
-      },
-      {
-        "path": "/students/{studentUniqueId}",
-        "definition": {
-          "entityName": "Student",
-          "schema": {
-            "$ref": "#/backend/entities/Student"
-          },
-          "description": "Master list of student profiles."
-        }
-      },
-      {
-        "path": "/staff/{staffUniqueId}",
-        "definition": {
-          "entityName": "Staff",
-          "schema": {
-            "$ref": "#/backend/entities/Staff"
-          },
-          "description": "Master list of staff/teacher profiles."
-        }
-      },
-      {
-        "path": "/admin_users/{userId}",
-        "definition": {
-          "entityName": "AdminRole",
-          "schema": {
-            "$ref": "#/backend/entities/AdminRole"
-          },
-          "description": "Grants the 'Admin' role to that user."
-        }
-      },
-      {
-        "path": "/regular_users/{userId}",
-        "definition": {
-          "entityName": "RegularUserRole",
-          "schema": {
-            "$ref": "#/backend/entities/RegularUserRole"
-          },
-          "description": "Grants the 'Regular User' role to that user."
-        }
-      },
-      {
-        "path": "/libraryVisits/{visitId}",
-        "definition": {
-          "entityName": "LibraryVisit",
-          "schema": {
-            "$ref": "#/backend/entities/LibraryVisit"
-          },
-          "description": "Records individual library visits."
-        }
-      }
-    ],
-    "reasoning": "Standardized paths to even segments for Firestore document reference compliance."
+    "admin_users/{userId}": {
+      "schema": "#/entities/AdminRole",
+      "description": "Authorized administrative accounts."
+    },
+    "students/{studentId}": {
+      "schema": "#/entities/Student",
+      "description": "Visitor profile registry."
+    },
+    "libraryVisits/{visitId}": {
+      "schema": "#/entities/LibraryVisit",
+      "description": "Live transaction logs."
+    },
+    "colleges/{collegeId}": {
+      "schema": "#/entities/College",
+      "description": "Academic unit references."
+    },
+    "reasonsForVisit/{reasonId}": {
+      "schema": "#/entities/ReasonForVisit",
+      "description": "Visit purpose references."
+    }
   }
 }

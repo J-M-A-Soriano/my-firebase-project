@@ -1,71 +1,40 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * NEU Library Visitor Log - Security Rules
-     * 
-     * Secure authorization with role-based access control.
-     * Automatically recognizes the designated super-admin email.
-     */
-
-    // --- Helper Functions ---
-
+    
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid)) ||
-        request.auth.token.email == 'jcesperanza@neu.edu.ph'
+        request.auth.token.email == 'jcesperanza@neu.edu.ph' ||
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
       );
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // --- Collection Rules ---
-
-    match /colleges/{collegeId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
-    }
-
-    match /reasonsForVisit/{reasonId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
-    }
-
-    match /students/{studentUniqueId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /staff/{staffUniqueId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
     match /admin_users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create, update, delete: if false;
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if isAdmin();
     }
 
-    match /regular_users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create, update, delete: if false;
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     match /libraryVisits/{visitId} {
-      allow get, list: if isAdmin();
-      allow create: if isAdmin();
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
+    match /colleges/{collegeId} {
+      allow read: if isSignedIn();
+    }
+
+    match /reasonsForVisit/{reasonId} {
+      allow read: if isSignedIn();
+    }
   }
 }
