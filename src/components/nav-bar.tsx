@@ -3,9 +3,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert, ShieldCheck } from "lucide-react";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert, ShieldCheck, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
+import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 
@@ -14,6 +15,7 @@ const navItems = [
   { name: "Intelligence Hub", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
   { name: "Visitor Hub", href: "/students", icon: Users, adminOnly: true },
   { name: "AI Analytics", href: "/insights", icon: BrainCircuit, adminOnly: true },
+  { name: "System Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
 /**
@@ -24,9 +26,7 @@ export function NavBar() {
   const router = useRouter();
   const auth = useAuth();
   const { user } = useUser();
-
-  // Primary Institutional Authority Check
-  const isAdmin = user?.email === 'jcesperanza@neu.edu.ph';
+  const { isAdmin } = useAdmin();
 
   const handleSignOut = async () => {
     await signOut(auth);

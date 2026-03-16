@@ -6,20 +6,20 @@ import { useRouter } from "next/navigation";
 import { BookOpen, ShieldCheck, Loader2, Mail, ArrowRight, Fingerprint, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth, useUser, useFirestore, initiateGoogleSignIn } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
+import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 
 /**
  * @fileOverview Institutional Landing Portal & Authentication Gateway.
- * Routes users based on institutional role (Admin vs regular).
+ * Routes users based on institutional role (Admin vs Regular).
  */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
-  const db = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
+  const { isAdmin, isAdminLoading } = useAdmin();
   const [isProcessing, setIsProcessing] = useState(false);
   const [localTime, setLocalTime] = useState("");
 
@@ -33,46 +33,27 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (user && !isUserLoading) {
-      checkUserRolesAndRedirect();
-    }
-  }, [user, isUserLoading]);
-
-  const checkUserRolesAndRedirect = async () => {
-    if (!user || !db) return;
-    setIsProcessing(true);
-
-    try {
-      // Direct authority for the institutional owner (Hardcoded Super-Admin)
-      const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
-      const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
-      
-      if (isAdminEmail || adminDoc.exists()) {
+    if (user && !isUserLoading && !isAdminLoading) {
+      if (isAdmin) {
         router.push("/dashboard");
       } else {
         router.push("/welcome");
       }
-    } catch (err) {
-      router.push("/welcome");
-    } finally {
-      setIsProcessing(false);
     }
-  };
+  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
 
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
     try {
       await initiateGoogleSignIn(auth);
     } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        setIsProcessing(false);
-        return;
-      }
       setIsProcessing(false);
+      if (err.code === 'auth/popup-closed-by-user') return;
+      
       toast({
         variant: "destructive",
         title: "Authentication Protocol Fault",
-        description: "Failed to initialize secure institutional login vector.",
+        description: "Failed to initialize secure institutional login vector. Ensure Google provider is enabled in Firebase.",
       });
     }
   };
@@ -117,9 +98,9 @@ export default function LandingPage() {
               <Button 
                 onClick={handleGoogleLogin}
                 className="w-full h-24 text-xl font-black bg-primary text-white hover:bg-primary/90 shadow-2xl rounded-[2rem] group transition-all"
-                disabled={isProcessing}
+                disabled={isProcessing || isUserLoading || isAdminLoading}
               >
-                {isProcessing ? (
+                {isProcessing || isUserLoading || isAdminLoading ? (
                   <Loader2 className="h-10 w-10 animate-spin" />
                 ) : (
                   <>
