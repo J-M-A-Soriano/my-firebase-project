@@ -20,7 +20,7 @@ import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Implements persona selection for authenticated Administrators.
+ * Implements persona selection for authenticated Administrators and auto-entry for visitors.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -41,12 +41,18 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // AUTO-ENTRY PROTOCOL: Redirect non-admins automatically
+  useEffect(() => {
+    if (user && !isAdminLoading && !isAdmin && !isActionPending) {
+      router.push("/welcome");
+    }
+  }, [user, isAdmin, isAdminLoading, isActionPending, router]);
+
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // Ensure state is released after successful login to prevent UI lock
-      setIsActionPending(false);
+      // State is handled by the identity effects
     } catch (err: any) {
       setIsActionPending(false);
       if (err.code === 'auth/popup-closed-by-user') return;
@@ -56,6 +62,8 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
+    } finally {
+      setIsActionPending(false);
     }
   };
 
@@ -79,7 +87,6 @@ export default function LandingPage() {
       console.error("Visit log failed:", error);
       router.push("/welcome");
     } finally {
-      // Re-enable buttons if for some reason the navigation is delayed
       setIsActionPending(false);
     }
   };
@@ -96,7 +103,6 @@ export default function LandingPage() {
     }
   };
 
-  // Show terminal only if user is not an admin or not logged in
   const showTerminal = !isAdmin && !isAdminLoading;
   const isGlobalLoading = isUserLoading || isAdminLoading;
 
@@ -115,8 +121,8 @@ export default function LandingPage() {
                 <BookOpen className="h-4 w-4 text-accent" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-black italic uppercase tracking-tighter leading-none text-white">NEULibrary</span>
-                <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white/40">Intelligence Systems</span>
+                <span className="text-xl font-black italic uppercase tracking-tighter leading-none text-white">NEULibrary</span>
+                <span className="text-[7px] font-black uppercase tracking-[0.4em] text-white/40">Intelligence Systems</span>
               </div>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
@@ -159,34 +165,29 @@ export default function LandingPage() {
                       <Button
                         asChild
                         disabled={isActionPending}
-                        className="h-20 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.03] transition-all"
+                        className="h-24 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.03] transition-all"
                       >
                         <Link href="/dashboard" className="flex flex-col items-center justify-center gap-2">
-                          <LayoutDashboard className="h-6 w-6" />
-                          <span className="text-[10px] tracking-widest">Intelligence Center</span>
+                          <LayoutDashboard className="h-7 w-7" />
+                          <span className="text-[11px] tracking-widest">Intelligence Center</span>
                         </Link>
                       </Button>
                       <Button
                         onClick={handleEnterAsVisitor}
                         disabled={isActionPending}
-                        className="h-20 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-black uppercase tracking-widest shadow-xl hover:bg-white/20 hover:scale-[1.03] transition-all cursor-pointer"
+                        className="h-24 rounded-2xl bg-white/10 border-2 border-white/20 text-white font-black uppercase tracking-widest shadow-xl hover:bg-white/20 hover:scale-[1.03] transition-all cursor-pointer"
                       >
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <UserCheck className="h-6 w-6" />
-                          <span className="text-[10px] tracking-widest">Visitor Welcome</span>
+                          <UserCheck className="h-7 w-7" />
+                          <span className="text-[11px] tracking-widest">Visitor Welcome</span>
                         </div>
                       </Button>
                     </>
                   ) : (
-                    <Button
-                      asChild
-                      className="h-14 col-span-2 rounded-2xl bg-accent text-white font-black uppercase tracking-widest shadow-xl hover:scale-[1.05] transition-all"
-                    >
-                      <Link href="/welcome" className="flex items-center justify-center gap-4">
-                        <UserCheck className="h-6 w-6" />
-                        Enter Library Portal
-                      </Link>
-                    </Button>
+                    <div className="col-span-2 flex flex-col items-center py-6 animate-pulse">
+                      <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Initializing Visitor Portal...</p>
+                    </div>
                   )}
                   
                   <Button 
