@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -35,7 +36,7 @@ export default function AdminDashboard() {
   const sessionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
-      collection(db, 'librarySessions'),
+      collection(db, 'libraryVisits'),
       orderBy('checkInTime', 'desc'),
       limit(1000)
     );
@@ -81,8 +82,8 @@ export default function AdminDashboard() {
       const matchesCollege = filterCollege === "all" || s.collegeOrOffice === filterCollege;
       
       let matchesType = true;
-      if (filterType === "employee") matchesType = s.isEmployee === true;
-      if (filterType === "student") matchesType = s.isEmployee !== true;
+      if (filterType === "employee") matchesType = s.visitorType === 'Staff';
+      if (filterType === "student") matchesType = s.visitorType === 'Student';
 
       return inTimeRange && matchesReason && matchesCollege && matchesType;
     });
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
     doc.text(`Period: ${timeRange.toUpperCase()} | Filter: R:${filterReason} C:${filterCollege} T:${filterType}`, 14, 37);
 
     const tableData = stats.filteredSessions.map(s => [
-      s.visitorName || s.studentId || "Guest",
+      s.visitorName || s.visitorId || "Guest",
       s.collegeOrOffice || "N/A",
       format(s.checkInTime.toDate(), "PPpp"),
       s.purpose || "N/A"

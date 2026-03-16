@@ -39,7 +39,12 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
-      // Corrected paths to ensure even number of segments for doc()
+      // Hardcoded super-admin email check as requested
+      if (user.email === 'jcesperanza@neu.edu.ph') {
+        router.push("/dashboard");
+        return;
+      }
+
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       if (adminDoc.exists()) {
         router.push("/dashboard");
@@ -47,15 +52,17 @@ export default function LandingPage() {
       }
 
       const regularDoc = await getDoc(doc(db, 'regular_users', user.uid));
-      if (regularDoc.exists() || user.email === 'jcesperanza@neu.edu.ph') {
+      if (regularDoc.exists()) {
         router.push("/welcome");
         return;
       }
 
-      // Default to welcome if logged in but role not found
+      // Default to welcome for all other authenticated users
       router.push("/welcome");
     } catch (err) {
       console.error("Role check failed", err);
+      // Fallback for UI if error occurs during fetch
+      router.push("/welcome");
     } finally {
       setIsProcessing(false);
     }

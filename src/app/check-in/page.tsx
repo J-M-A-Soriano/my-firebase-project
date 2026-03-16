@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, UserCheck, XCircle, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -41,7 +41,7 @@ export default function CheckInPage() {
         setError(`No student found with ID: ${studentIdInput.toUpperCase()}`);
       }
     } catch (err) {
-      setError("Database connection error. Please sign in and check permissions.");
+      setError("Access denied. Admin credentials required for visitor lookup.");
     } finally {
       setIsSearching(false);
     }
@@ -50,14 +50,14 @@ export default function CheckInPage() {
   const handleCheckIn = () => {
     if (!foundStudent || !user) return;
 
-    const sessionId = `sess_${Date.now()}`;
-    addDocumentNonBlocking(collection(db, 'librarySessions'), {
-      id: sessionId,
-      studentId: foundStudent.id,
-      firstName: foundStudent.firstName,
-      lastName: foundStudent.lastName,
+    addDocumentNonBlocking(collection(db, 'libraryVisits'), {
+      visitorId: foundStudent.id,
+      visitorName: `${foundStudent.firstName} ${foundStudent.lastName}`,
+      visitorType: 'Student',
+      collegeOrOffice: foundStudent.collegeOrOffice || 'N/A',
       checkInTime: serverTimestamp(),
-      checkOutTime: null
+      checkOutTime: null,
+      purpose: 'General Visit'
     });
 
     toast({
@@ -75,119 +75,122 @@ export default function CheckInPage() {
       <main className="container mx-auto py-12 px-4 max-w-2xl">
         <div className="space-y-8">
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold font-headline">Student Access Control</h1>
-            <p className="text-muted-foreground">Verify student ID to authorize library entry.</p>
+            <h1 className="text-3xl font-bold font-headline uppercase italic">Access Control</h1>
+            <p className="text-muted-foreground font-bold text-xs uppercase tracking-widest opacity-60">Terminal L-01 Entry Verification</p>
           </div>
 
           {!user ? (
-            <Card className="shadow-lg border-destructive/20 bg-destructive/5">
-              <CardContent className="pt-6 text-center space-y-4">
+            <Card className="shadow-lg border-destructive/20 bg-destructive/5 rounded-[2rem]">
+              <CardContent className="pt-8 text-center space-y-4">
                 <XCircle className="h-12 w-12 text-destructive mx-auto" />
-                <h2 className="text-xl font-bold">Authentication Required</h2>
-                <p className="text-muted-foreground">Please sign in from the landing page to access the database.</p>
-                <Button asChild variant="outline">
+                <h2 className="text-xl font-bold uppercase italic">Authentication Required</h2>
+                <p className="text-muted-foreground text-sm font-medium">Please sign in with your institutional Google account.</p>
+                <Button asChild variant="outline" className="rounded-xl font-black uppercase tracking-widest text-xs">
                   <Link href="/">Go to Login</Link>
                 </Button>
               </CardContent>
             </Card>
           ) : (
             <>
-              <Card className="shadow-lg border-primary/20">
-                <CardHeader>
-                  <CardTitle>ID Entry</CardTitle>
-                  <CardDescription>Enter the unique student identifier</CardDescription>
+              <Card className="shadow-xl border-primary/10 rounded-[2rem] bg-white overflow-hidden">
+                <CardHeader className="bg-muted/20">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">ID Entry Terminal</CardTitle>
+                  <CardDescription className="font-bold text-xs uppercase opacity-50">Scan RFID or enter identifier</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleLookup} className="flex gap-2">
+                <CardContent className="p-8">
+                  <form onSubmit={handleLookup} className="flex gap-3">
                     <div className="relative flex-1">
                       <Input 
                         placeholder="e.g., S1001" 
                         value={studentIdInput}
                         onChange={(e) => setStudentIdInput(e.target.value)}
-                        className="pl-10 h-12 text-lg uppercase tracking-widest"
+                        className="pl-12 h-14 text-xl uppercase tracking-widest font-black border-2 rounded-2xl"
                         autoFocus
                       />
-                      <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+                      <Search className="absolute left-4 top-4.5 h-5 w-5 text-muted-foreground" />
                     </div>
                     <Button 
                       type="submit" 
-                      className="h-12 bg-primary px-6"
+                      className="h-14 bg-primary px-8 rounded-2xl font-black uppercase tracking-widest text-xs"
                       disabled={!studentIdInput || isSearching}
                     >
-                      {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+                      {isSearching ? <Loader2 className="h-5 w-5 animate-spin" /> : "Lookup"}
                     </Button>
                   </form>
                 </CardContent>
               </Card>
 
               {error && (
-                <div className="flex items-center gap-3 p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 animate-in fade-in slide-in-from-top-2">
-                  <XCircle className="h-5 w-5" />
-                  <p className="text-sm font-medium">{error}</p>
+                <div className="flex items-center gap-4 p-5 bg-destructive/5 text-destructive rounded-2xl border-2 border-destructive/10 animate-in fade-in slide-in-from-top-4">
+                  <XCircle className="h-6 w-6" />
+                  <p className="text-sm font-black uppercase tracking-wide">{error}</p>
                 </div>
               )}
 
               {foundStudent && (
-                <Card className="glass-card animate-in zoom-in-95 duration-300 border-primary success-pulse">
-                  <CardHeader className="pb-2">
+                <Card className="glass-card animate-in zoom-in-95 duration-500 border-none shadow-2xl rounded-[2.5rem] success-pulse overflow-hidden">
+                  <div className="h-2 bg-primary w-full" />
+                  <CardHeader className="pb-2 px-8 pt-8">
                     <div className="flex items-center justify-between">
-                      <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border-none px-2 py-0 text-[10px] uppercase tracking-wider">
-                        Profile Verified
+                      <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                        Verified Identity
                       </Badge>
-                      <Button variant="ghost" size="icon" onClick={() => setFoundStudent(null)}>
+                      <Button variant="ghost" size="icon" onClick={() => setFoundStudent(null)} className="rounded-full">
                         <XCircle className="h-5 w-5 text-muted-foreground" />
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-8 px-8 pb-8">
                     <div className="flex flex-col items-center gap-4 py-4">
-                      <Avatar className="h-24 w-24 ring-4 ring-accent ring-offset-2">
-                        <AvatarFallback className="text-2xl">{foundStudent.firstName.charAt(0)}{foundStudent.lastName.charAt(0)}</AvatarFallback>
+                      <Avatar className="h-24 w-24 ring-4 ring-primary/10 ring-offset-4 rounded-[2rem]">
+                        <AvatarFallback className="text-3xl font-black bg-primary/5 text-primary">
+                          {foundStudent.firstName.charAt(0)}{foundStudent.lastName.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="text-center">
-                        <h3 className="text-2xl font-bold font-headline">{foundStudent.firstName} {foundStudent.lastName}</h3>
-                        <p className="text-muted-foreground">Grade {foundStudent.gradeLevel} • ID: {foundStudent.id}</p>
+                        <h3 className="text-3xl font-black italic uppercase tracking-tighter">{foundStudent.firstName} {foundStudent.lastName}</h3>
+                        <p className="text-muted-foreground font-black text-[10px] uppercase tracking-widest opacity-50 mt-1">ID: {foundStudent.id} • {foundStudent.collegeOrOffice || 'General'}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">Status</Label>
-                        <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                          <div className="h-2 w-2 rounded-full bg-primary" />
-                          Eligible for Entry
+                      <div className="p-4 bg-muted/30 rounded-2xl border border-white/50">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">Vector Status</Label>
+                        <div className="flex items-center gap-2 text-xs font-black text-primary uppercase italic">
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                          Eligible
                         </div>
                       </div>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <Label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 block">Email</Label>
-                        <div className="text-xs truncate font-medium">{foundStudent.email}</div>
+                      <div className="p-4 bg-muted/30 rounded-2xl border border-white/50">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">Account</Label>
+                        <div className="text-[10px] truncate font-black uppercase opacity-60 italic">{foundStudent.email || 'N/A'}</div>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3 p-3 bg-accent/10 rounded-lg text-accent-foreground text-xs">
-                      <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                      <p>Student is currently authorized for library access. No active restrictions found.</p>
+                    <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-2xl text-primary text-[10px] font-bold uppercase tracking-wide leading-relaxed">
+                      <Info className="h-4 w-4 shrink-0" />
+                      <p>Institutional record confirms authorized status. Logging entry vector to central database.</p>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-2">
+                  <CardFooter className="p-8 pt-0">
                     <Button 
-                      className="w-full bg-primary hover:bg-primary/90 h-12 text-lg font-bold"
+                      className="w-full bg-primary hover:bg-primary/90 h-16 rounded-2xl text-lg font-black uppercase italic shadow-2xl"
                       onClick={handleCheckIn}
                     >
-                      <UserCheck className="mr-2 h-5 w-5" />
-                      Confirm Check-In
+                      <UserCheck className="mr-3 h-6 w-6" />
+                      Confirm Access
                     </Button>
                   </CardFooter>
                 </Card>
               )}
 
               {!foundStudent && !error && !isSearching && (
-                <div className="text-center py-12 space-y-4">
-                  <div className="mx-auto w-16 h-16 bg-muted flex items-center justify-center rounded-full">
-                    <Search className="h-8 w-8 text-muted-foreground" />
+                <div className="text-center py-20 space-y-6 opacity-30">
+                  <div className="mx-auto w-24 h-24 bg-muted/50 flex items-center justify-center rounded-[2rem]">
+                    <Search className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  <p className="text-muted-foreground max-w-xs mx-auto">
-                    Enter a student ID to begin the verification process.
+                  <p className="text-xs font-black uppercase tracking-[0.3em] max-w-xs mx-auto">
+                    Waiting for scanner input...
                   </p>
                 </div>
               )}

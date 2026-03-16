@@ -6,7 +6,8 @@ service cloud.firestore {
     /**
      * NEU Library Visitor Log - Security Rules
      * 
-     * Fixed role paths to support even-segment document references.
+     * Secure authorization with role-based access control.
+     * Automatically recognizes the designated super-admin email.
      */
 
     // --- Helper Functions ---
@@ -16,11 +17,14 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid)) ||
+        request.auth.token.email == 'jcesperanza@neu.edu.ph'
+      );
     }
 
-    function isAdminAndResourceExists() {
-      return isAdmin() && resource != null;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // --- Collection Rules ---
@@ -37,24 +41,22 @@ service cloud.firestore {
 
     match /students/{studentUniqueId} {
       allow get, list: if isAdmin();
-      allow create: if isAdmin();
-      allow update, delete: if isAdminAndResourceExists();
+      allow create, update, delete: if isAdmin();
     }
 
     match /staff/{staffUniqueId} {
       allow get, list: if isAdmin();
-      allow create: if isAdmin();
-      allow update, delete: if isAdminAndResourceExists();
+      allow create, update, delete: if isAdmin();
     }
 
     match /admin_users/{userId} {
-      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow get: if isOwner(userId);
       allow list: if false;
       allow create, update, delete: if false;
     }
 
     match /regular_users/{userId} {
-      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow get: if isOwner(userId);
       allow list: if false;
       allow create, update, delete: if false;
     }
@@ -62,7 +64,7 @@ service cloud.firestore {
     match /libraryVisits/{visitId} {
       allow get, list: if isAdmin();
       allow create: if isAdmin();
-      allow update, delete: if isAdminAndResourceExists();
+      allow update, delete: if isAdmin();
     }
 
   }
