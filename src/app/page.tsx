@@ -44,11 +44,6 @@ export default function LandingPage() {
 
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
   useEffect(() => {
-    // Only redirect if:
-    // 1. User is authenticated
-    // 2. Admin verification is complete
-    // 3. User is NOT an admin
-    // 4. No manual action is currently pending
     if (user && !isAdminLoading && !isAdmin && !isActionPending) {
       router.push("/welcome");
     }
@@ -58,7 +53,6 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // Logic continues via the identity effects
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -70,6 +64,7 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
+    } finally {
       setIsActionPending(false);
     }
   };
@@ -191,7 +186,7 @@ export default function LandingPage() {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-2 flex flex-col items-center py-6 animate-pulse">
+                    <div className="col-span-2 flex flex-col items-center py-6">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Launching Verification Gateway...</p>
                     </div>
