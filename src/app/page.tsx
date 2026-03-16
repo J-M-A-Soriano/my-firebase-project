@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, LogIn, ArrowRight, Fingerprint, Scan, Mail, ShieldAlert } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, Mail, ArrowRight, Fingerprint, Scan, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth, useUser, useFirestore, initiateGoogleSignIn } from "@/firebase";
@@ -36,6 +37,7 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
+      // Direct email check for primary admin account
       const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       
@@ -65,7 +67,7 @@ export default function LandingPage() {
             <BookOpen className="h-12 w-12" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-5xl font-black tracking-tight text-foreground uppercase italic">
+            <h1 className="text-5xl font-black tracking-tight text-foreground uppercase italic leading-none">
               NEU <span className="text-primary not-italic">LIBRARY</span> LOG
             </h1>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em] opacity-60">
@@ -89,7 +91,7 @@ export default function LandingPage() {
           <CardContent className="p-12 space-y-12">
             <div className="space-y-4 text-center">
               <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Security Protocol</h2>
-              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Authentication Required for Access</p>
+              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Identity Verification Required</p>
             </div>
 
             <div className="space-y-8">
@@ -103,7 +105,7 @@ export default function LandingPage() {
                 ) : (
                   <>
                     <Mail className="mr-4 h-6 w-6" />
-                    SIGN IN WITH INSTITUTIONAL ACCOUNT
+                    LOGIN WITH INSTITUTIONAL ACCOUNT
                     <ArrowRight className="ml-4 h-6 w-6 opacity-0 group-hover:opacity-100 transition-all" />
                   </>
                 )}
@@ -111,13 +113,13 @@ export default function LandingPage() {
               
               <div className="flex items-center justify-center gap-8 border-t pt-8">
                 <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
-                  <Fingerprint className="h-4 w-4" /> Biometric Ready
+                  <Fingerprint className="h-4 w-4" /> Biometric Sync
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
-                  <ShieldCheck className="h-4 w-4" /> Encryption Active
+                  <ShieldCheck className="h-4 w-4" /> Secure Auth
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
-                  <Scan className="h-4 w-4" /> Scanning Enabled
+                  <Scan className="h-4 w-4" /> RFID Ready
                 </div>
               </div>
             </div>

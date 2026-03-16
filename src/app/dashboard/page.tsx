@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -5,7 +6,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, FileDown, TrendingUp, Loader2, Clock, Calendar as CalendarIcon, UserCheck, Filter, ArrowRight } from "lucide-react";
+import { Users, FileDown, TrendingUp, Loader2, Clock, UserCheck, Filter } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -140,7 +141,6 @@ export default function AdminDashboard() {
       <NavBar />
       <main className="container mx-auto py-12 px-8 max-w-7xl space-y-12">
         
-        {/* Intelligence Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b pb-12">
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tighter text-foreground uppercase italic leading-none">
@@ -156,7 +156,6 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
-        {/* Global Control Filters */}
         <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden">
           <CardHeader className="p-8 pb-4 border-b bg-muted/10">
             <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
@@ -226,7 +225,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Intelligence Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group">
             <div className="h-3 bg-primary w-full" />
@@ -276,7 +274,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Temporal Analysis Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <Card className="rounded-[3rem] border-none shadow-2xl bg-white p-6">
             <CardHeader className="pb-10">
@@ -325,52 +322,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Live Vector Feed */}
-        <Card className="rounded-[3.5rem] border-none shadow-2xl bg-white overflow-hidden">
-          <CardHeader className="p-10 border-b bg-muted/10">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-3xl font-black uppercase italic tracking-tighter">Live Activity Vector</CardTitle>
-                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Real-time Credential Validation Feed</p>
-              </div>
-              <Badge className="bg-primary/5 text-primary border-2 border-primary/10 font-black px-6 py-2 rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-sm">REAL-TIME SYNC</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="p-32 text-center"><Loader2 className="h-16 w-16 animate-spin mx-auto text-primary opacity-20" /></div>
-            ) : (
-              <div className="divide-y divide-border/30 max-h-[800px] overflow-auto custom-scrollbar">
-                {stats?.filteredSessions.map((session: any) => (
-                  <div key={session.id} className="p-8 flex items-center justify-between hover:bg-muted/30 transition-all group">
-                    <div className="flex items-center gap-8">
-                      <div className="h-16 w-16 rounded-[1.5rem] bg-primary text-white flex items-center justify-center font-black text-2xl shadow-lg transform group-hover:scale-110 transition-transform">
-                        {session.visitorName?.charAt(0) || "V"}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-black text-xl leading-none uppercase tracking-tight">{session.visitorName || "Unauthorized Guest"}</p>
-                        <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-40">{session.collegeOrOffice}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-3">
-                      <Badge variant="secondary" className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-xl">
-                        {session.purpose}
-                      </Badge>
-                      <p className="text-[12px] font-black text-muted-foreground uppercase opacity-40 flex items-center justify-end gap-2 tracking-widest">
-                        <Clock className="h-4 w-4" />
-                        {format(session.checkInTime.toDate(), "hh:mm a")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {stats?.filteredSessions.length === 0 && (
-                  <div className="p-32 text-center opacity-20 font-black uppercase tracking-[0.5em] text-sm italic">Null Vector State</div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </main>
     </div>
   );

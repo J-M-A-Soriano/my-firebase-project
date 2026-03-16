@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,11 +37,11 @@ export default function WelcomePage() {
           </div>
 
           <div className="space-y-6">
-            <h1 className="text-6xl md:text-7xl font-black tracking-tight text-foreground uppercase italic">
+            <h1 className="text-6xl md:text-7xl font-black tracking-tight text-foreground uppercase italic leading-none">
               Welcome to <span className="text-primary not-italic">NEU Library!</span>
             </h1>
             <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">
-              Institutional Visitor Authorization Verified
+              Institutional Access Vector Verified
             </p>
           </div>
 
@@ -64,7 +65,7 @@ export default function WelcomePage() {
                 <div className="p-8 bg-muted/30 rounded-[2rem] border-2 border-white/50 space-y-2">
                   <ShieldCheck className="h-5 w-5 text-primary mx-auto opacity-50" />
                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">Status</p>
-                  <p className="text-xl font-black uppercase italic text-cyan-600">Active</p>
+                  <p className="text-xl font-black uppercase italic text-cyan-600">Verified</p>
                 </div>
                 <div className="p-8 bg-muted/30 rounded-[2rem] border-2 border-white/50 space-y-2">
                   <MapPin className="h-5 w-5 text-primary mx-auto opacity-50" />
@@ -73,8 +74,8 @@ export default function WelcomePage() {
                 </div>
                 <div className="p-8 bg-muted/30 rounded-[2rem] border-2 border-white/50 space-y-2">
                   <Library className="h-5 w-5 text-primary mx-auto opacity-50" />
-                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Access</p>
-                  <p className="text-xl font-black uppercase italic">Standard</p>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Profile</p>
+                  <p className="text-xl font-black uppercase italic">Regular</p>
                 </div>
               </div>
 
@@ -84,13 +85,13 @@ export default function WelcomePage() {
                 className="w-full h-16 rounded-2xl border-2 font-black uppercase tracking-widest text-xs hover:bg-destructive hover:text-white hover:border-destructive transition-all"
               >
                 <LogOut className="mr-3 h-5 w-5" />
-                Secure Logout
+                Secure Exit
               </Button>
             </CardContent>
           </Card>
           
           <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.5em]">
-            Advancing Knowledge Through Secure Access
+            Advancing Knowledge Through Secure Authorization
           </p>
         </div>
       </main>
