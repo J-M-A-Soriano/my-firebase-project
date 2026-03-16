@@ -103,7 +103,6 @@ export function useAdmin() {
       verifyAuthority();
     } else {
       setIsAdminLoading(true);
-      // If we know they are hardcoded, we can show admin state early
       if (isHardcoded) {
         setIsAdmin(true);
         setIsAdminLoading(false);

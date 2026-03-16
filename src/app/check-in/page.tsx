@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -305,7 +306,6 @@ export default function CheckInHub() {
                             {unit}
                           </SelectItem>
                         ))}
-                        {dynamicColleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-[10px] uppercase">{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

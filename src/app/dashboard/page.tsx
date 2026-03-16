@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -308,9 +309,6 @@ export default function IntelligenceCenter() {
                     <SelectItem key={unit} value={unit} className="text-[9px] font-black uppercase">
                       {unit}
                     </SelectItem>
-                  ))}
-                  {dynamicColleges?.map(c => (
-                    <SelectItem key={c.id} value={c.name} className="text-[9px] font-black uppercase">{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
