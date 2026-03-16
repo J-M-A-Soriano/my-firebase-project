@@ -45,7 +45,8 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // Processing state will reset upon auth state change re-render
+      // Ensure state is released after successful login to prevent UI lock
+      setIsActionPending(false);
     } catch (err: any) {
       setIsActionPending(false);
       if (err.code === 'auth/popup-closed-by-user') return;
@@ -78,6 +79,7 @@ export default function LandingPage() {
       console.error("Visit log failed:", error);
       router.push("/welcome");
     } finally {
+      // Re-enable buttons if for some reason the navigation is delayed
       setIsActionPending(false);
     }
   };
