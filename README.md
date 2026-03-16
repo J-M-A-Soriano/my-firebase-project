@@ -12,7 +12,7 @@ The NEU Library Log provides a secure, digital gateway for academic access. Desi
 
 ## 🔑 Access Control & Authorization
 The system utilizes Google Institutional Authentication for all entry points.
-- **Administrative Authority:** Automatically granted to authorized institutional accounts (e.g., `jcesperanza@neu.edu.ph`).
+- **Administrative Authority:** Automatically granted to authorized institutional accounts (specifically `jcesperanza@neu.edu.ph`).
 - **Regular Access:** Standard students and visitors are routed to a verification confirmation interface.
 - **Secure Switching:** Administrative users can safely simulate regular visitor sessions for audit purposes via the secondary navigation.
 
@@ -26,23 +26,20 @@ The administrative dashboard provides a high-fidelity "Intelligence Center" view
 
 ## 🚀 Professional Deployment Guide
 
-To host this system professionally for free via GitHub and Vercel:
+To ensure system functionality, follow these institutional setup steps:
 
 1. **GitHub Synchronization**:
-   - Create a new repository on [GitHub](https://github.com).
-   - In your project terminal, run:
-     ```bash
-     git remote add origin <your-repo-link>
-     git add .
-     git commit -m "Initialize Institutional Build"
-     git push -u origin main
-     ```
+   - Ensure the project is synced to your institutional repository.
+   - Any push to the `main` branch will automatically trigger a production build.
 
 2. **Vercel Live Deployment**:
-   - Create a free account on [Vercel](https://vercel.com).
-   - Select "Import Project" and connect your GitHub repository.
-   - Add your Firebase environment variables from `src/firebase/config.ts`.
-   - Click **Deploy**. Your app will be live on a professional `.vercel.app` URL.
+   - The application is configured to run on Vercel for dynamic scaling.
+   - Ensure all Firebase environment variables are mirrored in the Vercel project settings.
+
+3. **Authentication Activation**:
+   - **Crucial:** Go to the Firebase Console.
+   - Navigate to **Authentication > Sign-in method**.
+   - Enable the **Google** provider. Without this step, the `auth/operation-not-allowed` error will persist at the terminal.
 
 ## ⚙️ Architecture Profile
 - **Engine:** Next.js 15 (App Router)

@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth, useUser, useFirestore, initiateGoogleSignIn } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
   const db = useFirestore();
+  const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const [localTime, setLocalTime] = useState("");
@@ -37,7 +39,6 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
-      // Direct email check for primary admin account
       const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       
@@ -53,9 +54,22 @@ export default function LandingPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsProcessing(true);
-    initiateGoogleSignIn(auth);
+    try {
+      // Direct call to trigger sign-in
+      initiateGoogleSignIn(auth);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/operation-not-allowed') {
+        toast({
+          variant: "destructive",
+          title: "Configuration Required",
+          description: "Google Sign-In is not enabled in the Firebase Console. Please contact IT.",
+        });
+      }
+      setIsProcessing(false);
+    }
   };
 
   return (
