@@ -6,7 +6,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, FileDown, TrendingUp, Calendar as CalendarIcon, Loader2, Clock, Filter, ArrowRight, UserCheck } from "lucide-react";
+import { Users, FileDown, TrendingUp, Loader2, Clock, Filter, ArrowRight, UserCheck, Search, Building2, Tag } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -28,17 +28,32 @@ export default function AdminDashboard() {
   const db = useFirestore();
   const { user } = useUser();
   const [timeRange, setTimeRange] = useState("day");
+  const [filterReason, setFilterReason] = useState("all");
+  const [filterCollege, setFilterCollege] = useState("all");
+  const [filterType, setFilterType] = useState("all");
 
   const sessionsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
       collection(db, 'librarySessions'),
       orderBy('checkInTime', 'desc'),
-      limit(500)
+      limit(1000)
     );
   }, [db, user]);
 
+  const collegesQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'colleges');
+  }, [db, user]);
+
+  const reasonsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'reasonsForVisit');
+  }, [db, user]);
+
   const { data: sessions, isLoading } = useCollection(sessionsQuery);
+  const { data: colleges } = useCollection(collegesQuery);
+  const { data: reasons } = useCollection(reasonsQuery);
 
   const stats = useMemo(() => {
     if (!sessions) return null;
@@ -60,7 +75,16 @@ export default function AdminDashboard() {
     const filtered = sessions.filter(s => {
       if (!s.checkInTime) return false;
       const date = s.checkInTime.toDate();
-      return isWithinInterval(date, rangeInterval);
+      
+      const inTimeRange = isWithinInterval(date, rangeInterval);
+      const matchesReason = filterReason === "all" || s.purpose === filterReason;
+      const matchesCollege = filterCollege === "all" || s.collegeOrOffice === filterCollege;
+      
+      let matchesType = true;
+      if (filterType === "employee") matchesType = s.isEmployee === true;
+      if (filterType === "student") matchesType = s.isEmployee !== true;
+
+      return inTimeRange && matchesReason && matchesCollege && matchesType;
     });
 
     const chartDataMap: Record<string, number> = {};
@@ -70,52 +94,45 @@ export default function AdminDashboard() {
       const date = s.checkInTime.toDate();
       const key = timeRange === "day" ? format(date, "HH:00") : format(date, "EEE dd");
       chartDataMap[key] = (chartDataMap[key] || 0) + 1;
-      purposeMap[s.purpose] = (purposeMap[s.purpose] || 0) + 1;
+      purposeMap[s.purpose || "Other"] = (purposeMap[s.purpose || "Other"] || 0) + 1;
     });
 
     const chartData = Object.entries(chartDataMap).map(([name, count]) => ({ name, count }));
     const pieData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
 
     return { total: filtered.length, chartData, pieData, filteredSessions: filtered };
-  }, [sessions, timeRange]);
+  }, [sessions, timeRange, filterReason, filterCollege, filterType]);
 
-  const COLORS = ['#0f172a', '#1e293b', '#334155', '#475569', '#2563eb'];
+  const COLORS = ['#0f172a', '#1e293b', '#334155', '#475569', '#2563eb', '#64748b'];
 
   const generateReport = () => {
     if (!stats) return;
     const doc = new jsPDF();
     doc.setFontSize(22);
-    doc.setTextColor(15, 23, 42); // Navy Blue
-    doc.text("NEU Library Analytics Report", 14, 25);
+    doc.setTextColor(15, 23, 42); 
+    doc.text("NEU Library Intelligence Audit", 14, 25);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated: ${format(new Date(), "PPpp")}`, 14, 32);
-    doc.text(`Reporting Range: ${timeRange.toUpperCase()}`, 14, 37);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text(`Summary Statistics:`, 14, 48);
-    doc.setFontSize(10);
-    doc.text(`- Total Visitors in Period: ${stats.total}`, 18, 55);
-    doc.text(`- Peak Activity Hour: ${stats.chartData.sort((a,b) => b.count - a.count)[0]?.name || "N/A"}`, 18, 62);
+    doc.text(`Period: ${timeRange.toUpperCase()} | Filter: R:${filterReason} C:${filterCollege} T:${filterType}`, 14, 37);
 
     const tableData = stats.filteredSessions.map(s => [
-      s.visitorName || s.studentId,
+      s.visitorName || s.studentId || "Guest",
       s.collegeOrOffice || "N/A",
       format(s.checkInTime.toDate(), "PPpp"),
-      s.purpose
+      s.purpose || "N/A"
     ]);
 
     (doc as any).autoTable({
-      startY: 70,
-      head: [['Visitor Name', 'Affiliation', 'Entry Timestamp', 'Activity Purpose']],
+      startY: 45,
+      head: [['Visitor', 'Affiliation', 'Entry Time', 'Purpose']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillStyle: 'F', fillColor: [15, 23, 42] },
+      headStyles: { fillColor: [15, 23, 42] },
     });
 
-    doc.save(`NEU_Library_Report_${format(new Date(), "yyyyMMdd")}.pdf`);
+    doc.save(`NEU_Intelligence_Audit_${format(new Date(), "yyyyMMdd")}.pdf`);
   };
 
   return (
@@ -130,37 +147,94 @@ export default function AdminDashboard() {
               Intelligence <span className="text-primary not-italic">Center</span>
             </h1>
             <p className="text-muted-foreground font-bold text-sm uppercase tracking-widest opacity-60">
-              Live Visitor Traffic & Resource Monitoring
+              Visitor Analytics & Behavioral Control
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40 h-12 rounded-2xl border-2 font-bold bg-white">
-                <Filter className="h-4 w-4 mr-2 text-primary" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-2xl">
-                <SelectItem value="day">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
             <Button onClick={generateReport} className="h-12 px-6 rounded-2xl bg-primary text-white shadow-xl hover:scale-105 transition-transform font-bold">
               <FileDown className="mr-2 h-5 w-5" />
-              Download Audit PDF
+              Intelligence PDF
             </Button>
           </div>
         </div>
 
-        {/* High Level Stats */}
+        {/* Filters Section */}
+        <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="p-6 pb-0">
+            <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Global Analytics Filters</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase opacity-40 ml-1">Time Horizon</label>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Today</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase opacity-40 ml-1">Academic Unit</label>
+              <Select value={filterCollege} onValueChange={setFilterCollege}>
+                <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Colleges</SelectItem>
+                  {colleges?.map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase opacity-40 ml-1">Visit Purpose</label>
+              <Select value={filterReason} onValueChange={setFilterReason}>
+                <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Purposes</SelectItem>
+                  {reasons?.map(r => (
+                    <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                  ))}
+                  <SelectItem value="Reading Books">Reading Books</SelectItem>
+                  <SelectItem value="Thesis Research">Thesis Research</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase opacity-40 ml-1">Visitor Class</label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="h-12 rounded-xl border-2 font-bold bg-muted/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Profiles</SelectItem>
+                  <SelectItem value="student">Students Only</SelectItem>
+                  <SelectItem value="employee">Staff / Teachers</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* High Level Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden group">
             <div className="h-2 bg-primary w-full" />
             <CardContent className="p-8">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Period Visitors</p>
-                  <h3 className="text-5xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-left">{stats?.total || 0}</h3>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Aggregate Traffic</p>
+                  <h3 className="text-5xl font-black text-foreground tabular-nums">{stats?.total || 0}</h3>
                 </div>
                 <div className="h-16 w-16 bg-primary/10 rounded-3xl flex items-center justify-center">
                   <Users className="h-8 w-8 text-primary" />
@@ -174,8 +248,8 @@ export default function AdminDashboard() {
             <CardContent className="p-8">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Currently Active</p>
-                  <h3 className="text-5xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-left">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Occupancy Vector</p>
+                  <h3 className="text-5xl font-black text-foreground tabular-nums">
                     {sessions?.filter(s => !s.checkOutTime).length || 0}
                   </h3>
                 </div>
@@ -189,12 +263,14 @@ export default function AdminDashboard() {
           <Card className="rounded-[2rem] border-none shadow-xl bg-primary text-white overflow-hidden">
             <CardContent className="p-8 h-full flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <Badge className="bg-white/20 text-white border-none font-bold">Libriguard Sync</Badge>
+                <Badge className="bg-white/20 text-white border-none font-bold">Secure Sync</Badge>
                 <TrendingUp className="h-6 w-6 opacity-50" />
               </div>
               <div className="space-y-1 mt-4">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">System Health</p>
-                <h3 className="text-2xl font-black italic uppercase">Optimal Performance</h3>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Peak Intelligence</p>
+                <h3 className="text-2xl font-black italic uppercase">
+                  {stats?.chartData.sort((a,b) => b.count - a.count)[0]?.name || "Calculating..."}
+                </h3>
               </div>
             </CardContent>
           </Card>
@@ -204,32 +280,16 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card className="rounded-[2rem] border-none shadow-xl bg-white p-4">
             <CardHeader className="pb-8">
-              <CardTitle className="text-xl font-black uppercase italic">Traffic Flow</CardTitle>
-              <CardDescription className="font-bold">Student visit frequency analysis</CardDescription>
+              <CardTitle className="text-xl font-black uppercase italic">Temporal Distribution</CardTitle>
+              <CardDescription className="font-bold">Hourly visitor intensity analysis</CardDescription>
             </CardHeader>
             <CardContent className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.chartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
-                    fontSize={11} 
-                    fontWeight="bold" 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis 
-                    fontSize={11} 
-                    fontWeight="bold" 
-                    tickLine={false} 
-                    axisLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <ChartTooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
+                  <XAxis dataKey="name" fontSize={11} fontWeight="black" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={11} fontWeight="black" tickLine={false} axisLine={false} />
+                  <ChartTooltip cursor={{ fill: '#f8fafc' }} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -238,8 +298,8 @@ export default function AdminDashboard() {
 
           <Card className="rounded-[2rem] border-none shadow-xl bg-white p-4">
             <CardHeader className="pb-8">
-              <CardTitle className="text-xl font-black uppercase italic">Activity Breakdown</CardTitle>
-              <CardDescription className="font-bold">Purpose of library usage</CardDescription>
+              <CardTitle className="text-xl font-black uppercase italic">Purpose Breakdown</CardTitle>
+              <CardDescription className="font-bold">Primary academic objectives</CardDescription>
             </CardHeader>
             <CardContent className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -259,32 +319,19 @@ export default function AdminDashboard() {
                     ))}
                   </Pie>
                   <ChartTooltip />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36} 
-                    iconType="circle"
-                    formatter={(value) => <span className="text-xs font-bold text-muted-foreground uppercase">{value}</span>}
-                  />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[10px] font-black uppercase">{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity Feed */}
         <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
           <CardHeader className="p-8 border-b bg-muted/20">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl font-black uppercase italic">Live Activity Feed</CardTitle>
-                <CardDescription className="font-bold">Real-time terminal transaction log</CardDescription>
-              </div>
-              <Button variant="outline" className="rounded-xl border-2 font-bold px-6" asChild>
-                <Link href="/students">
-                  Manage Directory
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              <CardTitle className="text-2xl font-black uppercase italic">Live Activity Feed</CardTitle>
+              <Badge className="bg-primary/5 text-primary border-none font-black px-4 py-1">REAL-TIME</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -293,18 +340,18 @@ export default function AdminDashboard() {
             ) : (
               <div className="divide-y divide-border/50 max-h-[600px] overflow-auto custom-scrollbar">
                 {stats?.filteredSessions.map((session: any) => (
-                  <div key={session.id} className="p-6 flex items-center justify-between hover:bg-muted/30 transition-colors group">
+                  <div key={session.id} className="p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-6">
-                      <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-xl border-2 border-primary/20 group-hover:bg-primary group-hover:text-white transition-all">
+                      <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary border-2 border-primary/20">
                         {session.visitorName?.charAt(0) || "V"}
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-black text-lg text-foreground leading-none">{session.visitorName || "Guest Visitor"}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{session.collegeOrOffice}</p>
+                      <div>
+                        <p className="font-black text-lg leading-none">{session.visitorName || "Guest"}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{session.collegeOrOffice}</p>
                       </div>
                     </div>
                     <div className="text-right space-y-2">
-                      <Badge variant="secondary" className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase px-3 py-1 rounded-lg">
+                      <Badge variant="secondary" className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase">
                         {session.purpose}
                       </Badge>
                       <p className="text-[11px] font-bold text-muted-foreground uppercase opacity-50 flex items-center justify-end gap-1.5">
@@ -314,6 +361,9 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+                {stats?.filteredSessions.length === 0 && (
+                  <div className="p-20 text-center opacity-40 font-black uppercase tracking-widest">No Intelligence Vectors Found</div>
+                )}
               </div>
             )}
           </CardContent>

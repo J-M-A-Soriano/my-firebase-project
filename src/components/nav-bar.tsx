@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut } from "lucide-react";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 
 const navItems = [
-  { name: "Terminal", href: "/", icon: UserCheck },
-  { name: "Insights Center", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Visitor Hub", href: "/students", icon: Users },
-  { name: "AI Analyst", href: "/insights", icon: BrainCircuit },
+  { name: "Terminal", href: "/", icon: UserCheck, adminOnly: false },
+  { name: "Intelligence", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
+  { name: "Visitor Hub", href: "/students", icon: Users, adminOnly: true },
+  { name: "AI Insights", href: "/insights", icon: BrainCircuit, adminOnly: true },
 ];
 
 export function NavBar() {
@@ -36,7 +36,7 @@ export function NavBar() {
               <BookOpen className="h-7 w-7" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black italic uppercase tracking-tighter text-primary font-headline leading-none">NEU LOG</span>
+              <span className="text-2xl font-black italic uppercase tracking-tighter text-primary leading-none">NEU LOG</span>
               <span className="text-[9px] font-black uppercase tracking-[0.4em] opacity-40">Library Systems</span>
             </div>
           </Link>
@@ -45,6 +45,11 @@ export function NavBar() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+              
+              // Simple check for role demo - in production use a custom hook
+              const isJcAdmin = user?.email === 'jcesperanza@neu.edu.ph';
+              if (item.adminOnly && !isJcAdmin) return null;
+
               return (
                 <Link
                   key={item.name}
@@ -67,12 +72,16 @@ export function NavBar() {
             {user ? (
               <div className="flex items-center gap-4 pl-4 border-l">
                 <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Admin Access</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                    {user.email === 'jcesperanza@neu.edu.ph' ? 'Super Admin' : 'Visitor'}
+                  </span>
                   <span className="text-[9px] text-muted-foreground font-bold opacity-60">Session Active</span>
                 </div>
-                <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black border-2 border-primary/10 shadow-inner">
-                  {user.email ? user.email.charAt(0).toUpperCase() : "A"}
-                </div>
+                {user.email === 'jcesperanza@neu.edu.ph' && pathname !== '/welcome' && (
+                  <Button variant="ghost" size="icon" asChild className="h-10 w-10 text-primary hover:bg-primary/10 rounded-xl">
+                    <Link href="/welcome" title="Switch to Regular View"><ShieldAlert className="h-5 w-5" /></Link>
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="icon" 
