@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -6,10 +5,10 @@ import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, FileDown, TrendingUp, UserCheck, Filter, PieChart as PieIcon, Activity } from "lucide-react";
+import { Users, FileDown, TrendingUp, Filter, PieChart as PieIcon, Activity, Calendar as CalendarIcon, GraduationCap, Briefcase, Building2 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -46,14 +45,8 @@ export default function AdminDashboard() {
     return collection(db, 'colleges');
   }, [db, user]);
 
-  const reasonsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, 'reasonsForVisit');
-  }, [db, user]);
-
   const { data: sessions, isLoading } = useCollection(sessionsQuery);
   const { data: colleges } = useCollection(collegesQuery);
-  const { data: reasons } = useCollection(reasonsQuery);
 
   const stats = useMemo(() => {
     if (!sessions) return null;
@@ -81,26 +74,49 @@ export default function AdminDashboard() {
       const matchesCollege = filterCollege === "all" || s.collegeOrOffice === filterCollege;
       
       let matchesType = true;
-      if (filterType === "employee") matchesType = s.visitorType === 'Staff';
-      if (filterType === "student") matchesType = s.visitorType === 'Student';
+      if (filterType === "Staff") matchesType = s.visitorType === 'Staff';
+      if (filterType === "Student") matchesType = s.visitorType === 'Student';
 
       return inTimeRange && matchesReason && matchesCollege && matchesType;
     });
 
     const chartDataMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
+    const collegeMap: Record<string, number> = {};
+    let staffCount = 0;
+    let studentCount = 0;
 
     filtered.forEach(s => {
       const date = s.checkInTime.toDate();
       const key = timeRange === "day" ? format(date, "HH:00") : format(date, "EEE dd");
       chartDataMap[key] = (chartDataMap[key] || 0) + 1;
-      purposeMap[s.purpose || "Other"] = (purposeMap[s.purpose || "Other"] || 0) + 1;
+      
+      const purpose = s.purpose || "General";
+      purposeMap[purpose] = (purposeMap[purpose] || 0) + 1;
+
+      const college = s.collegeOrOffice || "N/A";
+      collegeMap[college] = (collegeMap[college] || 0) + 1;
+
+      if (s.visitorType === "Staff") staffCount++;
+      if (s.visitorType === "Student") studentCount++;
     });
 
     const chartData = Object.entries(chartDataMap).map(([name, count]) => ({ name, count }));
     const pieData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
+    
+    const mostActiveCollege = Object.entries(collegeMap).sort((a,b) => b[1] - a[1])[0]?.[0] || "N/A";
+    const totalToday = sessions.filter(s => s.checkInTime && isSameDay(s.checkInTime.toDate(), now)).length;
 
-    return { total: filtered.length, chartData, pieData, filteredSessions: filtered };
+    return { 
+      total: filtered.length, 
+      totalToday,
+      chartData, 
+      pieData, 
+      filteredSessions: filtered,
+      staffCount,
+      studentCount,
+      mostActiveCollege
+    };
   }, [sessions, timeRange, filterReason, filterCollege, filterType]);
 
   const COLORS = ['#0f172a', '#2563eb', '#3b82f6', '#1d4ed8', '#1e293b', '#64748b'];
@@ -115,7 +131,7 @@ export default function AdminDashboard() {
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Generated: ${format(new Date(), "PPpp")}`, 14, 32);
-    doc.text(`Horizon: ${timeRange.toUpperCase()} | Filters: Reason:${filterReason} | College:${filterCollege} | Type:${filterType}`, 14, 38);
+    doc.text(`Horizon: ${timeRange.toUpperCase()} | Reason:${filterReason} | College:${filterCollege}`, 14, 38);
 
     const tableData = stats.filteredSessions.map(s => [
       s.visitorName || s.visitorId || "Anonymous",
@@ -157,6 +173,7 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
+        {/* Professional Filters */}
         <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden">
           <CardHeader className="p-8 pb-4 border-b bg-muted/10">
             <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
@@ -201,85 +218,106 @@ export default function AdminDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Global Objectives</SelectItem>
-                  {reasons?.map(r => (
-                    <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
-                  ))}
+                  <SelectItem value="Research">Research</SelectItem>
+                  <SelectItem value="Individual Study">Individual Study</SelectItem>
+                  <SelectItem value="Group Project">Group Project</SelectItem>
+                  <SelectItem value="Book Borrowing/Return">Book Borrowing/Return</SelectItem>
+                  <SelectItem value="Computer Lab Use">Computer Lab Use</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Vector (Class)</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Employment Status</label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Vectors</SelectItem>
-                  <SelectItem value="student">Student Class</SelectItem>
-                  <SelectItem value="employee">Employee (Teacher/Staff)</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Student">Student</SelectItem>
+                  <SelectItem value="Staff">Staff/Teacher</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
+        {/* Professional Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
             <div className="h-3 bg-primary w-full" />
-            <CardContent className="p-10">
+            <CardContent className="p-8">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">Aggregate Traffic</p>
-                  <h3 className="text-6xl font-black text-foreground tabular-nums tracking-tighter">{stats?.total || 0}</h3>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Visits Today</p>
+                  <h3 className="text-4xl font-black text-foreground tabular-nums">{stats?.totalToday || 0}</h3>
                 </div>
-                <div className="h-20 w-20 bg-primary/10 rounded-[2rem] flex items-center justify-center border-2 border-primary/5">
-                  <Users className="h-10 w-10 text-primary" />
+                <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                  <CalendarIcon className="h-7 w-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
+          <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
             <div className="h-3 bg-accent w-full" />
-            <CardContent className="p-10">
+            <CardContent className="p-8">
               <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">Live Occupancy</p>
-                  <h3 className="text-6xl font-black text-foreground tabular-nums tracking-tighter">
-                    {sessions?.filter(s => !s.checkOutTime).length || 0}
-                  </h3>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Most Active College</p>
+                  <h3 className="text-2xl font-black text-foreground uppercase italic leading-tight truncate max-w-[150px]">{stats?.mostActiveCollege}</h3>
                 </div>
-                <div className="h-20 w-20 bg-accent/10 rounded-[2rem] flex items-center justify-center border-2 border-accent/5">
-                  <Activity className="h-10 w-10 text-accent" />
+                <div className="h-14 w-14 bg-accent/10 rounded-2xl flex items-center justify-center">
+                  <Building2 className="h-7 w-7 text-accent" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden hover:scale-[1.02] transition-transform">
-            <CardContent className="p-10 h-full flex flex-col justify-between">
+          <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
+            <div className="h-3 bg-primary w-full" />
+            <CardContent className="p-8">
               <div className="flex items-center justify-between">
-                <Badge className="bg-white/10 text-white border-none font-black px-4 py-1.5 rounded-xl text-[9px] uppercase tracking-widest">System Peak</Badge>
-                <TrendingUp className="h-6 w-6 opacity-40" />
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Staff vs. Student Ratio</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-3xl font-black text-foreground">{stats?.staffCount}</h3>
+                    <span className="text-xs font-bold text-muted-foreground">to</span>
+                    <h3 className="text-3xl font-black text-primary">{stats?.studentCount}</h3>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <div className="h-10 w-10 bg-muted rounded-xl flex items-center justify-center"><Briefcase className="h-5 w-5" /></div>
+                  <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center"><GraduationCap className="h-5 w-5 text-primary" /></div>
+                </div>
               </div>
-              <div className="space-y-2 mt-8">
-                <p className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Intensity Window</p>
-                <h3 className="text-3xl font-black italic uppercase leading-none tracking-tight">
-                  {stats?.chartData.sort((a,b) => b.count - a.count)[0]?.name || "CALCULATING..."}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2.5rem] border-none shadow-2xl bg-primary text-white overflow-hidden hover:scale-[1.02] transition-transform">
+            <CardContent className="p-8 h-full flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <Badge className="bg-white/10 text-white border-none font-black text-[9px] uppercase tracking-widest">System Peak</Badge>
+                <TrendingUp className="h-5 w-5 opacity-40" />
+              </div>
+              <div className="space-y-1 mt-4">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Intensity Window</p>
+                <h3 className="text-xl font-black italic uppercase truncate">
+                  {stats?.chartData.sort((a,b) => b.count - a.count)[0]?.name || "N/A"}
                 </h3>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Analytics Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <Card className="rounded-[3rem] border-none shadow-2xl bg-white p-6">
             <CardHeader className="pb-10">
               <CardTitle className="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
                 <Activity className="h-6 w-6 text-primary" /> Temporal Analysis
               </CardTitle>
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Visit Distribution Over Time</p>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -299,7 +337,6 @@ export default function AdminDashboard() {
               <CardTitle className="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
                 <PieIcon className="h-6 w-6 text-primary" /> Objective Analysis
               </CardTitle>
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Visit Purpose Variance</p>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">

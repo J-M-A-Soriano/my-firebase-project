@@ -1,279 +1,303 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, UserCheck, XCircle, Info, Loader2, BookOpen, GraduationCap, Briefcase, CheckCircle2 } from "lucide-react";
+import { Search, UserCheck, XCircle, Loader2, BookOpen, GraduationCap, Briefcase, CheckCircle2, ArrowRight, UserPlus, Building2, MousePointer2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-/**
- * @fileOverview High-Impact Access Terminal.
- * Handles visitor identification, role assignment, and objective tracking.
- */
+type Step = "IDENTIFY" | "REGISTER" | "INTENT" | "WELCOME";
+
+const INTENT_OPTIONS = [
+  { id: "research", name: "Research", icon: Search },
+  { id: "individual-study", name: "Individual Study", icon: BookOpen },
+  { id: "group-project", name: "Group Project", icon: GraduationCap },
+  { id: "borrow-return", name: "Book Borrowing/Return", icon: Briefcase },
+  { id: "computer-lab", name: "Computer Lab Use", icon: MousePointer2 },
+];
+
 export default function CheckInPage() {
   const { toast } = useToast();
   const db = useFirestore();
-  const { user, isUserLoading } = useUser();
-  const [studentIdInput, setStudentIdInput] = useState("");
-  const [foundStudent, setFoundStudent] = useState<any | null>(null);
+  const { user } = useUser();
+  const [currentStep, setCurrentStep] = useState<Step>("IDENTIFY");
+  const [identifier, setIdentifier] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [foundStudent, setFoundStudent] = useState<any | null>(null);
 
-  // Purpose and Role state
-  const [selectedRole, setSelectedRole] = useState<"Student" | "Staff">("Student");
-  const [selectedPurpose, setSelectedPurpose] = useState<string>("General Visit");
+  // Registration State
+  const [regType, setRegType] = useState<"Student" | "Staff">("Student");
+  const [regCollege, setRegCollege] = useState("");
+  const [regFirstName, setRegFirstName] = useState("");
+  const [regLastName, setRegLastName] = useState("");
 
-  // Defer query until user is authenticated to prevent permission errors
-  const reasonsQuery = useMemoFirebase(() => {
+  // Intent State
+  const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
+
+  const collegesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'reasonsForVisit');
+    return collection(db, 'colleges');
   }, [db, user]);
+  const { data: colleges } = useCollection(collegesQuery);
 
-  const { data: purposes } = useCollection(reasonsQuery);
+  // Auto-reset after welcome
+  useEffect(() => {
+    if (currentStep === "WELCOME") {
+      const timer = setTimeout(() => {
+        resetKiosk();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
 
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!studentIdInput || !db) return;
-    
-    setIsSearching(true);
-    setError(null);
+  const resetKiosk = () => {
+    setCurrentStep("IDENTIFY");
+    setIdentifier("");
     setFoundStudent(null);
+    setSelectedIntent(null);
+    setRegType("Student");
+    setRegCollege("");
+    setRegFirstName("");
+    setRegLastName("");
+  };
 
+  const handleIdentification = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!identifier || !db) return;
+
+    setIsSearching(true);
+    const normalizedId = identifier.trim().toUpperCase();
+    
     try {
-      const studentDoc = await getDoc(doc(db, 'students', studentIdInput.toUpperCase()));
+      const studentDoc = await getDoc(doc(db, 'students', normalizedId));
       if (studentDoc.exists()) {
         const data = studentDoc.data();
         setFoundStudent({ ...data, id: studentDoc.id });
-        if (data.type) {
-          setSelectedRole(data.type as "Student" | "Staff");
-        }
+        setCurrentStep("INTENT");
       } else {
-        setError(`No registry found for ID: ${studentIdInput.toUpperCase()}`);
+        setCurrentStep("REGISTER");
       }
     } catch (err) {
-      setError("System Access Fault. Please verify credentials.");
+      toast({ title: "System Error", description: "Verification handshake failed.", variant: "destructive" });
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleCheckIn = () => {
+  const handleRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !regFirstName || !regLastName || !regCollege) return;
+
+    const normalizedId = identifier.trim().toUpperCase();
+    const newStudent = {
+      id: normalizedId,
+      firstName: regFirstName,
+      lastName: regLastName,
+      type: regType,
+      collegeOrOffice: regCollege,
+      email: normalizedId.includes("@") ? normalizedId.toLowerCase() : "",
+      updatedAt: new Date().toISOString()
+    };
+
+    setDocumentNonBlocking(doc(db, 'students', normalizedId), newStudent, { merge: true });
+    setFoundStudent(newStudent);
+    setCurrentStep("INTENT");
+  };
+
+  const handleIntentSelection = (intent: string) => {
     if (!foundStudent || !db) return;
 
     addDocumentNonBlocking(collection(db, 'libraryVisits'), {
       visitorId: foundStudent.id,
       visitorName: `${foundStudent.firstName} ${foundStudent.lastName}`,
-      visitorType: selectedRole,
-      collegeOrOffice: foundStudent.collegeOrOffice || 'General',
+      visitorType: foundStudent.type,
+      collegeOrOffice: foundStudent.collegeOrOffice,
       checkInTime: serverTimestamp(),
-      checkOutTime: null,
-      purpose: selectedPurpose
+      purpose: intent
     });
 
-    toast({
-      title: "Check-in Authorized",
-      description: `Log entries committed for ${foundStudent.firstName} ${foundStudent.lastName}.`,
-    });
-    
-    setFoundStudent(null);
-    setStudentIdInput("");
-    setSelectedPurpose("General Visit");
+    setCurrentStep("WELCOME");
   };
-
-  if (isUserLoading) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
-      <main className="container mx-auto py-12 px-4 max-w-3xl">
-        <div className="space-y-10">
-          <div className="text-center space-y-3">
-            <h1 className="text-4xl font-black font-headline uppercase italic tracking-tighter">
-              Access <span className="text-primary not-italic">Terminal</span>
-            </h1>
-            <p className="text-muted-foreground font-black text-[10px] uppercase tracking-[0.4em] opacity-50">
-              Institutional Entry Logic & Verification
-            </p>
+      <main className="container mx-auto py-12 px-4 max-w-4xl">
+        <div className="space-y-12">
+          {/* Progress Header */}
+          <div className="flex justify-center items-center gap-4">
+            {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as Step[]).map((s, i) => {
+              if (s === "REGISTER" && currentStep !== "REGISTER") return null;
+              const isActive = currentStep === s;
+              return (
+                <div key={s} className="flex items-center gap-4">
+                  <div className={cn(
+                    "h-12 w-12 rounded-2xl flex items-center justify-center font-black transition-all border-4",
+                    isActive ? "bg-primary text-white border-primary shadow-xl scale-110" : "bg-muted/40 text-muted-foreground border-transparent"
+                  )}>
+                    {i + 1}
+                  </div>
+                  {isActive && <span className="text-xs font-black uppercase tracking-widest text-primary italic">{s}</span>}
+                  {i < 3 && <div className="h-1 w-8 bg-muted rounded-full" />}
+                </div>
+              );
+            })}
           </div>
 
-          {!user ? (
-            <Card className="shadow-2xl border-none bg-white rounded-[3rem] p-10 text-center space-y-6 border-4 border-primary/5">
-              <XCircle className="h-20 w-20 text-destructive mx-auto opacity-20" />
-              <h2 className="text-2xl font-black uppercase italic">Identity Required</h2>
-              <p className="text-muted-foreground text-xs font-black uppercase tracking-widest leading-relaxed">
-                Terminal operational security requires an active institutional session.
-              </p>
-              <Button asChild className="h-14 px-10 rounded-2xl bg-primary font-black uppercase tracking-widest text-[10px]">
-                <Link href="/">Secure Login</Link>
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid gap-8">
-              <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white overflow-hidden">
-                <div className="h-2 bg-muted w-full" />
-                <CardHeader className="p-8 pb-4">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">ID Scanning Vector</CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 pt-0">
-                  <form onSubmit={handleLookup} className="flex gap-4">
-                    <div className="relative flex-1">
-                      <Input 
-                        placeholder="ENTER IDENTIFIER (e.g., S1001)" 
-                        value={studentIdInput}
-                        onChange={(e) => setStudentIdInput(e.target.value)}
-                        className="pl-14 h-16 text-xl uppercase tracking-[0.2em] font-black border-2 rounded-2xl bg-muted/20 focus-visible:ring-primary"
-                        autoFocus
-                      />
-                      <Search className="absolute left-5 top-5.5 h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="h-16 bg-primary px-10 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl hover:scale-105 transition-all"
-                      disabled={!studentIdInput || isSearching}
-                    >
-                      {isSearching ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify ID"}
-                    </Button>
-                  </form>
-                </CardContent>
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+            {currentStep === "IDENTIFY" && (
+              <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden p-12">
+                <div className="text-center space-y-4 mb-12">
+                  <h2 className="text-4xl font-black italic uppercase tracking-tighter">System <span className="text-primary not-italic">Identification</span></h2>
+                  <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.3em] opacity-60">Enter Student ID or Institutional Email</p>
+                </div>
+                <form onSubmit={handleIdentification} className="space-y-8">
+                  <div className="relative">
+                    <Input 
+                      placeholder="e.g. 2023-100456 or name@neu.edu.ph"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className="h-24 text-2xl font-black uppercase tracking-widest rounded-[2rem] border-4 border-muted focus-visible:border-primary pl-10"
+                      autoFocus
+                    />
+                  </div>
+                  <Button 
+                    disabled={!identifier || isSearching}
+                    className="w-full h-20 rounded-[2rem] bg-primary text-white text-xl font-black uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all"
+                  >
+                    {isSearching ? <Loader2 className="h-10 w-10 animate-spin" /> : "Verify Identity"}
+                  </Button>
+                </form>
               </Card>
+            )}
 
-              {error && (
-                <div className="flex items-center gap-5 p-6 bg-destructive/5 text-destructive rounded-[2rem] border-2 border-destructive/10 animate-in fade-in slide-in-from-top-4">
-                  <XCircle className="h-8 w-8 shrink-0" />
+            {currentStep === "REGISTER" && (
+              <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden p-12">
+                <div className="flex items-center gap-6 mb-12">
+                  <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <UserPlus className="h-8 w-8 text-primary" />
+                  </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-black uppercase tracking-widest">Verification Failed</p>
-                    <p className="text-[10px] font-bold opacity-70 uppercase tracking-wide">{error}</p>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter">New <span className="text-primary not-italic">Visitor</span></h2>
+                    <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">Initialize institutional profile for {identifier}</p>
                   </div>
                 </div>
-              )}
+                <form onSubmit={handleRegistration} className="space-y-8">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">First Name</Label>
+                      <Input value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="h-14 rounded-xl border-2 font-bold" required />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Last Name</Label>
+                      <Input value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="h-14 rounded-xl border-2 font-bold" required />
+                    </div>
+                  </div>
 
-              {foundStudent && (
-                <div className="animate-in zoom-in-95 duration-500">
-                  <Card className="border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] rounded-[3rem] bg-white overflow-hidden success-pulse border-4 border-white">
-                    <div className="h-3 bg-primary w-full" />
-                    <CardHeader className="p-10 pb-6 flex flex-row items-center justify-between">
-                      <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase tracking-widest px-4 py-2 rounded-xl">
-                        Verification Successful
-                      </Badge>
-                      <Button variant="ghost" size="icon" onClick={() => setFoundStudent(null)} className="rounded-full hover:bg-muted">
-                        <XCircle className="h-5 w-5 text-muted-foreground" />
-                      </Button>
-                    </CardHeader>
-
-                    <CardContent className="p-10 pt-0 space-y-12">
-                      <div className="flex items-center gap-8">
-                        <Avatar className="h-32 w-32 rounded-[2.5rem] ring-8 ring-primary/5 shadow-inner">
-                          <AvatarFallback className="text-4xl font-black bg-primary/10 text-primary">
-                            {foundStudent.firstName?.charAt(0)}{foundStudent.lastName?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="space-y-2">
-                          <h3 className="text-4xl font-black italic uppercase tracking-tighter">{foundStudent.firstName} {foundStudent.lastName}</h3>
-                          <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">ID: {foundStudent.id}</span>
-                            <div className="h-1 w-1 rounded-full bg-muted-foreground opacity-20" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary italic">{foundStudent.collegeOrOffice || 'General Affiliation'}</span>
-                          </div>
-                        </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Visitor Class</Label>
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button" 
+                          variant={regType === "Student" ? "default" : "outline"}
+                          onClick={() => setRegType("Student")}
+                          className="flex-1 h-14 rounded-xl font-black uppercase text-[10px]"
+                        >
+                          <GraduationCap className="mr-2 h-4 w-4" /> Student
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant={regType === "Staff" ? "default" : "outline"}
+                          onClick={() => setRegType("Staff")}
+                          className="flex-1 h-14 rounded-xl font-black uppercase text-[10px]"
+                        >
+                          <Briefcase className="mr-2 h-4 w-4" /> Staff/Teacher
+                        </Button>
                       </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">College/Office</Label>
+                      <Select value={regCollege} onValueChange={setRegCollege}>
+                        <SelectTrigger className="h-14 rounded-xl border-2 font-black uppercase text-[10px]">
+                          <SelectValue placeholder="Select Academic Unit" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                          <SelectItem value="CAS" className="font-bold">College of Arts & Sciences</SelectItem>
+                          <SelectItem value="CBA" className="font-bold">College of Business Admin</SelectItem>
+                          <SelectItem value="CED" className="font-bold">College of Education</SelectItem>
+                          <SelectItem value="COE" className="font-bold">College of Engineering</SelectItem>
+                          <SelectItem value="CS" className="font-bold">College of Computer Studies</SelectItem>
+                          {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold">{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-dashed">
-                        <div className="space-y-4">
-                          <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Visitor Vector (Class)</Label>
-                          <RadioGroup 
-                            value={selectedRole} 
-                            onValueChange={(v: any) => setSelectedRole(v)}
-                            className="grid grid-cols-2 gap-4"
-                          >
-                            <div className={cn(
-                              "relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                              selectedRole === "Student" ? "border-primary bg-primary/5 scale-105" : "border-muted opacity-60 hover:opacity-100"
-                            )} onClick={() => setSelectedRole("Student")}>
-                              <div className="flex items-center gap-3">
-                                <GraduationCap className={cn("h-5 w-5", selectedRole === "Student" ? "text-primary" : "text-muted-foreground")} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Student</span>
-                              </div>
-                              <RadioGroupItem value="Student" className="sr-only" />
-                              {selectedRole === "Student" && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                            </div>
-                            <div className={cn(
-                              "relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                              selectedRole === "Staff" ? "border-primary bg-primary/5 scale-105" : "border-muted opacity-60 hover:opacity-100"
-                            )} onClick={() => setSelectedRole("Staff")}>
-                              <div className="flex items-center gap-3">
-                                <Briefcase className={cn("h-5 w-5", selectedRole === "Staff" ? "text-primary" : "text-muted-foreground")} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Employee</span>
-                              </div>
-                              <RadioGroupItem value="Staff" className="sr-only" />
-                              {selectedRole === "Staff" && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                            </div>
-                          </RadioGroup>
-                        </div>
+                  <Button className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-xl">
+                    Create Profile & Proceed
+                  </Button>
+                </form>
+              </Card>
+            )}
 
-                        <div className="space-y-4">
-                          <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Visit Objective (Purpose)</Label>
-                          <Select value={selectedPurpose} onValueChange={setSelectedPurpose}>
-                            <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/10 text-xs uppercase tracking-widest focus:ring-primary">
-                              <div className="flex items-center gap-3">
-                                <BookOpen className="h-4 w-4 text-primary opacity-60" />
-                                <SelectValue placeholder="Select Purpose" />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
-                              <SelectItem value="General Visit" className="rounded-xl font-bold uppercase text-[10px] py-3">General Visit</SelectItem>
-                              {purposes?.map(p => (
-                                <SelectItem key={p.id} value={p.name} className="rounded-xl font-bold uppercase text-[10px] py-3">{p.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+            {currentStep === "INTENT" && (
+              <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden p-12">
+                <div className="flex items-center justify-between mb-12">
+                  <div className="space-y-1">
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter">Select <span className="text-primary not-italic">Activity</span></h2>
+                    <p className="text-muted-foreground text-xs font-black uppercase tracking-widest opacity-60">Verified: {foundStudent?.firstName} {foundStudent?.lastName}</p>
+                  </div>
+                  <Badge className="bg-primary/5 text-primary border-none px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest">{foundStudent?.type}</Badge>
+                </div>
 
-                      <div className="p-6 bg-primary/5 rounded-[2rem] flex gap-5 items-start">
-                        <Info className="h-6 w-6 text-primary shrink-0 opacity-40" />
-                        <p className="text-[10px] font-bold text-primary leading-relaxed uppercase tracking-wide">
-                          Verification confirmed against institutional registry. Proceeding to log this access vector with the specified role and objective.
-                        </p>
-                      </div>
-                    </CardContent>
-
-                    <CardFooter className="p-10 pt-0">
-                      <Button 
-                        className="w-full h-20 rounded-[1.5rem] bg-primary hover:bg-primary/90 text-white font-black uppercase italic tracking-widest text-lg shadow-2xl transition-all"
-                        onClick={handleCheckIn}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {INTENT_OPTIONS.map((intent) => {
+                    const Icon = intent.icon;
+                    return (
+                      <Button
+                        key={intent.id}
+                        variant="outline"
+                        onClick={() => handleIntentSelection(intent.name)}
+                        className="h-32 rounded-[2rem] border-4 border-muted hover:border-primary hover:bg-primary/5 group transition-all"
                       >
-                        <UserCheck className="mr-4 h-8 w-8" />
-                        Authorize Entry Log
+                        <div className="flex flex-col items-center gap-4">
+                          <Icon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <span className="text-xs font-black uppercase tracking-widest">{intent.name}</span>
+                        </div>
                       </Button>
-                    </CardFooter>
-                  </Card>
+                    );
+                  })}
                 </div>
-              )}
+              </Card>
+            )}
 
-              {!foundStudent && !error && !isSearching && (
-                <div className="text-center py-20 space-y-8 opacity-20">
-                  <div className="mx-auto w-32 h-32 bg-muted/40 flex items-center justify-center rounded-[3rem] shadow-inner">
-                    <Search className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.6em] max-w-xs mx-auto leading-loose text-center">
-                    Terminal L-01: Waiting for institutional input scan
-                  </p>
+            {currentStep === "WELCOME" && (
+              <Card className="rounded-[4rem] border-none shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] bg-white overflow-hidden p-20 text-center space-y-12 success-pulse border-8 border-white">
+                <div className="inline-flex items-center justify-center p-12 bg-primary text-white rounded-[3rem] shadow-2xl">
+                  <CheckCircle2 className="h-24 w-24" />
                 </div>
-              )}
-            </div>
-          )}
+                <div className="space-y-4">
+                  <h1 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
+                    Welcome to <br /><span className="text-primary not-italic">NEU Library!</span>
+                  </h1>
+                  <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.5em] opacity-60">Entry Protocol Confirmed</p>
+                </div>
+                <div className="pt-8 border-t border-dashed">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">System will reset in 5 seconds...</p>
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
     </div>
