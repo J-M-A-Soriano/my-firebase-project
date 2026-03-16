@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   FileDown, TrendingUp, Filter, PieChart as PieIcon, 
-  Activity, Building2, Clock, UsersRound, Loader2, KeyRound, Calendar as CalendarIcon
+  Activity, Building2, Clock, UsersRound, Loader2, KeyRound, Calendar as CalendarIcon,
+  Table as TableIcon
 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
@@ -25,6 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useAdmin } from "@/hooks/use-admin";
@@ -381,6 +390,67 @@ export default function IntelligenceCenter() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Visitor List Section */}
+        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="p-8 pb-4 border-b bg-muted/10">
+            <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+              <TableIcon className="h-6 w-6 text-primary" /> Live Access Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-muted/5">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Visitor Name</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Institutional ID</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Academic Unit</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Check-in Time</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Purpose</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Role</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stats?.filteredSessions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-[10px] font-black uppercase tracking-[0.3em] opacity-30">
+                      No Records in Specified Window
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  stats?.filteredSessions.map((session) => (
+                    <TableRow key={session.id} className="hover:bg-muted/5 transition-colors">
+                      <TableCell className="text-xs font-bold py-4">
+                        <div className="flex flex-col">
+                          <span className="uppercase italic tracking-tight">{session.visitorName || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[10px] font-black opacity-60 tracking-widest">{session.visitorId || "N/A"}</TableCell>
+                      <TableCell className="text-[10px] font-black uppercase tracking-widest text-primary/80">{session.collegeOrOffice || "N/A"}</TableCell>
+                      <TableCell className="text-[10px] font-bold text-muted-foreground">
+                        {session.checkInTime ? format(session.checkInTime.toDate(), "PP | hh:mm a") : "N/A"}
+                      </TableCell>
+                      <TableCell className="text-[10px] font-black uppercase tracking-widest">
+                        <Badge variant="outline" className="border-primary/10 bg-primary/5 text-[8px] font-black py-0.5 px-2">
+                          {session.purpose || "General"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge className={cn(
+                          "text-[8px] font-black uppercase px-2 py-0.5 rounded-md",
+                          session.visitorType === "Student" ? "bg-accent text-white" : "bg-primary text-white"
+                        )}>
+                          {session.visitorType}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
       </main>
     </div>
   );
