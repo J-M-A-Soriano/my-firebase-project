@@ -6,7 +6,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, FileDown, TrendingUp, Loader2, Clock, UserCheck, Filter } from "lucide-react";
+import { Users, FileDown, TrendingUp, Loader2, Clock, UserCheck, Filter, Search } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     return { total: filtered.length, chartData, pieData, filteredSessions: filtered };
   }, [sessions, timeRange, filterReason, filterCollege, filterType]);
 
-  const COLORS = ['#0f172a', '#1e293b', '#334155', '#475569', '#2563eb', '#64748b'];
+  const COLORS = ['#0f172a', '#2563eb', '#1e293b', '#334155', '#475569', '#64748b'];
 
   const generateReport = () => {
     if (!stats) return;
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Generated: ${format(new Date(), "PPpp")}`, 14, 32);
-    doc.text(`Horizon: ${timeRange.toUpperCase()} | Filters: R:${filterReason} | C:${filterCollege} | T:${filterType}`, 14, 38);
+    doc.text(`Horizon: ${timeRange.toUpperCase()} | Filters: Reason:${filterReason} | College:${filterCollege} | Type:${filterType}`, 14, 38);
 
     const tableData = stats.filteredSessions.map(s => [
       s.visitorName || s.visitorId || "Anonymous",
@@ -178,13 +178,13 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Academic Unit</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Academic Unit (College)</label>
               <Select value={filterCollege} onValueChange={setFilterCollege}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Global (All)</SelectItem>
+                  <SelectItem value="all">Global (All Colleges)</SelectItem>
                   {colleges?.map(c => (
                     <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                   ))}
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Objective</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Objective (Reason)</label>
               <Select value={filterReason} onValueChange={setFilterReason}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />
@@ -203,14 +203,12 @@ export default function AdminDashboard() {
                   {reasons?.map(r => (
                     <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
                   ))}
-                  <SelectItem value="Reading Books">Reading Books</SelectItem>
-                  <SelectItem value="Thesis Research">Thesis Research</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Vector</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Vector (Type)</label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />

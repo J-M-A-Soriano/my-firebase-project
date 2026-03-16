@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "College": {
@@ -23,16 +24,17 @@
     "Student": {
       "title": "Student",
       "type": "object",
-      "description": "Student profile data.",
+      "description": "Student or Staff profile data.",
       "properties": {
         "id": { "type": "string" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "collegeOrOffice": { "type": "string" },
-        "isBlocked": { "type": "boolean" }
+        "isBlocked": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["Student", "Staff"] }
       },
-      "required": ["id", "firstName", "lastName"]
+      "required": ["id", "firstName", "lastName", "type"]
     },
     "LibraryVisit": {
       "title": "LibraryVisit",
