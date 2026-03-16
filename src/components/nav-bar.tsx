@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -13,6 +14,10 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 
+/**
+ * @fileOverview Institutional Navigation Bar.
+ * Provides administrators with direct access to Analytics, Visitors (CRUD), AI Hub, and Settings.
+ */
 export function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
