@@ -35,7 +35,8 @@ export default function LandingPage() {
 
   useEffect(() => {
     const updateTime = () => {
-      setLocalTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      const now = new Date();
+      setLocalTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     };
     updateTime();
     const timer = setInterval(updateTime, 10000);
@@ -43,6 +44,7 @@ export default function LandingPage() {
   }, []);
 
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
+  // Admins stay on this page to choose their persona
   useEffect(() => {
     if (user && !isAdminLoading && !isAdmin && !isActionPending) {
       router.push("/welcome");
@@ -58,13 +60,13 @@ export default function LandingPage() {
         setIsActionPending(false);
         return;
       }
-
       toast({
         variant: "destructive",
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
     } finally {
+      // Ensure we reset the pending state so buttons are clickable if redirection doesn't happen
       setIsActionPending(false);
     }
   };
@@ -106,7 +108,8 @@ export default function LandingPage() {
   };
 
   const isGlobalLoading = isUserLoading || isAdminLoading;
-  const showTerminal = !isAdmin && !isAdminLoading;
+  // Terminal kiosk view is only for unauthenticated users or users identified as non-admins
+  const showTerminal = !user && !isGlobalLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
@@ -225,7 +228,7 @@ export default function LandingPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {/* Right Section: TERMINAL ACTION (Only for non-admins) */}
+        {/* Right Section: TERMINAL ACTION (Only shown when not logged in) */}
         {showTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
             <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">
