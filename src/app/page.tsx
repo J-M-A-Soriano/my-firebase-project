@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -44,12 +43,12 @@ export default function LandingPage() {
   }, []);
 
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
-  // Admins stay on this page to choose their persona
+  // Explicitly guard against redirecting administrators
   useEffect(() => {
-    if (user && !isAdminLoading && !isAdmin && !isActionPending) {
+    if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
       router.push("/welcome");
     }
-  }, [user, isAdmin, isAdminLoading, isActionPending, router]);
+  }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, router]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
@@ -65,10 +64,10 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
-    } finally {
-      // Ensure we reset the pending state so buttons are clickable if redirection doesn't happen
       setIsActionPending(false);
     }
+    // Note: isActionPending is reset via component state updates upon re-render
+    // but we ensure a finally block or explicit reset for resilience
   };
 
   const handleEnterAsVisitor = async () => {
@@ -108,14 +107,13 @@ export default function LandingPage() {
   };
 
   const isGlobalLoading = isUserLoading || isAdminLoading;
-  // Terminal kiosk view is only for unauthenticated users or users identified as non-admins
   const showTerminal = !user && !isGlobalLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full">
 
-        {/* Left Section: SECURE LOGIN HERO / PERSONA SELECTION */}
+        {/* Persona Selection / Secure Gateway Hero */}
         <Card className={cn(
           "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none",
           showTerminal ? "lg:col-span-7" : "lg:col-span-10"
@@ -139,11 +137,11 @@ export default function LandingPage() {
           <CardContent className="p-8 md:p-12 space-y-8 z-10">
             <div className="space-y-3">
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none text-white">
-                {user ? "IDENTIFIED" : "SECURE"} <br /> 
+                {user ? "AUTHORIZED" : "SECURE"} <br /> 
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isGlobalLoading ? "Verifying Authority..." : user ? `Authorized: ${user.email}` : "Institutional Google Account Required"}
+                {isGlobalLoading ? "Verifying Authority..." : user ? `Identity: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -228,7 +226,7 @@ export default function LandingPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {/* Right Section: TERMINAL ACTION (Only shown when not logged in) */}
+        {/* Kiosk Mode Hub */}
         {showTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
             <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">

@@ -28,7 +28,9 @@ export function useAdmin() {
         return;
       }
 
-      const superAdminStatus = hardcodedAdmins.includes(user.email || '');
+      // Case-insensitive email check for institutional resilience
+      const userEmail = (user.email || '').toLowerCase();
+      const superAdminStatus = hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
       setIsSuperAdmin(superAdminStatus);
       
       let registryAdmin = false;
