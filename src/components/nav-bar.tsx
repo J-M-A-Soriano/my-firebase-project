@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   BookOpen, LayoutDashboard, BrainCircuit, Users, 
-  LogOut, ShieldCheck, Home, Monitor, LayoutTemplate, 
+  LogOut, ShieldCheck, LayoutTemplate, 
   Loader2 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,65 +49,40 @@ export function NavBar() {
             </div>
           </Link>
           
-          <div className="hidden lg:flex items-center bg-muted/30 p-1.5 rounded-2xl border-2 border-white shadow-inner">
-            <Link
-              href="/"
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
-                pathname === "/" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
-              )}
-            >
-              <Home className="h-3.5 w-3.5" />
-              Portal
-            </Link>
-            
-            <Link
-              href="/check-in"
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
-                pathname === "/check-in" ? "bg-accent text-white shadow-md" : "text-muted-foreground hover:text-accent"
-              )}
-            >
-              <Monitor className="h-3.5 w-3.5" />
-              Terminal
-            </Link>
-
-            {isAdmin && (
-              <>
-                <div className="h-6 w-[1.5px] bg-muted mx-2" />
-                <Link
-                  href="/dashboard"
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/dashboard" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <LayoutDashboard className="h-3.5 w-3.5" />
-                  Analytics
-                </Link>
-                <Link
-                  href="/students"
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/students" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  Visitors
-                </Link>
-                <Link
-                  href="/insights"
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
-                    pathname === "/insights" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <BrainCircuit className="h-3.5 w-3.5" />
-                  AI Hub
-                </Link>
-              </>
-            )}
-          </div>
+          {isAdmin && (
+            <div className="hidden lg:flex items-center bg-muted/30 p-1.5 rounded-2xl border-2 border-white shadow-inner">
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                  pathname === "/dashboard" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Analytics
+              </Link>
+              <Link
+                href="/students"
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                  pathname === "/students" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <Users className="h-3.5 w-3.5" />
+                Visitors
+              </Link>
+              <Link
+                href="/insights"
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all",
+                  pathname === "/insights" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <BrainCircuit className="h-3.5 w-3.5" />
+                AI Hub
+              </Link>
+            </div>
+          )}
 
           <div className="flex items-center gap-4">
             {user ? (
