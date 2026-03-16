@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,11 +11,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdmin } from "@/hooks/use-admin";
 import { cn } from "@/lib/utils";
+import { NavBar } from "@/components/nav-bar";
 
 /**
  * @fileOverview Institutional Verification Gateway.
  * Features an automatic 5-second reset to clear the session for the next user.
- * Removed NavBar for a clean, full-screen kiosk experience.
+ * Displays NavBar only for Admins to allow "Simulation Mode" auditing.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -65,6 +67,9 @@ export default function AuthorizedGreeting() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Simulation Mode Header for Admins */}
+      {isAdmin && <NavBar />}
+      
       <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
         <div className="max-w-4xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-700">
           

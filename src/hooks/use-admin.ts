@@ -7,8 +7,8 @@ import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * @fileOverview Centralized Administrative Authority Hook.
- * Implements a High-Performance Identity Caching System with User-Context Guarding
- * to eliminate verification latency and prevent session-switch redirection faults.
+ * Optimized with a Synchronous Institutional Handshake to eliminate UI flicker
+ * and ensure immediate access for authorized staff.
  */
 export function useAdmin() {
   const { user, isUserLoading } = useUser();
@@ -21,20 +21,21 @@ export function useAdmin() {
     'admin@neu.edu.ph'
   ], []);
 
-  // Synchronous Super-Admin Check (Zero Latency)
+  // SYNCHRONOUS HANDSHAKE: Determine authority immediately if email is known
   const isHardcoded = useMemo(() => {
     if (!user?.email) return false;
     const userEmail = user.email.toLowerCase();
     return hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
   }, [user, hardcodedAdmins]);
 
-  // Use a user-specific cache key to prevent identity bleed
+  // Identity Persistence Key
   const cacheKey = user ? `neu_lib_is_admin_${user.uid}` : null;
 
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
-  const [verifiedUid, setVerifiedUid] = useState<string | null>(null);
+  // Initialize with the synchronous check result to prevent UI flicker
+  const [isAdmin, setIsAdmin] = useState<boolean>(isHardcoded);
+  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(!isHardcoded);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(isHardcoded);
+  const [verifiedUid, setVerifiedUid] = useState<string | null>(user?.uid || null);
 
   useEffect(() => {
     async function verifyAuthority() {
@@ -47,55 +48,54 @@ export function useAdmin() {
         return;
       }
 
-      // 2. Prevent stale state from previous sessions
-      // If the user has changed, we are definitely loading again
+      // 2. Identity Synchronization
       if (verifiedUid !== user.uid) {
-        setIsAdminLoading(true);
+        setVerifiedUid(user.uid);
+        if (isHardcoded) {
+          setIsAdmin(true);
+          setIsSuperAdmin(true);
+          setIsAdminLoading(false);
+        } else {
+          setIsAdminLoading(true);
+        }
       }
 
-      // 3. Fast-Path: Synchronous Institutional Recognition
+      // 3. Fast-Path: Institutional Recognition (Already handled by initial state, but kept for sync)
       if (isHardcoded) {
-        setIsSuperAdmin(true);
         setIsAdmin(true);
+        setIsSuperAdmin(true);
         setIsAdminLoading(false);
-        setVerifiedUid(user.uid);
         if (typeof window !== 'undefined' && cacheKey) {
           localStorage.setItem(cacheKey, 'true');
         }
         return;
       }
 
-      // 4. Cache-Path: Institutional Persistence (localStorage)
+      // 4. Persistence Path: Local Identity Cache
       if (typeof window !== 'undefined' && cacheKey) {
         const cached = localStorage.getItem(cacheKey);
         if (cached !== null) {
           setIsAdmin(cached === 'true');
-          // Even if cached, we set loading to false to allow UI to proceed
           setIsAdminLoading(false);
-          setVerifiedUid(user.uid);
         }
       }
 
       if (!db) return;
 
-      // 5. Registry-Path: Dynamic Authority Verification
+      // 5. Registry Path: Dynamic Verification
       try {
         const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
         const status = adminDoc.exists();
         
         setIsAdmin(status);
         setIsAdminLoading(false);
-        setVerifiedUid(user.uid);
 
         if (typeof window !== 'undefined' && cacheKey) {
           localStorage.setItem(cacheKey, status.toString());
         }
       } catch (error) {
-        console.error("Authority verification failed:", error);
-        // Fallback for students/non-admins
         setIsAdmin(false);
         setIsAdminLoading(false);
-        setVerifiedUid(user.uid);
       }
     }
 
@@ -104,12 +104,9 @@ export function useAdmin() {
     }
   }, [user, isUserLoading, db, isHardcoded, cacheKey, verifiedUid]);
 
-  // CRITICAL: Composite loading state that respects the CURRENT user context
-  const effectiveLoading = isAdminLoading || (user !== null && verifiedUid !== user.uid);
-
   return { 
     isAdmin, 
-    isAdminLoading: effectiveLoading, 
+    isAdminLoading, 
     isSuperAdmin
   };
 }
