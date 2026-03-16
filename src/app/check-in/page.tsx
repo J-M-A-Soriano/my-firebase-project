@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,6 +29,10 @@ const INTENT_OPTIONS = [
   { id: "computer-lab", name: "Computer Lab Use", icon: MousePointer2 },
 ];
 
+/**
+ * @fileOverview NEULibrary Visitor Identification Terminal.
+ * Handles identity verification, profile registration, and intent logging.
+ */
 export default function CheckInKiosk() {
   const { toast } = useToast();
   const db = useFirestore();
@@ -36,7 +41,7 @@ export default function CheckInKiosk() {
   const [isLoading, setIsLoading] = useState(false);
   const [visitor, setVisitor] = useState<any | null>(null);
 
-  // Registration Form
+  // Registration Form State
   const [regType, setRegType] = useState<"Student" | "Staff">("Student");
   const [regCollege, setRegCollege] = useState("");
   const [regFirstName, setRegFirstName] = useState("");
@@ -44,7 +49,6 @@ export default function CheckInKiosk() {
 
   const collegesQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Allow unauthenticated loading of colleges for the public registration step
     return collection(db, 'colleges');
   }, [db]);
   const { data: colleges } = useCollection(collegesQuery);
@@ -85,7 +89,7 @@ export default function CheckInKiosk() {
         setStep("REGISTER");
       }
     } catch (err) {
-      toast({ title: "System Error", description: "Could not verify ID. Please check connection.", variant: "destructive" });
+      toast({ title: "System Error", description: "Could not verify identity. Please check terminal connection.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -98,9 +102,9 @@ export default function CheckInKiosk() {
     const normalizedId = identifier.trim().toUpperCase();
     const newProfile = {
       id: normalizedId,
-      firstName: regFirstName,
-      lastName: regLastName,
-      type: regType,
+      firstName: regFirstName.trim(),
+      lastName: regLastName.trim(),
+      type: regType || "Student",
       collegeOrOffice: regCollege,
       email: normalizedId.includes("@") ? normalizedId.toLowerCase() : "",
       createdAt: new Date().toISOString()
@@ -114,14 +118,17 @@ export default function CheckInKiosk() {
   const handleIntent = (purpose: string) => {
     if (!visitor || !db) return;
 
-    addDocumentNonBlocking(collection(db, 'libraryVisits'), {
-      visitorId: visitor.id,
-      visitorName: `${visitor.firstName} ${visitor.lastName}`,
-      visitorType: visitor.type,
-      collegeOrOffice: visitor.collegeOrOffice,
+    // Sanitize data and provide robust fallbacks for all fields to avoid 'undefined' errors
+    const logPayload = {
+      visitorId: visitor.id || identifier || "UNKNOWN",
+      visitorName: `${visitor.firstName || ""} ${visitor.lastName || ""}`.trim() || "Anonymous Visitor",
+      visitorType: visitor.type || "Student",
+      collegeOrOffice: visitor.collegeOrOffice || "General",
       checkInTime: serverTimestamp(),
-      purpose: purpose
-    });
+      purpose: purpose || "General Use"
+    };
+
+    addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
 
     setStep("WELCOME");
   };
@@ -132,7 +139,7 @@ export default function CheckInKiosk() {
       <main className="container mx-auto py-10 px-6 max-w-3xl">
         <div className="space-y-10">
           
-          {/* Step Indicators */}
+          {/* Progress Indicators */}
           <div className="flex justify-center items-center gap-4">
             {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
               if (s === "REGISTER" && step !== "REGISTER") return null;
@@ -142,7 +149,7 @@ export default function CheckInKiosk() {
                 <div key={s} className="flex items-center gap-4">
                   <div className={cn(
                     "h-10 w-10 rounded-xl flex items-center justify-center font-black transition-all duration-500 border-2",
-                    isActive ? "step-active border-primary text-sm" : isPast ? "bg-accent text-white border-accent text-sm" : "bg-white text-muted-foreground border-muted text-sm"
+                    isActive ? "step-active border-primary text-[10px]" : isPast ? "bg-accent text-white border-accent text-[10px]" : "bg-white text-muted-foreground border-muted text-[10px]"
                   )}>
                     {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
                   </div>
