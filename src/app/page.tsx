@@ -44,7 +44,7 @@ export default function LandingPage() {
   }, []);
 
   // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
-  // Now uses cached identity status for instant redirection
+  // Strictly guarded to ensure administrators are never accidentally redirected
   useEffect(() => {
     if (user && !isUserLoading && !isAdminLoading && !isAdmin && !isActionPending) {
       router.replace("/welcome");
@@ -65,9 +65,9 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
-    } finally {
       setIsActionPending(false);
     }
+    // Note: isActionPending(false) is handled by the redirect effect or manual release if login fails
   };
 
   const handleEnterAsVisitor = async () => {
@@ -97,7 +97,6 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await signOut(auth);
-      if (typeof window !== 'undefined') localStorage.removeItem('neu_lib_is_admin');
       router.replace("/");
     } catch (error) {
       toast({ title: "Sign Out Failed", variant: "destructive" });
@@ -193,7 +192,7 @@ export default function LandingPage() {
                   ) : (
                     <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Portal Redirection...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Finalizing Handshake...</p>
                     </div>
                   )}
                   

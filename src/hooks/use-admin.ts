@@ -21,70 +21,67 @@ export function useAdmin() {
     'admin@neu.edu.ph'
   ], []);
 
-  // Use a local cache to provide an "instant" identity handshake
+  // Synchronous Super-Admin Check (Zero Latency)
+  const isHardcoded = useMemo(() => {
+    if (!user?.email) return false;
+    const userEmail = user.email.toLowerCase();
+    return hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
+  }, [user, hardcodedAdmins]);
+
+  // Use a user-specific cache key to prevent identity bleed
+  const cacheKey = user ? `neu_lib_is_admin_${user.uid}` : null;
+
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const userEmail = (user?.email || '').toLowerCase();
-      const isHardcoded = hardcodedAdmins.includes(userEmail);
-      if (isHardcoded) return true;
-      return localStorage.getItem('neu_lib_is_admin') === 'true';
+    if (isHardcoded) return true;
+    if (typeof window !== 'undefined' && cacheKey) {
+      return localStorage.getItem(cacheKey) === 'true';
     }
     return false;
   });
   
-  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const userEmail = (user?.email || '').toLowerCase();
-      // If they are hardcoded or we have a cached 'false', we are not "loading"
-      if (hardcodedAdmins.includes(userEmail)) return false;
-      const cached = localStorage.getItem('neu_lib_is_admin');
-      return cached === null;
-    }
-    return true;
-  });
-  
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(() => {
-    const userEmail = (user?.email || '').toLowerCase();
-    return hardcodedAdmins.includes(userEmail);
-  });
+  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(isHardcoded);
 
   useEffect(() => {
     async function verifyAuthority() {
-      if (isUserLoading) return;
-
-      if (!user || !db) {
+      // If no user, we aren't admin and we aren't loading
+      if (!user) {
         setIsAdmin(false);
         setIsSuperAdmin(false);
         setIsAdminLoading(false);
-        if (typeof window !== 'undefined') localStorage.removeItem('neu_lib_is_admin');
         return;
       }
 
-      const userEmail = (user.email || '').toLowerCase();
-      const superAdminStatus = hardcodedAdmins.some(email => email.toLowerCase() === userEmail);
-      
-      // Fast-path: SuperAdmin check is synchronous and instant
-      if (superAdminStatus) {
+      // If already identified as hardcoded, we can stop loading early
+      if (isHardcoded) {
         setIsSuperAdmin(true);
         setIsAdmin(true);
         setIsAdminLoading(false);
-        if (typeof window !== 'undefined') localStorage.setItem('neu_lib_is_admin', 'true');
+        if (typeof window !== 'undefined' && cacheKey) {
+          localStorage.setItem(cacheKey, 'true');
+        }
         return;
       }
 
-      // Check cache again to see if we can finish early
-      const cachedStatus = typeof window !== 'undefined' ? localStorage.getItem('neu_lib_is_admin') : null;
-      if (cachedStatus === 'false') {
-        setIsAdmin(false);
-        setIsAdminLoading(false);
+      // Check user-specific cache
+      if (typeof window !== 'undefined' && cacheKey) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached !== null) {
+          setIsAdmin(cached === 'true');
+          setIsAdminLoading(false);
+        }
       }
+
+      if (!db) return;
 
       // Registry Path: Background Sync for dynamic admins
       try {
         const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
         const status = adminDoc.exists();
         setIsAdmin(status);
-        if (typeof window !== 'undefined') localStorage.setItem('neu_lib_is_admin', status.toString());
+        if (typeof window !== 'undefined' && cacheKey) {
+          localStorage.setItem(cacheKey, status.toString());
+        }
       } catch (error) {
         console.error("Authority verification failed:", error);
       } finally {
@@ -92,8 +89,10 @@ export function useAdmin() {
       }
     }
 
-    verifyAuthority();
-  }, [user, isUserLoading, db, hardcodedAdmins]);
+    if (!isUserLoading) {
+      verifyAuthority();
+    }
+  }, [user, isUserLoading, db, isHardcoded, cacheKey]);
 
   return { 
     isAdmin, 
