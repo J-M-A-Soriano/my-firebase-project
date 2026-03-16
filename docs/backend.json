@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "College": {
@@ -165,12 +166,25 @@
         "visitorId",
         "reasonForVisitId"
       ]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "type": "object",
+      "description": "Role marker for Admin access.",
+      "properties": {}
+    },
+    "RegularUserRole": {
+      "title": "RegularUserRole",
+      "type": "object",
+      "description": "Role marker for Regular User access.",
+      "properties": {}
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
@@ -182,7 +196,7 @@
           "schema": {
             "$ref": "#/backend/entities/College"
           },
-          "description": "Master data collection for academic colleges. Read access for all authenticated users; write access typically restricted to super-admins or via controlled processes. No denormalization required for authorization."
+          "description": "Master data collection for academic colleges."
         }
       },
       {
@@ -192,7 +206,7 @@
           "schema": {
             "$ref": "#/backend/entities/ReasonForVisit"
           },
-          "description": "Master data collection for predefined reasons for library visits. Read access for all authenticated users; write access typically restricted to super-admins or via controlled processes. No denormalization required for authorization."
+          "description": "Master data collection for predefined reasons for library visits."
         }
       },
       {
@@ -202,7 +216,7 @@
           "schema": {
             "$ref": "#/backend/entities/Student"
           },
-          "description": "Master list of student profiles who can visit the library. The document ID (`studentUniqueId`) is the official 'studentId' for efficient lookup by library staff during check-in. Read/write access is restricted to authenticated Admin users."
+          "description": "Master list of student profiles."
         }
       },
       {
@@ -212,27 +226,27 @@
           "schema": {
             "$ref": "#/backend/entities/Staff"
           },
-          "description": "Master list of staff/teacher profiles who can visit the library. The document ID (`staffUniqueId`) is the official 'staffId' for efficient lookup by library staff. Read/write access is restricted to authenticated Admin users."
+          "description": "Master list of staff/teacher profiles."
         }
       },
       {
-        "path": "/app_roles/admin_users/{userId}",
+        "path": "/admin_users/{userId}",
         "definition": {
           "entityName": "AdminRole",
           "schema": {
             "$ref": "#/backend/entities/AdminRole"
           },
-          "description": "A collection used for role-based access control. The presence of a document with a Firebase UID as its ID grants the 'Admin' role to that user. Adheres to DBAC 'Existence over Content' for secure authorization. Read access is for authenticated users (to check their own role), write access is highly restricted (e.g., via Cloud Functions or a super-admin interface)."
+          "description": "Grants the 'Admin' role to that user."
         }
       },
       {
-        "path": "/app_roles/regular_users/{userId}",
+        "path": "/regular_users/{userId}",
         "definition": {
           "entityName": "RegularUserRole",
           "schema": {
             "$ref": "#/backend/entities/RegularUserRole"
           },
-          "description": "A collection used for role-based access control. The presence of a document with a Firebase UID as its ID grants the 'Regular User' role to that user. This role serves to distinguish authenticated users who are not Admins. Adheres to DBAC 'Existence over Content'. Read access is for authenticated users, write access is highly restricted."
+          "description": "Grants the 'Regular User' role to that user."
         }
       },
       {
@@ -242,10 +256,10 @@
           "schema": {
             "$ref": "#/backend/entities/LibraryVisit"
           },
-          "description": "Records individual library visits. Each document includes denormalized 'collegeId', 'collegeName', 'reasonForVisitName', 'isEmployee', 'isTeacherVisitor', 'isStudentVisitor', 'visitorEmail', 'visitorFirstName', and 'visitorLastName' fields. These denormalized fields ensure Authorization Independence and enable efficient, filterable queries (QAP) for Admin users without needing `get()` operations in security rules. Read/write access is restricted solely to authenticated Admin users for all operations (check-in, check-out, statistics)."
+          "description": "Records individual library visits."
         }
       }
     ],
-    "reasoning": "The Firestore structure prioritizes Authorization Independence and Queryability for Admins (Library Staff) through strategic denormalization and structural segregation. \n\n**Authorization Independence:** The core transactional entity, `LibraryVisit`, includes denormalized attributes such as `collegeId`, `collegeName`, `reasonForVisitName`, `isEmployee`, `isTeacherVisitor`, `isStudentVisitor`, `visitorEmail`, `visitorFirstName`, and `visitorLastName`. These fields are copied from the respective `Student`, `Staff`, `College`, and `ReasonForVisit` master data documents at the time of check-in. This is CRITICAL because it eliminates the need for `get()` calls in Firestore Security Rules when querying `LibraryVisit` documents for statistics or display. All necessary information for filtering and authorization decisions is contained within the `LibraryVisit` document itself, simplifying rules and enabling atomic write operations.\n\n**Support for QAPs (Queryable Access Patterns):** By denormalizing these fields, the structure fully supports secure `list` operations (queries) for Admins. Admins need to view visitor statistics filtered by 'reason for visiting the library', 'college', and 'whether the visitor is an employee'. Because these filterable attributes are directly available on each `LibraryVisit` document, the Admin can perform efficient and secure queries (e.g., `db.collection('libraryVisits').where('collegeId', '==', '...')` or `.where('isEmployee', '==', true)`). Firestore Security Rules can then grant blanket `read` access to the `libraryVisits` collection for authenticated users with the 'Admin' role, as the collection's security posture is homogeneous (only Admins can read/write), and the necessary query filters are on denormalized fields, not reliant on rule-based data fetching. This ensures that rules are not used as filters and maintain predictable performance.\n\n**Structural Segregation:** Master data (Colleges, ReasonsForVisit, Students, Staff) are segregated into their own top-level collections. This ensures each collection has a homogeneous security posture (e.g., `Colleges` and `ReasonsForVisit` are read-only for authenticated users, `Students` and `Staff` are read/write only for Admins). User roles (`AdminRole`, `RegularUserRole`) are also segregated into dedicated collections following the 'Existence over Content' DBAC principle, making role checks explicit and robust based on the presence of a document for a specific `userId`.\n\n**Consistency:** Document IDs for `Student` and `Staff` collections are set to their respective unique identifiers (`studentId`, `staffId`). This enables direct, efficient lookups when checking visitors in or viewing profiles, aligning with the application's requirement for quick ID entry. All wildcards are descriptive, and authorization fields (implicitly via role collections) are standardized."
+    "reasoning": "Standardized paths to even segments for Firestore document reference compliance."
   }
 }

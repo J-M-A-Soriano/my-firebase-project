@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,13 +39,14 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
-      const adminDoc = await getDoc(doc(db, 'app_roles', 'admin_users', user.uid));
+      // Corrected paths to ensure even number of segments for doc()
+      const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       if (adminDoc.exists()) {
         router.push("/dashboard");
         return;
       }
 
-      const regularDoc = await getDoc(doc(db, 'app_roles', 'regular_users', user.uid));
+      const regularDoc = await getDoc(doc(db, 'regular_users', user.uid));
       if (regularDoc.exists() || user.email === 'jcesperanza@neu.edu.ph') {
         router.push("/welcome");
         return;
