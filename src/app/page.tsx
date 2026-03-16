@@ -9,6 +9,7 @@ import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { signOut } from "firebase/auth";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 /**
@@ -61,12 +62,17 @@ export default function LandingPage() {
     }
   };
 
+  const showTerminal = !isAdmin && !isAdminLoading;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full max-h-[750px]">
 
-        {/* Left Section: SECURE LOGIN HERO (70%) */}
-        <Card className="lg:col-span-7 auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2rem]">
+        {/* Left Section: SECURE LOGIN HERO (Expanded if admin) */}
+        <Card className={cn(
+          "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2rem] transition-all duration-500",
+          showTerminal ? "lg:col-span-7" : "lg:col-span-10"
+        )}>
           <div className="p-8 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
@@ -74,7 +80,7 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-black italic uppercase tracking-tighter leading-none">NEULibrary</span>
-                <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-40">Intelligence Systems</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.4em] opacity-40">Intelligence Systems</span>
               </div>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
@@ -98,17 +104,17 @@ export default function LandingPage() {
                 <>
                   <Button
                     asChild
-                    className="h-16 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                    className="h-14 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
                   >
                     <Link href={isAdmin ? "/dashboard" : "/welcome"}>
                       <UserCheck className="mr-4 h-6 w-6" />
-                      Dashboard
+                      {isAdmin ? "Admin Center" : "View Portal"}
                     </Link>
                   </Button>
                   <Button
                     onClick={handleLogout}
                     variant="outline"
-                    className="h-16 px-10 rounded-2xl border-2 border-white text-white hover:bg-white hover:text-primary text-lg font-black uppercase tracking-widest transition-all"
+                    className="h-14 px-10 rounded-2xl border-2 border-white text-white hover:bg-white hover:text-primary text-lg font-black uppercase tracking-widest transition-all"
                   >
                     <LogOut className="mr-4 h-6 w-6" />
                     Sign Out
@@ -117,7 +123,7 @@ export default function LandingPage() {
               ) : (
                 <Button
                   onClick={handleGoogleLogin}
-                  className="w-full md:w-fit h-16 px-12 rounded-2xl bg-white text-primary text-lg font-black uppercase tracking-widest shadow-xl hover:bg-accent hover:text-white transition-all hover:scale-[1.02]"
+                  className="w-full md:w-fit h-14 px-12 rounded-2xl bg-white text-primary text-lg font-black uppercase tracking-widest shadow-xl hover:bg-accent hover:text-white transition-all hover:scale-[1.02]"
                   disabled={isProcessing || isUserLoading || isAdminLoading}
                 >
                   {isProcessing || isUserLoading || isAdminLoading ? (
@@ -153,46 +159,48 @@ export default function LandingPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {/* Right Section: TERMINAL ACTION (30%) */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
-          <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2rem]">
-            <div className="p-6 flex items-center justify-between border-b border-muted/50">
-              <div className="flex items-center gap-2">
-                <MonitorCheck className="h-4 w-4 text-accent" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">TERMINAL-01</span>
-              </div>
-              <span className="text-[10px] font-mono tabular-nums font-black opacity-40">{localTime || "--:--"}</span>
-            </div>
-
-            <CardContent className="p-8 text-center space-y-8">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic leading-none">Visitor <br />Entry</h2>
-                <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-40">Public Logging Kiosk</p>
+        {/* Right Section: TERMINAL ACTION (Hidden for Admins) */}
+        {showTerminal && (
+          <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-6 duration-700">
+            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2rem]">
+              <div className="p-6 flex items-center justify-between border-b border-muted/50">
+                <div className="flex items-center gap-2">
+                  <MonitorCheck className="h-4 w-4 text-accent" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">TERMINAL-01</span>
+                </div>
+                <span className="text-[10px] font-mono tabular-nums font-black opacity-40">{localTime || "--:--"}</span>
               </div>
 
-              <Button
-                asChild
-                variant="outline"
-                className="w-full h-24 rounded-2xl border-4 border-white hover:border-accent hover:bg-accent/5 transition-all shadow-lg kiosk-button group"
-              >
-                <Link href="/check-in" className="flex flex-col items-center justify-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-accent">IDENTIFICATION HUB</span>
-                  <ArrowRight className="h-6 w-6 text-accent group-hover:translate-x-2 transition-transform" />
-                </Link>
-              </Button>
+              <CardContent className="p-8 text-center space-y-8">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic leading-none">Visitor <br />Entry</h2>
+                  <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-40">Public Logging Kiosk</p>
+                </div>
 
-              <div className="pt-6 border-t border-dashed border-muted">
-                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-loose opacity-40 px-4">
-                  Touch interface optimized.
-                </p>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full h-24 rounded-2xl border-4 border-white hover:border-accent hover:bg-accent/5 transition-all shadow-lg kiosk-button group"
+                >
+                  <Link href="/check-in" className="flex flex-col items-center justify-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-accent">IDENTIFICATION HUB</span>
+                    <ArrowRight className="h-6 w-6 text-accent group-hover:translate-x-2 transition-transform" />
+                  </Link>
+                </Button>
+
+                <div className="pt-6 border-t border-dashed border-muted">
+                  <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-loose opacity-40 px-4">
+                    Touch interface optimized.
+                  </p>
+                </div>
+              </CardContent>
+
+              <div className="p-4 bg-muted/20 text-center rounded-b-[2rem]">
+                <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">NEU LIBRARY SYSTEMS</span>
               </div>
-            </CardContent>
-
-            <div className="p-4 bg-muted/20 text-center rounded-b-[2rem]">
-              <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">NEU LIBRARY SYSTEMS</span>
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        )}
 
       </div>
     </div>
