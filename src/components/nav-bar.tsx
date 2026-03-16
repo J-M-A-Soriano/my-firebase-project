@@ -125,14 +125,16 @@ export function NavBar() {
                     <Link href="/welcome"><LayoutTemplate className="h-7 w-7" /></Link>
                   </Button>
                 )}
+                
+                {/* Upgraded Logout Button with Text Label */}
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
+                  variant="outline" 
                   onClick={handleSignOut}
                   disabled={isLoggingOut}
-                  className="h-14 w-14 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all"
+                  className="h-14 rounded-2xl border-2 border-muted hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-all px-6 font-black uppercase tracking-widest text-[10px]"
                 >
-                  {isLoggingOut ? <Loader2 className="h-6 w-6 animate-spin" /> : <LogOut className="h-7 w-7" />}
+                  {isLoggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                  Sign Out
                 </Button>
               </div>
             ) : (

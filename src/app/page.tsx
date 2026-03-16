@@ -1,16 +1,20 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, MonitorCheck, ArrowRight, LockKeyhole } from "lucide-react";
+import { BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, MonitorCheck, ArrowRight, LockKeyhole, LogOut, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
+import { signOut } from "firebase/auth";
 import Link from "next/link";
 
+/**
+ * @fileOverview NEULibrary Institutional Gateway.
+ * Features a high-impact Auth Vector Hero and a minimalist Access Terminal action.
+ */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -29,16 +33,6 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (user && !isUserLoading && !isAdminLoading) {
-      if (isAdmin) {
-        router.push("/dashboard");
-      } else {
-        router.push("/welcome");
-      }
-    }
-  }, [user, isUserLoading, isAdmin, isAdminLoading, router]);
-
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
     try {
@@ -52,6 +46,18 @@ export default function LandingPage() {
         title: "Authentication Protocol Fault",
         description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
       });
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsProcessing(true);
+    try {
+      await signOut(auth);
+      toast({ title: "Session Terminated", description: "You have been securely signed out." });
+    } catch (err) {
+      toast({ variant: "destructive", title: "Logout Fault", description: "Could not terminate session." });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -80,25 +86,51 @@ export default function LandingPage() {
           <CardContent className="p-12 md:p-24 space-y-16 z-10">
             <div className="space-y-6">
               <h1 className="text-8xl md:text-9xl font-black uppercase tracking-tighter italic leading-none">
-                SECURE <br /> <span className="text-accent not-italic">LOGIN</span>
+                {user ? "SYSTEM" : "SECURE"} <br /> <span className="text-accent not-italic">{user ? "ACCESS" : "LOGIN"}</span>
               </h1>
-              <p className="text-white/50 text-base font-black uppercase tracking-[0.5em] ml-2">Admin & Academic Personal Access</p>
+              <p className="text-white/50 text-base font-black uppercase tracking-[0.5em] ml-2">
+                {user ? `Authenticated: ${user.email}` : "Admin & Academic Personal Access"}
+              </p>
             </div>
 
-            <Button
-              onClick={handleGoogleLogin}
-              className="w-full md:w-fit h-28 px-20 rounded-[3rem] bg-white text-primary text-2xl font-black uppercase tracking-widest shadow-[0_32px_64px_-16px_rgba(255,255,255,0.2)] hover:bg-accent hover:text-white transition-all hover:scale-[1.05] active:scale-95"
-              disabled={isProcessing || isUserLoading || isAdminLoading}
-            >
-              {isProcessing || isUserLoading || isAdminLoading ? (
-                <Loader2 className="h-10 w-10 animate-spin" />
+            <div className="flex flex-col md:flex-row gap-6">
+              {user ? (
+                <>
+                  <Button
+                    asChild
+                    className="h-28 px-16 rounded-[3rem] bg-accent text-white text-2xl font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all"
+                  >
+                    <Link href={isAdmin ? "/dashboard" : "/welcome"}>
+                      <UserCheck className="mr-6 h-8 w-8" />
+                      Enter Dashboard
+                    </Link>
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="h-28 px-16 rounded-[3rem] border-4 border-white text-white hover:bg-white hover:text-primary text-2xl font-black uppercase tracking-widest transition-all"
+                  >
+                    <LogOut className="mr-6 h-8 w-8" />
+                    Sign Out / Log In
+                  </Button>
+                </>
               ) : (
-                <div className="flex items-center gap-8">
-                  <Mail className="h-8 w-8" />
-                  <span>Connect via Google</span>
-                </div>
+                <Button
+                  onClick={handleGoogleLogin}
+                  className="w-full md:w-fit h-28 px-20 rounded-[3rem] bg-white text-primary text-2xl font-black uppercase tracking-widest shadow-[0_32px_64px_-16px_rgba(255,255,255,0.2)] hover:bg-accent hover:text-white transition-all hover:scale-[1.05] active:scale-95"
+                  disabled={isProcessing || isUserLoading || isAdminLoading}
+                >
+                  {isProcessing || isUserLoading || isAdminLoading ? (
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                  ) : (
+                    <div className="flex items-center gap-8">
+                      <Mail className="h-8 w-8" />
+                      <span>Connect via Google</span>
+                    </div>
+                  )}
+                </Button>
               )}
-            </Button>
+            </div>
 
             <div className="flex items-center gap-12 pt-12 border-t border-white/10">
               <div className="flex items-center gap-4 text-[11px] font-black uppercase tracking-widest opacity-60">
