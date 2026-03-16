@@ -101,25 +101,15 @@ export default function LandingPage() {
 
             <div className="flex flex-col md:flex-row gap-4">
               {user ? (
-                <>
-                  <Button
-                    asChild
-                    className="h-14 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
-                  >
-                    <Link href={isAdmin ? "/dashboard" : "/welcome"}>
-                      <UserCheck className="mr-4 h-6 w-6" />
-                      {isAdmin ? "Admin Center" : "View Portal"}
-                    </Link>
-                  </Button>
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    className="h-14 px-10 rounded-2xl border-2 border-white text-white hover:bg-white hover:text-primary text-lg font-black uppercase tracking-widest transition-all"
-                  >
-                    <LogOut className="mr-4 h-6 w-6" />
-                    Sign Out
-                  </Button>
-                </>
+                <Button
+                  asChild
+                  className="h-14 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                >
+                  <Link href={isAdmin ? "/dashboard" : "/welcome"}>
+                    <UserCheck className="mr-4 h-6 w-6" />
+                    {isAdmin ? "Admin Center" : "View Portal"}
+                  </Link>
+                </Button>
               ) : (
                 <Button
                   onClick={handleGoogleLogin}
