@@ -2,27 +2,35 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, MonitorCheck, ArrowRight, LockKeyhole, UserCheck, Eye } from "lucide-react";
+import { 
+  BookOpen, ShieldCheck, Loader2, Mail, Fingerprint, 
+  MonitorCheck, ArrowRight, LockKeyhole, UserCheck, 
+  Eye, LayoutDashboard, UserRound
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth, useUser, initiateGoogleSignIn } from "@/firebase";
+import { useAuth, useUser, initiateGoogleSignIn, useFirestore } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Features a high-impact Auth Vector Hero and a minimalist Access Terminal action.
+ * Features a high-impact Auth Vector Hero and persona selection for admins.
  */
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isAdminLoading, isSuperAdmin, simulationMode } = useAdmin();
+  const { isAdmin, isAdminLoading, isSuperAdmin, simulationMode, setSimulationMode } = useAdmin();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoggingVisit, setIsLoggingVisit] = useState(false);
   const [localTime, setLocalTime] = useState("");
 
   useEffect(() => {
@@ -50,6 +58,35 @@ export default function LandingPage() {
     }
   };
 
+  const handleEnterAsVisitor = async () => {
+    if (!user || !db) return;
+    setIsLoggingVisit(true);
+
+    // Set simulation mode to ensure regular user UI
+    setSimulationMode(true);
+
+    // Automatically log the visit for the database/dashboard
+    const logPayload = {
+      visitorId: user.uid,
+      visitorName: user.displayName || "Authorized Admin",
+      visitorType: "Staff", // Admins log as Staff/Member
+      collegeOrOffice: "Administration",
+      checkInTime: serverTimestamp(),
+      purpose: "Admin Audit/Visit"
+    };
+
+    try {
+      addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
+      router.push("/welcome");
+    } catch (error) {
+      console.error("Visit logging failed:", error);
+      router.push("/welcome");
+    } finally {
+      setIsLoggingVisit(false);
+    }
+  };
+
+  // Only show the terminal to unauthenticated users or those in simulation mode
   const showTerminal = !isAdmin && !isAdminLoading;
 
   return (
@@ -67,8 +104,8 @@ export default function LandingPage() {
                 <BookOpen className="h-5 w-5 text-accent" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-black italic uppercase tracking-tighter leading-none">NEULibrary</span>
-                <span className="text-[8px] font-black uppercase tracking-[0.4em] opacity-40">Intelligence Systems</span>
+                <span className="text-xl font-black italic uppercase tracking-tighter leading-none text-white">NEULibrary</span>
+                <span className="text-[7px] font-black uppercase tracking-[0.4em] text-white/40">Intelligence Systems</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -79,33 +116,24 @@ export default function LandingPage() {
               )}
               <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
                 <ShieldCheck className="h-3 w-3 text-accent" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Authorized Access</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-white">Authorized Access</span>
               </div>
             </div>
           </div>
 
           <CardContent className="p-10 md:p-14 space-y-10 z-10">
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none">
-                {user ? "SYSTEM" : "SECURE"} <br /> <span className="text-accent not-italic">{user ? (simulationMode ? "AUDIT" : "ACCESS") : "LOGIN"}</span>
+              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic leading-none text-white">
+                {user ? (simulationMode ? "AUDIT" : "SYSTEM") : "SECURE"} <br /> 
+                <span className="text-accent not-italic">{user ? (simulationMode ? "PORTAL" : "ACCESS") : "LOGIN"}</span>
               </h1>
               <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.4em] ml-1">
-                {user ? `Authenticated: ${user.email}` : "Admin & Academic Personnel Access"}
+                {user ? `Identified: ${user.email}` : "Institutional Credential Required"}
               </p>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
-              {user ? (
-                <Button
-                  asChild
-                  className="h-14 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
-                >
-                  <Link href={isAdmin ? "/dashboard" : "/welcome"}>
-                    <UserCheck className="mr-4 h-6 w-6" />
-                    {isAdmin ? "Admin Center" : "Welcome Portal"}
-                  </Link>
-                </Button>
-              ) : (
+              {!user ? (
                 <Button
                   onClick={handleGoogleLogin}
                   className="w-full md:w-fit h-14 px-12 rounded-2xl bg-white text-primary text-lg font-black uppercase tracking-widest shadow-xl hover:bg-accent hover:text-white transition-all hover:scale-[1.02]"
@@ -120,21 +148,60 @@ export default function LandingPage() {
                     </div>
                   )}
                 </Button>
+              ) : (
+                <div className="flex flex-col md:flex-row gap-4 w-full">
+                  {(isAdmin || isSuperAdmin) && !simulationMode ? (
+                    <>
+                      <Button
+                        asChild
+                        className="h-14 flex-1 px-8 rounded-2xl bg-accent text-white text-base font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                      >
+                        <Link href="/dashboard">
+                          <LayoutDashboard className="mr-3 h-5 w-5" />
+                          Intelligence Center
+                        </Link>
+                      </Button>
+                      <Button
+                        onClick={handleEnterAsVisitor}
+                        disabled={isLoggingVisit}
+                        variant="outline"
+                        className="h-14 flex-1 px-8 rounded-2xl border-2 border-white/20 bg-white/5 text-white text-base font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                      >
+                        {isLoggingVisit ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                          <>
+                            <UserRound className="mr-3 h-5 w-5" />
+                            Enter as Visitor
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      asChild
+                      className="h-14 px-10 rounded-2xl bg-accent text-white text-lg font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                    >
+                      <Link href="/welcome">
+                        <UserCheck className="mr-4 h-6 w-6" />
+                        Welcome Portal
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
             <div className="flex items-center gap-8 pt-8 border-t border-white/10">
-              <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest opacity-60">
+              <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-white/60">
                 <LockKeyhole className="h-4 w-4 text-accent" /> OAUTH 2.0
               </div>
-              <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest opacity-60">
-                <Fingerprint className="h-4 w-4 text-accent" /> MFA READY
+              <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-white/60">
+                <Fingerprint className="h-4 w-4 text-accent" /> MFA SECURE
               </div>
             </div>
           </CardContent>
 
-          <div className="p-6 bg-black/20 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.4em] opacity-30 z-10">
-            <span>Institutional v3.0.0</span>
+          <div className="p-6 bg-black/20 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.4em] text-white/30 z-10">
+            <span>NEU Library Systems v3.0</span>
             <span className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
               Operational
@@ -159,7 +226,7 @@ export default function LandingPage() {
               <CardContent className="p-8 text-center space-y-8">
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic leading-none">Visitor <br />Entry</h2>
-                  <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-40">Public Logging Kiosk</p>
+                  <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-40">Public Kiosk Terminal</p>
                 </div>
 
                 <Button
@@ -174,14 +241,14 @@ export default function LandingPage() {
                 </Button>
 
                 <div className="pt-6 border-t border-dashed border-muted">
-                  <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-loose opacity-40 px-4">
-                    Touch interface optimized.
+                  <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest opacity-40 px-4 leading-relaxed">
+                    Institutional ID Required for Processing
                   </p>
                 </div>
               </CardContent>
 
               <div className="p-4 bg-muted/20 text-center rounded-b-[2.5rem]">
-                <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">NEU LIBRARY SYSTEMS</span>
+                <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em]">NEU LIBRARY CORE</span>
               </div>
             </Card>
           </div>
