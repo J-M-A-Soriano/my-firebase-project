@@ -24,7 +24,7 @@
     "Student": {
       "title": "Student",
       "type": "object",
-      "description": "Student or Staff profile data.",
+      "description": "Student or Staff/Teacher profile data.",
       "properties": {
         "id": { "type": "string" },
         "firstName": { "type": "string" },
@@ -32,7 +32,7 @@
         "email": { "type": "string", "format": "email" },
         "collegeOrOffice": { "type": "string" },
         "isBlocked": { "type": "boolean" },
-        "type": { "type": "string", "enum": ["Student", "Staff"] }
+        "type": { "type": "string", "enum": ["Student", "Teacher", "Staff"] }
       },
       "required": ["id", "firstName", "lastName", "type"]
     },
@@ -44,7 +44,7 @@
         "id": { "type": "string" },
         "checkInTime": { "type": "string", "format": "date-time" },
         "checkOutTime": { "type": "string", "format": "date-time" },
-        "visitorType": { "type": "string", "enum": ["Student", "Staff"] },
+        "visitorType": { "type": "string", "enum": ["Student", "Teacher", "Staff"] },
         "visitorId": { "type": "string" },
         "visitorName": { "type": "string" },
         "collegeOrOffice": { "type": "string" },

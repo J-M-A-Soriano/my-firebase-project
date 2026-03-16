@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  CalendarDays
+  CalendarDays, School
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -29,10 +29,6 @@ const INTENT_OPTIONS = [
   { id: "computer-lab", name: "Computer Lab Use", icon: MousePointer2 },
 ];
 
-/**
- * @fileOverview NEULibrary Visitor Identification Terminal.
- * Handles identity verification, profile registration, and intent logging.
- */
 export default function CheckInKiosk() {
   const { toast } = useToast();
   const db = useFirestore();
@@ -42,7 +38,7 @@ export default function CheckInKiosk() {
   const [visitor, setVisitor] = useState<any | null>(null);
 
   // Registration Form State
-  const [regType, setRegType] = useState<"Student" | "Staff">("Student");
+  const [regType, setRegType] = useState<"Student" | "Teacher" | "Staff">("Student");
   const [regCollege, setRegCollege] = useState("");
   const [regFirstName, setRegFirstName] = useState("");
   const [regLastName, setRegLastName] = useState("");
@@ -118,7 +114,6 @@ export default function CheckInKiosk() {
   const handleIntent = (purpose: string) => {
     if (!visitor || !db) return;
 
-    // Sanitize data and provide robust fallbacks for all fields to avoid 'undefined' errors
     const logPayload = {
       visitorId: visitor.id || identifier || "UNKNOWN",
       visitorName: `${visitor.firstName || ""} ${visitor.lastName || ""}`.trim() || "Anonymous Visitor",
@@ -129,7 +124,6 @@ export default function CheckInKiosk() {
     };
 
     addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
-
     setStep("WELCOME");
   };
 
@@ -139,7 +133,6 @@ export default function CheckInKiosk() {
       <main className="container mx-auto py-10 px-6 max-w-3xl">
         <div className="space-y-10">
           
-          {/* Progress Indicators */}
           <div className="flex justify-center items-center gap-4">
             {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
               if (s === "REGISTER" && step !== "REGISTER") return null;
@@ -208,43 +201,37 @@ export default function CheckInKiosk() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Class</Label>
-                      <div className="flex gap-2">
+                  <div className="space-y-4">
+                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Class</Label>
+                    <div className="flex gap-2">
+                      {["Student", "Teacher", "Staff"].map((type) => (
                         <Button 
+                          key={type}
                           type="button" 
-                          variant={regType === "Student" ? "default" : "outline"}
-                          onClick={() => setRegType("Student")}
+                          variant={regType === type ? "default" : "outline"}
+                          onClick={() => setRegType(type as any)}
                           className="flex-1 h-12 rounded-xl font-black uppercase text-[9px]"
                         >
-                          Student
+                          {type}
                         </Button>
-                        <Button 
-                          type="button" 
-                          variant={regType === "Staff" ? "default" : "outline"}
-                          onClick={() => setRegType("Staff")}
-                          className="flex-1 h-12 rounded-xl font-black uppercase text-[9px]"
-                        >
-                          Staff
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">College/Affiliation</Label>
-                      <Select value={regCollege} onValueChange={setRegCollege}>
-                        <SelectTrigger className="h-12 rounded-xl border-2 font-black uppercase text-[9px] px-4">
-                          <SelectValue placeholder="Select Unit" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-xl p-2">
-                          <SelectItem value="CAS" className="font-bold py-2 text-xs">CAS</SelectItem>
-                          <SelectItem value="CBA" className="font-bold py-2 text-xs">CBA</SelectItem>
-                          <SelectItem value="COE" className="font-bold py-2 text-xs">COE</SelectItem>
-                          <SelectItem value="CS" className="font-bold py-2 text-xs">CS</SelectItem>
-                          {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-xs">{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest ml-1">College/Affiliation</Label>
+                    <Select value={regCollege} onValueChange={setRegCollege}>
+                      <SelectTrigger className="h-12 rounded-xl border-2 font-black uppercase text-[9px] px-4">
+                        <SelectValue placeholder="Select Unit" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-none shadow-xl p-2">
+                        <SelectItem value="CAS" className="font-bold py-2 text-xs">CAS</SelectItem>
+                        <SelectItem value="CBA" className="font-bold py-2 text-xs">CBA</SelectItem>
+                        <SelectItem value="COE" className="font-bold py-2 text-xs">COE</SelectItem>
+                        <SelectItem value="CS" className="font-bold py-2 text-xs">CS</SelectItem>
+                        {colleges?.map(c => <SelectItem key={c.id} value={c.name} className="font-bold py-2 text-xs">{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Button className="w-full h-14 rounded-xl bg-primary text-white font-black uppercase tracking-widest shadow-md kiosk-button">

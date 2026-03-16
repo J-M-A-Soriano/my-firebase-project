@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -26,6 +27,13 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -44,7 +52,8 @@ export default function VisitorDirectory() {
     firstName: "",
     lastName: "",
     email: "",
-    collegeOrOffice: ""
+    collegeOrOffice: "",
+    type: "Student" as "Student" | "Teacher" | "Staff"
   });
 
   const studentsRef = useMemoFirebase(() => {
@@ -81,7 +90,7 @@ export default function VisitorDirectory() {
 
     setIsAddDialogOpen(false);
     setIsEditDialogOpen(false);
-    setFormData({ id: "", firstName: "", lastName: "", email: "", collegeOrOffice: "" });
+    setFormData({ id: "", firstName: "", lastName: "", email: "", collegeOrOffice: "", type: "Student" });
   };
 
   const toggleBlockStatus = (student: any) => {
@@ -101,7 +110,8 @@ export default function VisitorDirectory() {
       firstName: student.firstName,
       lastName: student.lastName,
       email: student.email || "",
-      collegeOrOffice: student.collegeOrOffice || ""
+      collegeOrOffice: student.collegeOrOffice || "",
+      type: student.type || "Student"
     });
     setIsEditDialogOpen(true);
   };
@@ -148,17 +158,26 @@ export default function VisitorDirectory() {
               <DialogContent className="rounded-[2.5rem] p-10">
                 <DialogHeader className="space-y-2">
                   <DialogTitle className="text-3xl font-black italic uppercase">Add Library Visitor</DialogTitle>
-                  <DialogDescription className="font-bold text-muted-foreground">Manual profile creation for RFID/institutional email identification.</DialogDescription>
+                  <DialogDescription className="font-bold text-muted-foreground">Manual profile creation for RFID/institutional identification.</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSaveStudent} className="space-y-6 py-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Student/Employee ID</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">ID Number</Label>
                       <Input placeholder="NEU-XXXX" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" required />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">College / Office</Label>
-                      <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Role Type</Label>
+                      <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val as any})}>
+                        <SelectTrigger className="h-12 rounded-xl font-bold bg-muted/30 border-none">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Student">Student</SelectItem>
+                          <SelectItem value="Teacher">Teacher</SelectItem>
+                          <SelectItem value="Staff">Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -172,8 +191,8 @@ export default function VisitorDirectory() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Institutional Email</Label>
-                    <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">College / Office</Label>
+                    <Input placeholder="e.g. CAS" value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
                   </div>
                   <DialogFooter className="pt-4">
                     <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Create Profile</Button>
@@ -249,12 +268,9 @@ export default function VisitorDirectory() {
                       <Building2 className="h-4 w-4 text-primary" />
                       {student.collegeOrOffice || 'General Affiliation'}
                     </div>
-                    {student.email && (
-                      <div className="flex items-center gap-3 text-[11px] font-bold text-muted-foreground uppercase truncate">
-                        <Mail className="h-4 w-4 text-primary" />
-                        {student.email}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3 text-[11px] font-black text-primary uppercase">
+                      <Badge variant="outline" className="text-[8px] font-black px-2 py-0.5 rounded-md border-primary/20 bg-primary/5">{student.type || 'Student'}</Badge>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
@@ -270,7 +286,6 @@ export default function VisitorDirectory() {
           </div>
         )}
 
-        {/* Edit Dialog - Redesigned */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="rounded-[2.5rem] p-10">
             <DialogHeader className="space-y-2">
@@ -284,8 +299,17 @@ export default function VisitorDirectory() {
                   <Input value={formData.id} disabled className="h-12 rounded-xl font-bold bg-muted/50 border-none cursor-not-allowed" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">College / Office</Label>
-                  <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Role Type</Label>
+                  <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val as any})}>
+                    <SelectTrigger className="h-12 rounded-xl font-bold bg-muted/30 border-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Teacher">Teacher</SelectItem>
+                      <SelectItem value="Staff">Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -299,8 +323,8 @@ export default function VisitorDirectory() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Email</Label>
-                <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">College / Office</Label>
+                <Input value={formData.collegeOrOffice} onChange={(e) => setFormData({...formData, collegeOrOffice: e.target.value})} className="h-12 rounded-xl font-bold bg-muted/30 border-none" />
               </div>
               <DialogFooter className="pt-4">
                 <Button type="submit" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest bg-primary text-white">Save Changes</Button>
