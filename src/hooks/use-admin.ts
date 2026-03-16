@@ -33,9 +33,9 @@ export function useAdmin() {
 
   // Initialize with the synchronous check result to prevent UI flicker
   const [isAdmin, setIsAdmin] = useState<boolean>(isHardcoded);
-  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(!isHardcoded);
+  const [isAdminLoading, setIsAdminLoading] = useState<boolean>(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(isHardcoded);
-  const [verifiedUid, setVerifiedUid] = useState<string | null>(user?.uid || null);
+  const [verifiedUid, setVerifiedUid] = useState<string | null>(null);
 
   useEffect(() => {
     async function verifyAuthority() {
@@ -48,23 +48,15 @@ export function useAdmin() {
         return;
       }
 
-      // 2. Identity Synchronization
-      if (verifiedUid !== user.uid) {
-        setVerifiedUid(user.uid);
-        if (isHardcoded) {
-          setIsAdmin(true);
-          setIsSuperAdmin(true);
-          setIsAdminLoading(false);
-        } else {
-          setIsAdminLoading(true);
-        }
-      }
+      // 2. Identity Synchronization Check
+      if (verifiedUid === user.uid && !isAdminLoading) return;
 
-      // 3. Fast-Path: Institutional Recognition (Already handled by initial state, but kept for sync)
+      // 3. Fast-Path: Institutional Recognition
       if (isHardcoded) {
         setIsAdmin(true);
         setIsSuperAdmin(true);
         setIsAdminLoading(false);
+        setVerifiedUid(user.uid);
         if (typeof window !== 'undefined' && cacheKey) {
           localStorage.setItem(cacheKey, 'true');
         }
@@ -77,10 +69,15 @@ export function useAdmin() {
         if (cached !== null) {
           setIsAdmin(cached === 'true');
           setIsAdminLoading(false);
+          setVerifiedUid(user.uid);
+          // Continue to verify in background...
         }
       }
 
-      if (!db) return;
+      if (!db) {
+        setIsAdminLoading(false);
+        return;
+      }
 
       // 5. Registry Path: Dynamic Verification
       try {
@@ -89,6 +86,7 @@ export function useAdmin() {
         
         setIsAdmin(status);
         setIsAdminLoading(false);
+        setVerifiedUid(user.uid);
 
         if (typeof window !== 'undefined' && cacheKey) {
           localStorage.setItem(cacheKey, status.toString());
@@ -96,17 +94,21 @@ export function useAdmin() {
       } catch (error) {
         setIsAdmin(false);
         setIsAdminLoading(false);
+        setVerifiedUid(user.uid);
       }
     }
 
     if (!isUserLoading) {
       verifyAuthority();
+    } else {
+      setIsAdminLoading(true);
     }
-  }, [user, isUserLoading, db, isHardcoded, cacheKey, verifiedUid]);
+  }, [user, isUserLoading, db, isHardcoded, cacheKey, verifiedUid, isAdminLoading]);
 
   return { 
     isAdmin, 
     isAdminLoading, 
-    isSuperAdmin
+    isSuperAdmin,
+    verifiedUid
   };
 }

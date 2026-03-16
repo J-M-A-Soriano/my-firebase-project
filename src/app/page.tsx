@@ -29,7 +29,7 @@ export default function LandingPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
-  const { isAdmin, isAdminLoading } = useAdmin();
+  const { isAdmin, isAdminLoading, verifiedUid } = useAdmin();
   const [isActionPending, setIsActionPending] = useState(false);
   const [localTime, setLocalTime] = useState("");
 
@@ -50,16 +50,18 @@ export default function LandingPage() {
     if (isUserLoading || isAdminLoading || isActionPending) return;
 
     // Only redirect if we have a confirmed user and we are ABSOLUTELY SURE they are NOT an admin
-    if (user && isAdmin === false) {
+    // We also check that the verifiedUid in the admin hook matches the current user uid
+    // to ensure the state isn't stale from a previous user on the same browser.
+    if (user && isAdmin === false && verifiedUid === user.uid) {
       router.replace("/welcome");
     }
-  }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, router]);
+  }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, verifiedUid, router]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // Explicitly release the lock after successful sign-in so buttons become interactive
+      // Explicitly release the lock after successful sign-in
       setIsActionPending(false);
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
