@@ -2,20 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldCheck, Settings, Home, LayoutTemplate } from "lucide-react";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldCheck, Settings, Home, LayoutTemplate, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
-
-const navItems = [
-  { name: "Terminal", href: "/check-in", icon: UserCheck, adminOnly: false },
-  { name: "Intelligence", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
-  { name: "Visitors", href: "/students", icon: Users, adminOnly: true },
-  { name: "AI Hub", href: "/insights", icon: BrainCircuit, adminOnly: true },
-  { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
-];
 
 export function NavBar() {
   const pathname = usePathname();
@@ -39,7 +31,7 @@ export function NavBar() {
               <BookOpen className="h-9 w-9" />
             </div>
             <div className="flex flex-col">
-              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">LibriGuard</span>
+              <span className="text-4xl font-black italic uppercase tracking-tighter text-primary leading-none">Libriguard</span>
               <span className="text-[9px] font-black uppercase tracking-[0.6em] opacity-40">Intelligence Systems</span>
             </div>
           </Link>
@@ -55,28 +47,53 @@ export function NavBar() {
               <Home className="h-4 w-4" />
               Portal
             </Link>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              
-              if (item.adminOnly && !isAdmin) return null;
+            
+            <Link
+              href="/check-in"
+              className={cn(
+                "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
+                pathname === "/check-in" ? "bg-accent text-white shadow-xl" : "text-muted-foreground hover:text-accent"
+              )}
+            >
+              <Monitor className="h-4 w-4" />
+              Terminal
+            </Link>
 
-              return (
+            {isAdmin && (
+              <>
+                <div className="h-8 w-[2px] bg-muted mx-4" />
                 <Link
-                  key={item.name}
-                  href={item.href}
+                  href="/dashboard"
                   className={cn(
-                    "flex items-center gap-3 rounded-[1.5rem] px-10 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
-                    isActive 
-                      ? "bg-primary text-white shadow-xl scale-105" 
-                      : "text-muted-foreground hover:text-primary hover:bg-white/60"
+                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/dashboard" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  {item.name}
+                  <LayoutDashboard className="h-4 w-4" />
+                  Analytics
                 </Link>
-              );
-            })}
+                <Link
+                  href="/students"
+                  className={cn(
+                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/students" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                  )}
+                >
+                  <Users className="h-4 w-4" />
+                  Visitors
+                </Link>
+                <Link
+                  href="/insights"
+                  className={cn(
+                    "flex items-center gap-3 rounded-[1.5rem] px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
+                    pathname === "/insights" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+                  )}
+                >
+                  <BrainCircuit className="h-4 w-4" />
+                  AI Hub
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-8">
@@ -104,8 +121,11 @@ export function NavBar() {
                 </Button>
               </div>
             ) : (
-              <Button asChild className="font-black uppercase tracking-widest text-[11px] rounded-[1.5rem] px-12 h-16 shadow-2xl bg-primary">
-                <Link href="/">Secure Login</Link>
+              <Button asChild className="font-black uppercase tracking-widest text-[11px] rounded-[1.5rem] px-12 h-16 shadow-2xl bg-primary flex items-center gap-3">
+                <Link href="/">
+                  <ShieldCheck className="h-4 w-4" />
+                  Secure Login
+                </Link>
               </Button>
             )}
           </div>
