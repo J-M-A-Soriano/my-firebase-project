@@ -6,7 +6,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, FileDown, TrendingUp, Loader2, Clock, UserCheck, Filter, Search } from "lucide-react";
+import { Users, FileDown, TrendingUp, UserCheck, Filter, PieChart as PieIcon, Activity } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     return { total: filtered.length, chartData, pieData, filteredSessions: filtered };
   }, [sessions, timeRange, filterReason, filterCollege, filterType]);
 
-  const COLORS = ['#0f172a', '#2563eb', '#1e293b', '#334155', '#475569', '#64748b'];
+  const COLORS = ['#0f172a', '#2563eb', '#3b82f6', '#1d4ed8', '#1e293b', '#64748b'];
 
   const generateReport = () => {
     if (!stats) return;
@@ -121,12 +121,13 @@ export default function AdminDashboard() {
       s.visitorName || s.visitorId || "Anonymous",
       s.collegeOrOffice || "N/A",
       format(s.checkInTime.toDate(), "PPpp"),
-      s.purpose || "General"
+      s.purpose || "General",
+      s.visitorType || "Student"
     ]);
 
     (doc as any).autoTable({
       startY: 48,
-      head: [['Identity', 'Affiliation', 'Timestamp', 'Objective']],
+      head: [['Identity', 'Affiliation', 'Timestamp', 'Objective', 'Class']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [15, 23, 42], fontSize: 10, fontStyle: 'bold' },
@@ -147,19 +148,19 @@ export default function AdminDashboard() {
               Intelligence <span className="text-primary not-italic">Center</span>
             </h1>
             <p className="text-muted-foreground font-black text-xs uppercase tracking-[0.4em] opacity-50">
-              Visitor Behavioral Analytics & Access Management
+              Institutional Behavioral Analytics & Traffic Oversight
             </p>
           </div>
           <Button onClick={generateReport} className="h-14 px-8 rounded-2xl bg-primary text-white shadow-2xl hover:scale-105 transition-all font-black uppercase tracking-widest text-[10px]">
             <FileDown className="mr-3 h-5 w-5" />
-            Download Intel Audit
+            Generate Audit Report
           </Button>
         </div>
 
         <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white/80 backdrop-blur-xl overflow-hidden">
           <CardHeader className="p-8 pb-4 border-b bg-muted/10">
             <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
-              <Filter className="h-4 w-4" /> Global Intelligence Parameters
+              <Filter className="h-4 w-4" /> Operational Intelligence Parameters
             </CardTitle>
           </CardHeader>
           <CardContent className="p-10 grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -170,9 +171,9 @@ export default function AdminDashboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">Today (24h)</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="day">Today (24h Window)</SelectItem>
+                  <SelectItem value="week">Weekly Aggregate</SelectItem>
+                  <SelectItem value="month">Monthly Aggregate</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -193,13 +194,13 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Objective (Reason)</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visit Objective (Reason)</label>
               <Select value={filterReason} onValueChange={setFilterReason}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Objectives</SelectItem>
+                  <SelectItem value="all">Global Objectives</SelectItem>
                   {reasons?.map(r => (
                     <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
                   ))}
@@ -208,15 +209,15 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Vector (Type)</label>
+              <label className="text-[11px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Vector (Class)</label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="h-14 rounded-2xl border-2 font-black bg-muted/20 text-xs uppercase tracking-widest">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Global Profiles</SelectItem>
+                  <SelectItem value="all">All Vectors</SelectItem>
                   <SelectItem value="student">Student Class</SelectItem>
-                  <SelectItem value="employee">Staff / Teaching Class</SelectItem>
+                  <SelectItem value="employee">Employee (Teacher/Staff)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -224,7 +225,7 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group">
+          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
             <div className="h-3 bg-primary w-full" />
             <CardContent className="p-10">
               <div className="flex items-center justify-between">
@@ -239,7 +240,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group">
+          <Card className="rounded-[3rem] border-none shadow-2xl bg-white overflow-hidden group hover:scale-[1.02] transition-transform">
             <div className="h-3 bg-accent w-full" />
             <CardContent className="p-10">
               <div className="flex items-center justify-between">
@@ -250,22 +251,22 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
                 <div className="h-20 w-20 bg-accent/10 rounded-[2rem] flex items-center justify-center border-2 border-accent/5">
-                  <UserCheck className="h-10 w-10 text-accent" />
+                  <Activity className="h-10 w-10 text-accent" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden">
+          <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden hover:scale-[1.02] transition-transform">
             <CardContent className="p-10 h-full flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <Badge className="bg-white/10 text-white border-none font-black px-4 py-1.5 rounded-xl text-[9px] uppercase tracking-widest">Secure Vector</Badge>
+                <Badge className="bg-white/10 text-white border-none font-black px-4 py-1.5 rounded-xl text-[9px] uppercase tracking-widest">System Peak</Badge>
                 <TrendingUp className="h-6 w-6 opacity-40" />
               </div>
               <div className="space-y-2 mt-8">
-                <p className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Peak Intensity</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Intensity Window</p>
                 <h3 className="text-3xl font-black italic uppercase leading-none tracking-tight">
-                  {stats?.chartData.sort((a,b) => b.count - a.count)[0]?.name || "SYNCING..."}
+                  {stats?.chartData.sort((a,b) => b.count - a.count)[0]?.name || "CALCULATING..."}
                 </h3>
               </div>
             </CardContent>
@@ -275,8 +276,10 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <Card className="rounded-[3rem] border-none shadow-2xl bg-white p-6">
             <CardHeader className="pb-10">
-              <CardTitle className="text-2xl font-black uppercase italic tracking-tight">Temporal Distribution</CardTitle>
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Hourly Access Patterns</p>
+              <CardTitle className="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
+                <Activity className="h-6 w-6 text-primary" /> Temporal Analysis
+              </CardTitle>
+              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Visit Distribution Over Time</p>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -293,8 +296,10 @@ export default function AdminDashboard() {
 
           <Card className="rounded-[3rem] border-none shadow-2xl bg-white p-6">
             <CardHeader className="pb-10">
-              <CardTitle className="text-2xl font-black uppercase italic tracking-tight">Objective Variance</CardTitle>
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Visit Purpose Analytics</p>
+              <CardTitle className="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
+                <PieIcon className="h-6 w-6 text-primary" /> Objective Analysis
+              </CardTitle>
+              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest opacity-50 mt-1">Visit Purpose Variance</p>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">

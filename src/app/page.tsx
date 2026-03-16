@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,7 +39,7 @@ export default function LandingPage() {
     setIsProcessing(true);
 
     try {
-      // Direct hardcode for institutional owner account as per specifications
+      // Direct authority for the institutional owner
       const isAdminEmail = user.email === 'jcesperanza@neu.edu.ph';
       const adminDoc = await getDoc(doc(db, 'admin_users', user.uid));
       
@@ -48,6 +49,7 @@ export default function LandingPage() {
         router.push("/welcome");
       }
     } catch (err) {
+      // Default to regular visitor welcome for any authentication faults
       router.push("/welcome");
     } finally {
       setIsProcessing(false);
@@ -59,9 +61,7 @@ export default function LandingPage() {
     try {
       await initiateGoogleSignIn(auth);
     } catch (err: any) {
-      // Professional handling of common authentication vectors
       if (err.code === 'auth/popup-closed-by-user') {
-        // Silent reset: user cancelled the action intentionally
         setIsProcessing(false);
         return;
       }
@@ -69,14 +69,14 @@ export default function LandingPage() {
       if (err.code === 'auth/operation-not-allowed') {
         toast({
           variant: "destructive",
-          title: "Protocol Fault: Auth Not Enabled",
-          description: "Google Sign-In provider is disabled in the Firebase Console. Please refer to System Specifications.",
+          title: "Protocol Fault",
+          description: "Google Sign-In is not enabled. Please refer to System Specifications.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "System Error",
-          description: "Authentication vector failed to initialize. Please retry.",
+          title: "Authentication Error",
+          description: "System failed to initialize secure login vector.",
         });
       }
       setIsProcessing(false);
@@ -105,7 +105,7 @@ export default function LandingPage() {
           <div className="bg-primary p-4 flex items-center justify-between px-10 text-[10px] font-black uppercase tracking-widest text-primary-foreground/90">
             <div className="flex items-center gap-3">
               <ShieldAlert className="h-4 w-4 text-accent" />
-              Terminal ID: L-01-ENTRY
+              Portal Status: Operational
             </div>
             <div className="flex items-center gap-6">
               <span className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" /> SYSTEM READY</span>
@@ -115,8 +115,8 @@ export default function LandingPage() {
 
           <CardContent className="p-12 space-y-12">
             <div className="space-y-4 text-center">
-              <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Security Protocol</h2>
-              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Identity Verification Required</p>
+              <h2 className="text-3xl font-black text-foreground uppercase tracking-tight italic">Secure Access</h2>
+              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Institutional Credentials Required</p>
             </div>
 
             <div className="space-y-8">
@@ -138,13 +138,10 @@ export default function LandingPage() {
               
               <div className="flex items-center justify-center gap-8 border-t pt-8">
                 <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
-                  <Fingerprint className="h-4 w-4" /> Biometric Sync
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
                   <ShieldCheck className="h-4 w-4" /> Secure Auth
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-black opacity-30 uppercase tracking-widest">
-                  <Scan className="h-4 w-4" /> RFID Ready
+                  <Fingerprint className="h-4 w-4" /> Encrypted Sync
                 </div>
               </div>
             </div>
