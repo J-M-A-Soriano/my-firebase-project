@@ -17,7 +17,12 @@ export function useAdmin() {
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
 
   // Hardcoded authorized accounts (Institutional Super-Admins)
-  const hardcodedAdmins = ['jcesperanza@neu.edu.ph', 'johnmichaelsoriano76@gmail.com'];
+  // These accounts bypass Firestore lookups for instant persona selection
+  const hardcodedAdmins = [
+    'jcesperanza@neu.edu.ph', 
+    'johnmichaelsoriano76@gmail.com', 
+    'johnmichaelsoriano151@gmail.com'
+  ];
 
   useEffect(() => {
     async function verifyAuthority() {
