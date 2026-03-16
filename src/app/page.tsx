@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
   BookOpen, ShieldCheck, Loader2, Mail, 
   MonitorCheck, ArrowRight, UserCheck, 
-  LayoutDashboard, LogOut, GraduationCap, Briefcase
+  LayoutDashboard, LogOut, GraduationCap, Briefcase, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,13 +15,13 @@ import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { collection, serverTimestamp } from "firebase/firestore";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { collection, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Optimized with High-Performance Identity Caching and User-Context Guards.
+ * Features an Automated Identity Handshake and Security Enforcement Protocol.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -32,6 +32,7 @@ export default function LandingPage() {
   const { isAdmin, isAdminLoading, verifiedUid } = useAdmin();
   const [isActionPending, setIsActionPending] = useState(false);
   const [localTime, setLocalTime] = useState("");
+  const hasLogged = useRef(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -43,26 +44,80 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // AUTO-ENTRY PROTOCOL: Redirect standard visitors automatically
-  // Strictly guarded to ensure administrators are never accidentally redirected
+  // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing and visit logging for non-admins
   useEffect(() => {
-    // SECURITY GUARD: Never redirect if we are still verifying administrative authority
-    if (isUserLoading || isAdminLoading || isActionPending) return;
+    const handleIdentityVerification = async () => {
+      // SECURITY GUARD: Wait for full identity verification
+      if (isUserLoading || isAdminLoading || isActionPending || !user || isAdmin !== false || verifiedUid !== user.uid || hasLogged.current) return;
 
-    // Only redirect if we have a confirmed user and we are ABSOLUTELY SURE they are NOT an admin
-    // We also check that the verifiedUid in the admin hook matches the current user uid
-    // to ensure the state isn't stale from a previous user on the same browser.
-    if (user && isAdmin === false && verifiedUid === user.uid) {
-      router.replace("/welcome");
-    }
-  }, [user, isAdmin, isAdminLoading, isUserLoading, isActionPending, verifiedUid, router]);
+      setIsActionPending(true);
+      hasLogged.current = true; // Mark as processed for this session
+
+      try {
+        if (!db) return;
+
+        // 1. SECURITY CHECK: Verify Block Status
+        const studentRef = doc(db, 'students', user.uid);
+        const studentSnap = await getDoc(studentRef);
+        const studentData = studentSnap.exists() ? studentSnap.data() : null;
+
+        if (studentData?.isBlocked) {
+          toast({ 
+            title: "Access Restricted", 
+            description: "Institutional privileges have been suspended. Contact the Library Admin.", 
+            variant: "destructive" 
+          });
+          await signOut(auth);
+          setIsActionPending(false);
+          hasLogged.current = false;
+          return;
+        }
+
+        // 2. AUTO-REGISTRY: Save new institutional profiles to the Visitors database
+        if (!studentSnap.exists()) {
+          const nameParts = (user.displayName || "Institutional User").split(" ");
+          const newProfile = {
+            id: user.uid,
+            firstName: nameParts[0],
+            lastName: nameParts.slice(1).join(" ") || "Student",
+            email: user.email || "",
+            type: "Student",
+            collegeOrOffice: "Institutional Auth",
+            isBlocked: false,
+            createdAt: new Date().toISOString()
+          };
+          setDocumentNonBlocking(studentRef, newProfile, { merge: true });
+        }
+
+        // 3. TRANSACTION LOG: Record this access for the Intelligence Center
+        const logPayload = {
+          visitorId: user.uid,
+          visitorName: user.displayName || user.email || "Google Visitor",
+          visitorType: studentData?.type || "Student", 
+          collegeOrOffice: studentData?.collegeOrOffice || "General Affiliation",
+          checkInTime: serverTimestamp(),
+          purpose: "Institutional Portal Login"
+        };
+        addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
+
+        // 4. SECURE ROUTING
+        router.replace("/welcome");
+      } catch (err) {
+        console.error("Identity Handshake Error:", err);
+        router.replace("/welcome");
+      } finally {
+        setIsActionPending(false);
+      }
+    };
+
+    handleIdentityVerification();
+  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, isActionPending, db, auth, router, toast]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
+    hasLogged.current = false; // Reset log flag on new login attempt
     try {
       await initiateGoogleSignIn(auth);
-      // Explicitly release the lock after successful sign-in
-      setIsActionPending(false);
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -83,25 +138,21 @@ export default function LandingPage() {
 
     const logPayload = {
       visitorId: user.uid,
-      visitorName: user.displayName || user.email || "Authorized Administrator",
+      visitorName: user.displayName || user.email || "Authorized Admin",
       visitorType: "Staff", 
       collegeOrOffice: "Administration",
       checkInTime: serverTimestamp(),
       purpose: "Administrative Audit"
     };
 
-    try {
-      addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
-      router.push("/welcome");
-    } catch (error) {
-      router.push("/welcome");
-    } finally {
-      setIsActionPending(false);
-    }
+    addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
+    router.push("/welcome");
+    setIsActionPending(false);
   };
 
   const handleSignOut = async () => {
     setIsActionPending(true);
+    hasLogged.current = false;
     try {
       await signOut(auth);
       router.replace("/");
@@ -112,8 +163,8 @@ export default function LandingPage() {
     }
   };
 
-  const isGlobalLoading = isUserLoading; 
-  const showTerminal = !user && !isGlobalLoading;
+  const showPersonaSelection = user && !isAdminLoading && isAdmin;
+  const showLoginTerminal = !user && !isUserLoading;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
@@ -121,7 +172,7 @@ export default function LandingPage() {
 
         <Card className={cn(
           "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none",
-          showTerminal ? "lg:col-span-7" : "lg:col-span-10"
+          showLoginTerminal ? "lg:col-span-7" : "lg:col-span-10"
         )}>
           <div className="p-6 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
@@ -146,7 +197,7 @@ export default function LandingPage() {
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
               <p className="text-white/50 text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isGlobalLoading ? "Connecting..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
+                {isUserLoading || isActionPending ? "Verifying Identity..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
               </p>
             </div>
 
@@ -155,9 +206,9 @@ export default function LandingPage() {
                 <Button
                   onClick={handleGoogleLogin}
                   className="w-full md:w-fit h-12 px-10 rounded-xl bg-white text-primary text-sm font-black uppercase tracking-widest shadow-xl hover:bg-accent hover:text-white transition-all hover:scale-[1.02]"
-                  disabled={isActionPending || isGlobalLoading}
+                  disabled={isActionPending || isUserLoading}
                 >
-                  {isActionPending || isGlobalLoading ? (
+                  {isActionPending || isUserLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <div className="flex items-center gap-4">
@@ -168,7 +219,7 @@ export default function LandingPage() {
                 </Button>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                  {!isAdminLoading && isAdmin ? (
+                  {showPersonaSelection ? (
                     <>
                       <Button
                         asChild
@@ -194,7 +245,7 @@ export default function LandingPage() {
                   ) : (
                     <div className="col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Verifying Authority...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Executing Identity Handshake...</p>
                     </div>
                   )}
                   
@@ -221,17 +272,17 @@ export default function LandingPage() {
           </CardContent>
 
           <div className="p-4 bg-black/20 flex items-center justify-between text-[8px] font-black uppercase tracking-[0.4em] text-white/30 z-10">
-            <span>Core v3.2</span>
+            <span>Core v3.5</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
-              Connection Secure
+              Redirection Handshake Active
             </span>
           </div>
 
           <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
-        {showTerminal && (
+        {showLoginTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
             <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">
               <div className="p-5 flex items-center justify-between border-b border-muted/50">
