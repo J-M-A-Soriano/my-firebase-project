@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
-  Loader2, UserPlus, MousePointer2, Building2, UserCheck, 
-  ChevronRight, CalendarDays
+  Loader2, UserPlus, MousePointer2, UserCheck, 
+  CalendarDays
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +31,6 @@ const INTENT_OPTIONS = [
 export default function CheckInKiosk() {
   const { toast } = useToast();
   const db = useFirestore();
-  const { user } = useUser();
   const [step, setStep] = useState<KioskStep>("IDENTIFY");
   const [identifier, setIdentifier] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,9 +43,10 @@ export default function CheckInKiosk() {
   const [regLastName, setRegLastName] = useState("");
 
   const collegesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db) return null;
+    // Allow unauthenticated loading of colleges for the public registration step
     return collection(db, 'colleges');
-  }, [db, user]);
+  }, [db]);
   const { data: colleges } = useCollection(collegesQuery);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function CheckInKiosk() {
         setStep("REGISTER");
       }
     } catch (err) {
-      toast({ title: "System Error", description: "Could not verify ID.", variant: "destructive" });
+      toast({ title: "System Error", description: "Could not verify ID. Please check connection.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +144,7 @@ export default function CheckInKiosk() {
                     "h-10 w-10 rounded-xl flex items-center justify-center font-black transition-all duration-500 border-2",
                     isActive ? "step-active border-primary text-sm" : isPast ? "bg-accent text-white border-accent text-sm" : "bg-white text-muted-foreground border-muted text-sm"
                   )}>
-                    {idx + 1}
+                    {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
                   </div>
                   {isActive && <span className="text-[10px] font-black uppercase tracking-widest text-primary italic">{s}</span>}
                   {idx < 3 && <div className="h-0.5 w-8 bg-muted rounded-full" />}
@@ -162,7 +162,7 @@ export default function CheckInKiosk() {
                 </div>
                 <form onSubmit={handleIdentification} className="space-y-6">
                   <Input 
-                    placeholder="e.g. 2023-100456"
+                    placeholder="e.g. 24-11657-926"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="h-20 text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-muted focus-visible:border-primary px-8 text-center"

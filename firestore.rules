@@ -20,22 +20,26 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      // Allow the kiosk to verify if an ID exists or create a new profile
+      allow get, create: if true;
+      // Listing all students or updating/deleting requires admin authority
+      allow list, update, delete: if isAdmin();
     }
 
     match /libraryVisits/{visitId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
+      // Allow any visitor to log their entry from the kiosk
+      allow create: if true;
+      // Only admins can view the operational logs or modify them
+      allow read, update, delete: if isAdmin();
     }
 
     match /colleges/{collegeId} {
-      allow read: if isSignedIn();
+      // Allow public lookup for the registration dropdown
+      allow read: if true;
     }
 
     match /reasonsForVisit/{reasonId} {
-      allow read: if isSignedIn();
+      allow read: if true;
     }
   }
 }
