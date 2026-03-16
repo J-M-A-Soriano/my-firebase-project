@@ -10,14 +10,17 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  CalendarDays, ShieldAlert, AlertCircle
+  CalendarDays, ShieldAlert
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from "@/firebase";
 import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useAdmin } from "@/hooks/use-admin";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 type KioskStep = "IDENTIFY" | "REGISTER" | "INTENT" | "WELCOME" | "BLOCKED";
 
@@ -30,12 +33,17 @@ const INTENT_OPTIONS = [
 ];
 
 /**
- * @fileOverview Check-In Kiosk - Terminal for institutional access logging.
- * Features real-time security handshake and blocking enforcement.
+ * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
+ * Supports both anonymous kiosk entry and authenticated institutional sessions.
  */
-export default function CheckInKiosk() {
+export default function CheckInHub() {
   const { toast } = useToast();
   const db = useFirestore();
+  const auth = useAuth();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const { isAdmin } = useAdmin();
+  
   const [step, setStep] = useState<KioskStep>("IDENTIFY");
   const [identifier, setIdentifier] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,12 +61,62 @@ export default function CheckInKiosk() {
   }, [db]);
   const { data: colleges } = useCollection(collegesQuery);
 
+  // AUTHENTICATED HANDSHAKE: Automatically identify users logging in via personal accounts
+  useEffect(() => {
+    if (!db || isUserLoading) return;
+
+    const performAuthHandshake = async () => {
+      if (user && step === "IDENTIFY") {
+        setIsLoading(true);
+        try {
+          const docRef = doc(db, 'students', user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // SECURITY CHECK: Terminate if blocked
+            if (data.isBlocked) {
+              setStep("BLOCKED");
+              toast({ title: "Access Denied", description: "Your institutional privileges are suspended.", variant: "destructive" });
+              await signOut(auth);
+              return;
+            }
+
+            setVisitor({ ...data, id: docSnap.id });
+            setStep("INTENT");
+          } else {
+            // New authenticated user: pre-fill registration from Google profile
+            const nameParts = (user.displayName || "").split(" ");
+            setRegFirstName(nameParts[0] || "");
+            setRegLastName(nameParts.slice(1).join(" ") || "");
+            setStep("REGISTER");
+          }
+        } catch (err) {
+          console.error("Auth Handshake Error:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    performAuthHandshake();
+  }, [user, isUserLoading, db, step, auth, toast]);
+
+  // RESET TIMER
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      const timer = setTimeout(() => resetKiosk(), step === "BLOCKED" ? 8000 : 5000);
+      const timer = setTimeout(() => {
+        if (user && !isAdmin) {
+          // Standard visitors go back to landing after log out
+          signOut(auth).then(() => router.replace("/"));
+        } else {
+          resetKiosk();
+        }
+      }, step === "BLOCKED" ? 8000 : 5000);
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, user, isAdmin, auth, router]);
 
   const resetKiosk = () => {
     setStep("IDENTIFY");
@@ -83,25 +141,17 @@ export default function CheckInKiosk() {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        
-        // SECURITY HANDSHAKE: TERMINATE ACCESS IF BLOCKED
         if (data.isBlocked) {
           setStep("BLOCKED");
-          toast({ 
-            title: "Access Denied", 
-            description: "Institutional privileges have been suspended. Please see the library administrator.",
-            variant: "destructive" 
-          });
           return;
         }
-
         setVisitor({ ...data, id: docSnap.id });
         setStep("INTENT");
       } else {
         setStep("REGISTER");
       }
     } catch (err) {
-      toast({ title: "System Error", description: "Identity handshake failed. Check terminal uplink.", variant: "destructive" });
+      toast({ title: "System Error", description: "Identity check failed.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +161,19 @@ export default function CheckInKiosk() {
     e.preventDefault();
     if (!db || !regFirstName || !regLastName || !regCollege) return;
 
-    const normalizedId = identifier.trim().toUpperCase();
+    const targetId = user?.uid || identifier.trim().toUpperCase();
     const newProfile = {
-      id: normalizedId,
+      id: targetId,
       firstName: regFirstName.trim(),
       lastName: regLastName.trim(),
       type: regType || "Student",
       collegeOrOffice: regCollege,
-      email: normalizedId.includes("@") ? normalizedId.toLowerCase() : "",
+      email: user?.email || "",
       createdAt: new Date().toISOString(),
       isBlocked: false
     };
 
-    setDocumentNonBlocking(doc(db, 'students', normalizedId), newProfile, { merge: true });
+    setDocumentNonBlocking(doc(db, 'students', targetId), newProfile, { merge: true });
     setVisitor(newProfile);
     setStep("INTENT");
   };
@@ -132,8 +182,8 @@ export default function CheckInKiosk() {
     if (!db) return;
 
     const logPayload = {
-      visitorId: visitor?.id || identifier || "UNKNOWN",
-      visitorName: `${visitor?.firstName || ""} ${visitor?.lastName || ""}`.trim() || "Anonymous Visitor",
+      visitorId: visitor?.id || user?.uid || identifier || "UNKNOWN",
+      visitorName: `${visitor?.firstName || ""} ${visitor?.lastName || ""}`.trim() || user?.displayName || "Visitor",
       visitorType: visitor?.type || "Student",
       collegeOrOffice: visitor?.collegeOrOffice || "General",
       checkInTime: serverTimestamp(),
@@ -176,7 +226,7 @@ export default function CheckInKiosk() {
               <Card className="kiosk-card p-10 rounded-[2rem]">
                 <div className="text-center space-y-3 mb-10">
                   <h2 className="text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">Access <span className="text-foreground not-italic">Identification</span></h2>
-                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Institutional ID / RFID Verification</p>
+                  <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Enter ID Number or Connect Account</p>
                 </div>
                 <form onSubmit={handleIdentification} className="space-y-6">
                   <Input 
@@ -204,7 +254,7 @@ export default function CheckInKiosk() {
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-2xl font-black italic uppercase tracking-tighter">Initial <span className="text-primary not-italic">Record</span></h2>
-                    <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-60">New profile detected for {identifier}</p>
+                    <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest opacity-60">Confirm profile details for enrollment</p>
                   </div>
                 </div>
                 <form onSubmit={handleRegistration} className="space-y-6">
@@ -264,7 +314,7 @@ export default function CheckInKiosk() {
                 <div className="flex items-center justify-between mb-10">
                   <div className="space-y-1">
                     <h2 className="text-2xl font-black italic uppercase tracking-tighter text-primary">Select <span className="text-foreground not-italic">Intent</span></h2>
-                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">Identity Confirmed: {visitor?.firstName} {visitor?.lastName}</p>
+                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">Identity Confirmed: {visitor?.firstName || user?.displayName} {visitor?.lastName || ""}</p>
                   </div>
                   <div className="h-12 w-12 bg-accent/20 rounded-2xl flex items-center justify-center border-2 border-accent">
                     <UserCheck className="h-6 w-6 text-primary" />

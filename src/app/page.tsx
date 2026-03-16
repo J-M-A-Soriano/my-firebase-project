@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { 
   BookOpen, ShieldCheck, Loader2, Mail, 
   MonitorCheck, ArrowRight, UserCheck, 
-  LayoutDashboard, LogOut, GraduationCap, Briefcase, Lock
+  LayoutDashboard, LogOut, GraduationCap, Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +15,6 @@ import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { collection, serverTimestamp, doc, getDoc } from "firebase/firestore";
-import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { signOut } from "firebase/auth";
 
 /**
@@ -26,13 +24,11 @@ import { signOut } from "firebase/auth";
 export default function LandingPage() {
   const router = useRouter();
   const auth = useAuth();
-  const db = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const { isAdmin, isAdminLoading, verifiedUid } = useAdmin();
   const [isActionPending, setIsActionPending] = useState(false);
   const [localTime, setLocalTime] = useState("");
-  const hasLogged = useRef(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -44,80 +40,25 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing and visit logging for non-admins
+  // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing to the verification hub
   useEffect(() => {
     const handleIdentityVerification = async () => {
       // SECURITY GUARD: Wait for full identity verification
-      if (isUserLoading || isAdminLoading || isActionPending || !user || isAdmin !== false || verifiedUid !== user.uid || hasLogged.current) return;
+      if (isUserLoading || isAdminLoading || isActionPending || !user || isAdmin !== false || verifiedUid !== user.uid) return;
 
-      setIsActionPending(true);
-      hasLogged.current = true; // Mark as processed for this session
-
-      try {
-        if (!db) return;
-
-        // 1. SECURITY CHECK: Verify Block Status
-        const studentRef = doc(db, 'students', user.uid);
-        const studentSnap = await getDoc(studentRef);
-        const studentData = studentSnap.exists() ? studentSnap.data() : null;
-
-        if (studentData?.isBlocked) {
-          toast({ 
-            title: "Access Restricted", 
-            description: "Institutional privileges have been suspended. Contact the Library Admin.", 
-            variant: "destructive" 
-          });
-          await signOut(auth);
-          setIsActionPending(false);
-          hasLogged.current = false;
-          return;
-        }
-
-        // 2. AUTO-REGISTRY: Save new institutional profiles to the Visitors database
-        if (!studentSnap.exists()) {
-          const nameParts = (user.displayName || "Institutional User").split(" ");
-          const newProfile = {
-            id: user.uid,
-            firstName: nameParts[0],
-            lastName: nameParts.slice(1).join(" ") || "Student",
-            email: user.email || "",
-            type: "Student",
-            collegeOrOffice: "Institutional Auth",
-            isBlocked: false,
-            createdAt: new Date().toISOString()
-          };
-          setDocumentNonBlocking(studentRef, newProfile, { merge: true });
-        }
-
-        // 3. TRANSACTION LOG: Record this access for the Intelligence Center
-        const logPayload = {
-          visitorId: user.uid,
-          visitorName: user.displayName || user.email || "Google Visitor",
-          visitorType: studentData?.type || "Student", 
-          collegeOrOffice: studentData?.collegeOrOffice || "General Affiliation",
-          checkInTime: serverTimestamp(),
-          purpose: "Institutional Portal Login"
-        };
-        addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
-
-        // 4. SECURE ROUTING
-        router.replace("/welcome");
-      } catch (err) {
-        console.error("Identity Handshake Error:", err);
-        router.replace("/welcome");
-      } finally {
-        setIsActionPending(false);
-      }
+      // ROUTE TO UNIFIED CHECK-IN FLOW
+      // This ensures standard visitors provide their "Intent" and verify affiliation
+      router.replace("/check-in");
     };
 
     handleIdentityVerification();
-  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, isActionPending, db, auth, router, toast]);
+  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, isActionPending, router]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
-    hasLogged.current = false; // Reset log flag on new login attempt
     try {
       await initiateGoogleSignIn(auth);
+      // Logic in useEffect handles routing after successful login
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -133,26 +74,12 @@ export default function LandingPage() {
   };
 
   const handleEnterAsVisitor = async () => {
-    if (!user || !db) return;
-    setIsActionPending(true);
-
-    const logPayload = {
-      visitorId: user.uid,
-      visitorName: user.displayName || user.email || "Authorized Admin",
-      visitorType: "Staff", 
-      collegeOrOffice: "Administration",
-      checkInTime: serverTimestamp(),
-      purpose: "Administrative Audit"
-    };
-
-    addDocumentNonBlocking(collection(db, 'libraryVisits'), logPayload);
-    router.push("/welcome");
-    setIsActionPending(false);
+    // Admin simulation: route to the unified entry flow
+    router.push("/check-in");
   };
 
   const handleSignOut = async () => {
     setIsActionPending(true);
-    hasLogged.current = false;
     try {
       await signOut(auth);
       router.replace("/");
@@ -275,7 +202,7 @@ export default function LandingPage() {
             <span>Core v3.5</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
-              Redirection Handshake Active
+              Unified REDIRECTION Handshake Active
             </span>
           </div>
 
