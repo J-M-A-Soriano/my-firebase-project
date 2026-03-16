@@ -3,43 +3,125 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * FIRESTORE SECURITY RULES - PROTOTYPE VERSION
+     * NEU Library Visitor Log - Security Rules
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset implements a robust Role-Based Access Control (RBAC) model centered around 
+     * the "Existence over Content" principle. Access is granted based on the presence of a 
+     * user's UID in specific role-defining collections (/app_roles/...). 
      *
-     * In this prototype, we relax the strict staff check to allow any 
-     * authenticated user to interact with the system.
+     * DATA STRUCTURE:
+     * - /colleges & /reasonsForVisit: Public master data (read-only for authenticated users).
+     * - /students & /staff: Sensitive master data (Admin-only read/write).
+     * - /libraryVisits: Transactional data (Admin-only read/write).
+     * - /app_roles: Structural segregation of roles for secure authorization checks.
+     *
+     * KEY SECURITY DECISIONS:
+     * 1. Authorization Independence: The 'libraryVisits' collection is heavily denormalized. 
+     *    This allows Admins to perform complex statistical queries and filtering (by college, 
+     *    reason, or employee status) without requiring the rules to perform expensive 
+     *    get() lookups on other collections.
+     * 2. Admin Dominance: Based on the IR, the management of visits and master student/staff 
+     *    lists is strictly reserved for Admin users. Regular users primarily interact with 
+     *    the system by being "checked in" by an Admin.
+     * 3. Identity Source of Truth: All authorization decisions are derived from the 
+     *    verified Firebase Auth token (request.auth).
      */
 
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Relaxed for prototype development: any signed-in user is treated as staff
-    function isLibraryStaff() {
-      return isSignedIn();
+    /** @description Checks if the authenticated user has the Admin role. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/app_roles/admin_users/$(request.auth.uid));
     }
 
-    function isExistingStaff() {
-      return isLibraryStaff() && resource != null;
+    /** @description Combines Admin check with resource existence for updates/deletes. */
+    function isAdminAndResourceExists() {
+      return isAdmin() && resource != null;
     }
 
-    match /students/{studentId} {
-      allow get, list: if isLibraryStaff();
-      allow create: if isLibraryStaff();
-      allow update: if isExistingStaff();
-      allow delete: if isExistingStaff();
-    }
+    // --- Collection Rules ---
 
-    match /librarySessions/{sessionId} {
-      allow get, list: if isLibraryStaff();
-      allow create: if isLibraryStaff();
-      allow update: if isExistingStaff();
-      allow delete: if isExistingStaff();
-    }
-
-    match /roles_libraryStaff/{uid} {
-      allow get: if isSignedIn();
-      allow list: if isLibraryStaff();
+    /**
+     * @description Master data for colleges. 
+     * @path /colleges/{collegeId}
+     * @allow (get, list) if any authenticated user.
+     * @deny (create, update, delete) for all users (managed via super-admin/external process).
+     * @principle Read-only master data for app configuration.
+     */
+    match /colleges/{collegeId} {
+      allow get, list: if isSignedIn();
       allow create, update, delete: if false;
     }
+
+    /**
+     * @description Master data for visit reasons.
+     * @path /reasonsForVisit/{reasonId}
+     * @allow (get, list) if any authenticated user.
+     * @deny (create, update, delete) for all users.
+     * @principle Read-only master data for app configuration.
+     */
+    match /reasonsForVisit/{reasonId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Student master profiles.
+     * @path /students/{studentUniqueId}
+     * @allow (get, list, create, update, delete) only for Admins.
+     * @deny (all) for regular users or guests.
+     * @principle Restricts sensitive PII to administrative staff.
+     */
+    match /students/{studentUniqueId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdminAndResourceExists();
+    }
+
+    /**
+     * @description Staff and Teacher master profiles.
+     * @path /staff/{staffUniqueId}
+     * @allow (get, list, create, update, delete) only for Admins.
+     * @deny (all) for regular users or guests.
+     * @principle Restricts sensitive PII to administrative staff.
+     */
+    match /staff/{staffUniqueId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdminAndResourceExists();
+    }
+
+    /**
+     * @description RBAC: Admin role mapping.
+     * @path /app_roles/admin_users/{userId}
+     * @allow (get) for the user themselves to verify their own role.
+     * @deny (write, list) for all users (managed via system).
+     * @principle Existence-based role check; read restricted to self.
+     */
+    match /app_roles/admin_users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Core visit logs. Highly denormalized for efficient Admin statistics.
+     * @path /libraryVisits/{visitId}
+     * @allow (get, list, create, update, delete) only for Admins.
+     * @deny (all) for regular users (regular users are visitors, not log managers).
+     * @principle Admin-only transactional access for management and reporting.
+     */
+    match /libraryVisits/{visitId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdminAndResourceExists();
+    }
+
   }
 }

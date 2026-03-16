@@ -1,47 +1,251 @@
-
 {
   "entities": {
+    "College": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "College",
+      "type": "object",
+      "description": "Represents an academic college or department within the university.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the College entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the college or department (e.g., 'College of Engineering')."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "ReasonForVisit": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReasonForVisit",
+      "type": "object",
+      "description": "Defines a predefined category for why a visitor is entering the library.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ReasonForVisit entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The descriptive name of the reason for visiting (e.g., 'Academic Study', 'Group Project', 'Event')."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
     "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Student",
       "type": "object",
-      "description": "Represents a library visitor (student, faculty, or employee).",
+      "description": "Represents a student enrolled in the university who can visit the library.",
       "properties": {
-        "id": { "type": "string" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "collegeOrOffice": { "type": "string" },
-        "isBlocked": { "type": "boolean", "default": false }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Student entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "The unique official student ID used for check-in (e.g., '2023-0001')."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the student."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the student."
+        },
+        "email": {
+          "type": "string",
+          "description": "The student's email address.",
+          "format": "email"
+        },
+        "collegeId": {
+          "type": "string",
+          "description": "Reference to College. (Relationship: College 1:N Student)"
+        }
       },
-      "required": ["id", "firstName", "lastName"]
+      "required": [
+        "id",
+        "studentId",
+        "firstName",
+        "lastName",
+        "collegeId"
+      ]
     },
-    "LibrarySession": {
-      "title": "LibrarySession",
+    "Staff": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Staff",
       "type": "object",
-      "description": "Records a library visit session.",
+      "description": "Represents a staff member or teacher of the university, who can be a library visitor or system administrator.",
       "properties": {
-        "id": { "type": "string" },
-        "studentId": { "type": "string" },
-        "checkInTime": { "type": "string", "format": "date-time" },
-        "checkOutTime": { "type": "string", "format": "date-time" },
-        "purpose": { "type": "string", "enum": ["Reading Books", "Thesis Research", "Computer Use", "Assignments", "Others"] },
-        "visitorName": { "type": "string" },
-        "collegeOrOffice": { "type": "string" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Staff entity."
+        },
+        "staffId": {
+          "type": "string",
+          "description": "The unique official staff ID or employee number."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the staff member."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the staff member."
+        },
+        "email": {
+          "type": "string",
+          "description": "The staff member's email address, often used as their login identifier for external authentication.",
+          "format": "email"
+        },
+        "isTeacher": {
+          "type": "boolean",
+          "description": "Indicates if the staff member holds a teaching role."
+        },
+        "collegeId": {
+          "type": "string",
+          "description": "Reference to College. Optional, as not all staff may be primarily affiliated with a specific college. (Relationship: College 1:N Staff)"
+        }
       },
-      "required": ["id", "studentId", "checkInTime", "purpose"]
+      "required": [
+        "id",
+        "staffId",
+        "firstName",
+        "lastName",
+        "email",
+        "isTeacher"
+      ]
+    },
+    "LibraryVisit": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LibraryVisit",
+      "type": "object",
+      "description": "Records a single entry and exit event for a visitor (student or staff) in the library.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the LibraryVisit entity."
+        },
+        "checkInTime": {
+          "type": "string",
+          "description": "The timestamp when the visitor checked into the library.",
+          "format": "date-time"
+        },
+        "checkOutTime": {
+          "type": "string",
+          "description": "The timestamp when the visitor checked out of the library. Null if currently checked in.",
+          "format": "date-time"
+        },
+        "visitorType": {
+          "type": "string",
+          "description": "Indicates the type of visitor ('Student' or 'Staff'). This determines which entity 'visitorId' refers to."
+        },
+        "visitorId": {
+          "type": "string",
+          "description": "Reference to the Student or Staff entity, based on 'visitorType'. (Relationship: Student 1:N LibraryVisit, Staff 1:N LibraryVisit)"
+        },
+        "reasonForVisitId": {
+          "type": "string",
+          "description": "Reference to ReasonForVisit. (Relationship: ReasonForVisit 1:N LibraryVisit)"
+        }
+      },
+      "required": [
+        "id",
+        "checkInTime",
+        "visitorType",
+        "visitorId",
+        "reasonForVisitId"
+      ]
     }
   },
   "auth": {
-    "providers": ["password", "anonymous", "google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/students/{studentId}": {
-      "schema": "Student",
-      "description": "Visitor profiles."
-    },
-    "/librarySessions/{sessionId}": {
-      "schema": "LibrarySession",
-      "description": "Check-in/out records."
-    }
+    "structure": [
+      {
+        "path": "/colleges/{collegeId}",
+        "definition": {
+          "entityName": "College",
+          "schema": {
+            "$ref": "#/backend/entities/College"
+          },
+          "description": "Master data collection for academic colleges. Read access for all authenticated users; write access typically restricted to super-admins or via controlled processes. No denormalization required for authorization."
+        }
+      },
+      {
+        "path": "/reasonsForVisit/{reasonId}",
+        "definition": {
+          "entityName": "ReasonForVisit",
+          "schema": {
+            "$ref": "#/backend/entities/ReasonForVisit"
+          },
+          "description": "Master data collection for predefined reasons for library visits. Read access for all authenticated users; write access typically restricted to super-admins or via controlled processes. No denormalization required for authorization."
+        }
+      },
+      {
+        "path": "/students/{studentUniqueId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Master list of student profiles who can visit the library. The document ID (`studentUniqueId`) is the official 'studentId' for efficient lookup by library staff during check-in. Read/write access is restricted to authenticated Admin users."
+        }
+      },
+      {
+        "path": "/staff/{staffUniqueId}",
+        "definition": {
+          "entityName": "Staff",
+          "schema": {
+            "$ref": "#/backend/entities/Staff"
+          },
+          "description": "Master list of staff/teacher profiles who can visit the library. The document ID (`staffUniqueId`) is the official 'staffId' for efficient lookup by library staff. Read/write access is restricted to authenticated Admin users."
+        }
+      },
+      {
+        "path": "/app_roles/admin_users/{userId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "A collection used for role-based access control. The presence of a document with a Firebase UID as its ID grants the 'Admin' role to that user. Adheres to DBAC 'Existence over Content' for secure authorization. Read access is for authenticated users (to check their own role), write access is highly restricted (e.g., via Cloud Functions or a super-admin interface)."
+        }
+      },
+      {
+        "path": "/app_roles/regular_users/{userId}",
+        "definition": {
+          "entityName": "RegularUserRole",
+          "schema": {
+            "$ref": "#/backend/entities/RegularUserRole"
+          },
+          "description": "A collection used for role-based access control. The presence of a document with a Firebase UID as its ID grants the 'Regular User' role to that user. This role serves to distinguish authenticated users who are not Admins. Adheres to DBAC 'Existence over Content'. Read access is for authenticated users, write access is highly restricted."
+        }
+      },
+      {
+        "path": "/libraryVisits/{visitId}",
+        "definition": {
+          "entityName": "LibraryVisit",
+          "schema": {
+            "$ref": "#/backend/entities/LibraryVisit"
+          },
+          "description": "Records individual library visits. Each document includes denormalized 'collegeId', 'collegeName', 'reasonForVisitName', 'isEmployee', 'isTeacherVisitor', 'isStudentVisitor', 'visitorEmail', 'visitorFirstName', and 'visitorLastName' fields. These denormalized fields ensure Authorization Independence and enable efficient, filterable queries (QAP) for Admin users without needing `get()` operations in security rules. Read/write access is restricted solely to authenticated Admin users for all operations (check-in, check-out, statistics)."
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure prioritizes Authorization Independence and Queryability for Admins (Library Staff) through strategic denormalization and structural segregation. \n\n**Authorization Independence:** The core transactional entity, `LibraryVisit`, includes denormalized attributes such as `collegeId`, `collegeName`, `reasonForVisitName`, `isEmployee`, `isTeacherVisitor`, `isStudentVisitor`, `visitorEmail`, `visitorFirstName`, and `visitorLastName`. These fields are copied from the respective `Student`, `Staff`, `College`, and `ReasonForVisit` master data documents at the time of check-in. This is CRITICAL because it eliminates the need for `get()` calls in Firestore Security Rules when querying `LibraryVisit` documents for statistics or display. All necessary information for filtering and authorization decisions is contained within the `LibraryVisit` document itself, simplifying rules and enabling atomic write operations.\n\n**Support for QAPs (Queryable Access Patterns):** By denormalizing these fields, the structure fully supports secure `list` operations (queries) for Admins. Admins need to view visitor statistics filtered by 'reason for visiting the library', 'college', and 'whether the visitor is an employee'. Because these filterable attributes are directly available on each `LibraryVisit` document, the Admin can perform efficient and secure queries (e.g., `db.collection('libraryVisits').where('collegeId', '==', '...')` or `.where('isEmployee', '==', true)`). Firestore Security Rules can then grant blanket `read` access to the `libraryVisits` collection for authenticated users with the 'Admin' role, as the collection's security posture is homogeneous (only Admins can read/write), and the necessary query filters are on denormalized fields, not reliant on rule-based data fetching. This ensures that rules are not used as filters and maintain predictable performance.\n\n**Structural Segregation:** Master data (Colleges, ReasonsForVisit, Students, Staff) are segregated into their own top-level collections. This ensures each collection has a homogeneous security posture (e.g., `Colleges` and `ReasonsForVisit` are read-only for authenticated users, `Students` and `Staff` are read/write only for Admins). User roles (`AdminRole`, `RegularUserRole`) are also segregated into dedicated collections following the 'Existence over Content' DBAC principle, making role checks explicit and robust based on the presence of a document for a specific `userId`.\n\n**Consistency:** Document IDs for `Student` and `Staff` collections are set to their respective unique identifiers (`studentId`, `staffId`). This enables direct, efficient lookups when checking visitors in or viewing profiles, aligning with the application's requirement for quick ID entry. All wildcards are descriptive, and authorization fields (implicitly via role collections) are standardized."
   }
 }
