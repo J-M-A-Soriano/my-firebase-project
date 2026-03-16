@@ -3,7 +3,7 @@
 
 A professional, academic-grade visitor management and behavioral analytics system for the NEU Library. Engineered for high-traffic terminals, granular administrative oversight, and real-time security enforcement.
 
-**My Personal Project URL:** [https://my-firebase-project-ten.vercel.app](https://my-firebase-project-ten.vercel.app)
+**My Personal Project URL:** [ENTER_YOUR_VERCEL_OR_APP_HOSTING_URL_HERE]
 
 ---
 
@@ -51,7 +51,7 @@ To enable the institutional entry protocol and resolve authentication faults (`a
 
 1. **Firebase Console**: Open your project at [console.firebase.google.com](https://console.firebase.google.com/).
 2. **Authentication**: Enable the **Google** provider in the "Sign-in method" tab.
-3. **Project ID**: Ensure the `src/firebase/config.ts` matches your current Firebase Project settings.
+3. **Project ID**: Ensure the `src/firebase/config.ts` matches your current Firebase Project settings (`studio-3230754876-e6aa7`).
 4. **Admin Registry**: To grant dynamic admin access beyond hardcoded emails, add the user's UID to the `admin_users` collection in Firestore.
 
 ---

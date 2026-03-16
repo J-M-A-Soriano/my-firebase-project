@@ -68,16 +68,17 @@ export default function LandingPage() {
     setIsActionPending(true);
     try {
       await initiateGoogleSignIn(auth);
-      // isActionPending is reset by the useEffect above once user is detected
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
         return;
       }
+      
+      console.error("Auth Error:", err);
       toast({
         variant: "destructive",
         title: "Authentication Protocol Fault",
-        description: "Institutional login vector failed. Please ensure Google Auth is enabled.",
+        description: `Error: ${err.code || err.message}. Ensure Google Auth is enabled and domains are whitelisted.`,
       });
       setIsActionPending(false);
     }
