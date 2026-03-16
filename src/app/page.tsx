@@ -221,14 +221,14 @@ export default function LandingPage() {
               <div className="p-5 flex items-center justify-between border-b border-muted/50">
                 <div className="flex items-center gap-2">
                   <MonitorCheck className="h-4 w-4 text-accent" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">K-01</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">NL-01</span>
                 </div>
                 <span className="text-[9px] font-mono tabular-nums font-black opacity-30">{localTime || "--:--"}</span>
               </div>
 
               <CardContent className="p-6 text-center space-y-6">
                 <div className="space-y-1">
-                  <h2 className="text-2xl font-black text-foreground uppercase tracking-tight italic leading-none">Access <br />Kiosk</h2>
+                  <h2 className="text-2xl font-black text-foreground uppercase tracking-tight italic leading-none">Access <br />NEULibrary</h2>
                   <p className="text-muted-foreground text-[7px] font-black uppercase tracking-widest opacity-40">Identity Verification Hub</p>
                 </div>
 
