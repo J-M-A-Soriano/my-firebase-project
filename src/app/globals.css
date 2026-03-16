@@ -32,15 +32,23 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased min-h-screen relative;
+    /* Institutional Mesh Background */
+    background-color: hsl(var(--background));
     background-image: 
-      radial-gradient(at 0% 0%, hsla(222, 47%, 11%, 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(221, 83%, 53%, 0.03) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(222, 47%, 11%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(221, 83%, 53%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(222, 47%, 11%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(221, 83%, 53%, 0.05) 0px, transparent 50%),
+      /* Diagnostic Dot Grid */
+      radial-gradient(circle at 2px 2px, hsla(222, 47%, 11%, 0.03) 1px, transparent 0);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 40px 40px;
+    background-attachment: fixed;
   }
 }
 
 .kiosk-card {
-  @apply bg-white border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-[2rem] transition-all duration-500;
+  @apply bg-white/90 backdrop-blur-md border border-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-[2rem] transition-all duration-500;
 }
 
 .kiosk-button {
@@ -48,7 +56,7 @@
 }
 
 .auth-hero {
-  @apply bg-primary text-white overflow-hidden relative;
+  @apply bg-primary text-white overflow-hidden relative border-none;
 }
 
 .terminal-accent {
