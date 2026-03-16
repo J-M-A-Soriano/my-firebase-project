@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 export default function CheckInPage() {
   const { toast } = useToast();
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [studentIdInput, setStudentIdInput] = useState("");
   const [foundStudent, setFoundStudent] = useState<any | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -45,7 +45,7 @@ export default function CheckInPage() {
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentIdInput || !user) return;
+    if (!studentIdInput || !db) return;
     
     setIsSearching(true);
     setError(null);
@@ -56,7 +56,6 @@ export default function CheckInPage() {
       if (studentDoc.exists()) {
         const data = studentDoc.data();
         setFoundStudent({ ...data, id: studentDoc.id });
-        // Auto-detect role if available in profile
         if (data.type) {
           setSelectedRole(data.type as "Student" | "Staff");
         }
@@ -71,7 +70,7 @@ export default function CheckInPage() {
   };
 
   const handleCheckIn = () => {
-    if (!foundStudent || !user) return;
+    if (!foundStudent || !db) return;
 
     addDocumentNonBlocking(collection(db, 'libraryVisits'), {
       visitorId: foundStudent.id,
@@ -93,6 +92,8 @@ export default function CheckInPage() {
     setSelectedPurpose("General Visit");
   };
 
+  if (isUserLoading) return null;
+
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
@@ -108,10 +109,12 @@ export default function CheckInPage() {
           </div>
 
           {!user ? (
-            <Card className="shadow-2xl border-none bg-white rounded-[3rem] p-10 text-center space-y-6">
+            <Card className="shadow-2xl border-none bg-white rounded-[3rem] p-10 text-center space-y-6 border-4 border-primary/5">
               <XCircle className="h-20 w-20 text-destructive mx-auto opacity-20" />
               <h2 className="text-2xl font-black uppercase italic">Identity Required</h2>
-              <p className="text-muted-foreground text-xs font-black uppercase tracking-widest leading-relaxed">Please authenticate with your institutional Google account to activate this terminal.</p>
+              <p className="text-muted-foreground text-xs font-black uppercase tracking-widest leading-relaxed">
+                Terminal operational security requires an active institutional session.
+              </p>
               <Button asChild className="h-14 px-10 rounded-2xl bg-primary font-black uppercase tracking-widest text-[10px]">
                 <Link href="/">Secure Login</Link>
               </Button>
@@ -264,7 +267,7 @@ export default function CheckInPage() {
                   <div className="mx-auto w-32 h-32 bg-muted/40 flex items-center justify-center rounded-[3rem] shadow-inner">
                     <Search className="h-12 w-12 text-muted-foreground" />
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.6em] max-w-xs mx-auto leading-loose">
+                  <p className="text-[10px] font-black uppercase tracking-[0.6em] max-w-xs mx-auto leading-loose text-center">
                     Terminal L-01: Waiting for institutional input scan
                   </p>
                 </div>

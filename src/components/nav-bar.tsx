@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert, ShieldCheck, Settings } from "lucide-react";
+import { BookOpen, LayoutDashboard, UserCheck, BrainCircuit, Users, LogOut, ShieldAlert, ShieldCheck, Settings, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
 import { useAdmin } from "@/hooks/use-admin";
@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 
 const navItems = [
-  { name: "Entry Terminal", href: "/check-in", icon: UserCheck, adminOnly: true },
-  { name: "Intelligence Hub", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
-  { name: "Visitor Hub", href: "/students", icon: Users, adminOnly: true },
-  { name: "AI Analytics", href: "/insights", icon: BrainCircuit, adminOnly: true },
-  { name: "System Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
+  { name: "Terminal", href: "/check-in", icon: UserCheck, adminOnly: false },
+  { name: "Intelligence", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
+  { name: "Visitors", href: "/students", icon: Users, adminOnly: true },
+  { name: "AI Hub", href: "/insights", icon: BrainCircuit, adminOnly: true },
+  { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
 /**
@@ -49,6 +49,16 @@ export function NavBar() {
           </Link>
           
           <div className="hidden lg:flex items-center bg-muted/40 p-2 rounded-[2rem] border-2 border-white shadow-inner">
+            <Link
+              href="/"
+              className={cn(
+                "flex items-center gap-3 rounded-[1.25rem] px-6 py-3.5 text-[11px] font-black uppercase tracking-widest transition-all",
+                pathname === "/" ? "bg-primary text-white shadow-xl" : "text-muted-foreground hover:text-primary"
+              )}
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Link>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
