@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  ShieldAlert, Timer
+  ShieldAlert, Timer, ArrowLeft, Home
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from "@/firebase";
@@ -266,36 +266,49 @@ export default function CheckInHub() {
 
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               {step === "IDENTIFY" && (
-                <Card className="kiosk-card p-8 md:p-14 rounded-[2.5rem] border-none bg-white shadow-2xl overflow-hidden relative">
-                  <div className="relative z-10">
-                    <div className="text-center space-y-4 mb-10">
-                      <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-primary leading-none">
-                        Access <span className="text-accent not-italic">Identification</span>
-                      </h2>
-                      <p className="text-muted-foreground text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
-                        Enter ID Number or Verify Account
-                      </p>
-                    </div>
-                    <form onSubmit={handleIdentification} className="space-y-8">
-                      <div className="relative group">
-                        <Input 
-                          placeholder="ENTER ID NUMBER..."
-                          value={identifier}
-                          onChange={(e) => setIdentifier(e.target.value)}
-                          className="h-20 md:h-24 text-xl md:text-3xl font-black uppercase tracking-[0.2em] rounded-[1.5rem] border-4 border-muted focus-visible:border-primary px-8 md:px-10 text-center bg-muted/30 text-primary placeholder:text-primary/20 transition-all"
-                          autoFocus
-                        />
-                        <div className="absolute inset-0 rounded-[1.5rem] border-2 border-primary/5 pointer-events-none group-focus-within:border-primary/20" />
+                <div className="space-y-6">
+                  <Card className="kiosk-card p-8 md:p-14 rounded-[2.5rem] border-none bg-white shadow-2xl overflow-hidden relative">
+                    <div className="relative z-10">
+                      <div className="text-center space-y-4 mb-10">
+                        <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-primary leading-none">
+                          Access <span className="text-accent not-italic">Identification</span>
+                        </h2>
+                        <p className="text-muted-foreground text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
+                          Enter ID Number or Verify Account
+                        </p>
                       </div>
-                      <Button 
-                        disabled={!identifier || isLoading}
-                        className="w-full h-16 md:h-20 rounded-[1.5rem] bg-primary text-white text-lg md:text-xl font-black uppercase tracking-widest shadow-xl kiosk-button hover:bg-[#1a263d] transition-all"
-                      >
-                        {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "Verify Identity"}
-                      </Button>
-                    </form>
+                      <form onSubmit={handleIdentification} className="space-y-8">
+                        <div className="relative group">
+                          <Input 
+                            placeholder="ENTER ID NUMBER..."
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            className="h-20 md:h-24 text-xl md:text-3xl font-black uppercase tracking-[0.2em] rounded-[1.5rem] border-4 border-muted focus-visible:border-primary px-8 md:px-10 text-center bg-muted/30 text-primary placeholder:text-primary/20 transition-all"
+                            autoFocus
+                          />
+                          <div className="absolute inset-0 rounded-[1.5rem] border-2 border-primary/5 pointer-events-none group-focus-within:border-primary/20" />
+                        </div>
+                        <Button 
+                          disabled={!identifier || isLoading}
+                          className="w-full h-16 md:h-20 rounded-[1.5rem] bg-primary text-white text-lg md:text-xl font-black uppercase tracking-widest shadow-xl kiosk-button hover:bg-[#1a263d] transition-all"
+                        >
+                          {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "Verify Identity"}
+                        </Button>
+                      </form>
+                    </div>
+                  </Card>
+                  
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => router.push("/")}
+                      className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl px-8 h-12 font-black uppercase tracking-[0.3em] text-[10px] transition-all group"
+                    >
+                      <ArrowLeft className="mr-3 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                      Return to Portal
+                    </Button>
                   </div>
-                </Card>
+                </div>
               )}
 
               {step === "REGISTER" && (
