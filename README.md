@@ -3,7 +3,7 @@
 
 A professional, academic-grade visitor management and behavioral analytics system for the NEU Library. Engineered for high-traffic terminals, granular administrative oversight, and real-time security enforcement.
 
-**My Personal Project URL:** [ENTER_YOUR_VERCEL_OR_APP_HOSTING_URL_HERE]
+**My Personal Project URL:** https://my-firebase-project-ten.vercel.app
 
 ---
 
