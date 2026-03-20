@@ -219,25 +219,25 @@ export default function IntelligenceCenter() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <NavBar />
-      <main className="container mx-auto py-10 px-6 max-w-7xl space-y-10">
+      <main className="container mx-auto py-6 md:py-10 px-4 md:px-6 max-w-7xl space-y-6 md:space-y-10">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-muted pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-muted pb-6 md:pb-8">
           <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-foreground uppercase italic leading-none">
               Access <span className="text-primary not-italic">Intelligence</span>
             </h1>
-            <p className="text-muted-foreground font-black text-[9px] uppercase tracking-[0.4em] opacity-40">
+            <p className="text-muted-foreground font-black text-[8px] md:text-[9px] uppercase tracking-[0.4em] opacity-40">
               Visitor Behavioral Management Dashboard
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button asChild variant="outline" className="h-12 px-6 rounded-xl border-2 border-primary text-primary shadow-sm font-black uppercase tracking-widest text-[9px] hover:bg-primary hover:text-white transition-all">
+          <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
+            <Button asChild variant="outline" className="w-full sm:w-fit h-10 md:h-12 px-6 rounded-xl border-2 border-primary text-primary shadow-sm font-black uppercase tracking-widest text-[8px] md:text-[9px] hover:bg-primary hover:text-white transition-all">
               <Link href="/students">
                 <Users className="mr-2 h-4 w-4" />
                 Manage Visitors
               </Link>
             </Button>
-            <Button onClick={generateReport} className="h-12 px-6 rounded-xl bg-primary text-white shadow-lg font-black uppercase tracking-widest text-[9px]">
+            <Button onClick={generateReport} className="w-full sm:w-fit h-10 md:h-12 px-6 rounded-xl bg-primary text-white shadow-lg font-black uppercase tracking-widest text-[8px] md:text-[9px]">
               <FileDown className="mr-2 h-4 w-4" />
               Export Analytics
             </Button>
@@ -245,17 +245,17 @@ export default function IntelligenceCenter() {
         </div>
 
         {/* Intelligence Filters */}
-        <Card className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-          <CardHeader className="p-8 pb-4 border-b bg-muted/10">
-            <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
-              <Filter className="h-4 w-4 text-accent" /> Analysis Vectors
+        <Card className="rounded-[1.5rem] md:rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="p-6 md:p-8 pb-4 border-b bg-muted/10">
+            <CardTitle className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
+              <Filter className="h-3 md:h-4 w-3 md:w-4 text-accent" /> Analysis Vectors
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <CardContent className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
             <div className="space-y-2">
               <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Timeframe</label>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
+                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[9px] md:text-[10px] uppercase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -274,20 +274,22 @@ export default function IntelligenceCenter() {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full h-10 rounded-xl justify-start text-left font-black text-[10px] uppercase",
+                      "w-full h-10 rounded-xl justify-start text-left font-black text-[9px] md:text-[10px] uppercase",
                       !date && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date?.from ? (
-                      date.to ? (
-                        <>{format(date.from, "LLL dd")} - {format(date.to, "LLL dd")}</>
+                    <span className="truncate">
+                      {date?.from ? (
+                        date.to ? (
+                          <>{format(date.from, "LLL dd")} - {format(date.to, "LLL dd")}</>
+                        ) : (
+                          format(date.from, "LLL dd")
+                        )
                       ) : (
-                        format(date.from, "LLL dd")
-                      )
-                    ) : (
-                      <span>Pick a range</span>
-                    )}
+                        "Pick range"
+                      )}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -300,7 +302,7 @@ export default function IntelligenceCenter() {
                       setDate(d);
                       if (d) setTimeRange("custom");
                     }}
-                    numberOfMonths={2}
+                    numberOfMonths={1}
                   />
                 </PopoverContent>
               </Popover>
@@ -309,7 +311,7 @@ export default function IntelligenceCenter() {
             <div className="space-y-2">
               <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Academic Unit</label>
               <Select value={filterCollege} onValueChange={setFilterCollege}>
-                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
+                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[9px] md:text-[10px] uppercase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -326,7 +328,7 @@ export default function IntelligenceCenter() {
             <div className="space-y-2">
               <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Visit Purpose</label>
               <Select value={filterReason} onValueChange={setFilterReason}>
-                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
+                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[9px] md:text-[10px] uppercase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -343,7 +345,7 @@ export default function IntelligenceCenter() {
             <div className="space-y-2">
               <label className="text-[8px] font-black uppercase opacity-40 ml-1 tracking-widest">Visitor Class</label>
               <Select value={filterClass} onValueChange={setFilterClass}>
-                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[10px] uppercase">
+                <SelectTrigger className="h-10 rounded-xl border border-muted font-black text-[9px] md:text-[10px] uppercase">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,23 +359,23 @@ export default function IntelligenceCenter() {
         </Card>
 
         {/* Operational Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[
             { label: "Aggregate Traffic", val: stats?.total || 0, icon: UsersRound, color: "bg-primary" },
             { label: "Live Occupancy (1h)", val: stats?.lastHourCount || 0, icon: Clock, color: "bg-accent" },
             { label: "Intensity Unit", val: stats?.activeUnit || "N/A", icon: Building2, color: "bg-primary", isText: true },
             { label: "Employee : Student", val: `${stats?.employeeCount} : ${stats?.studentCount}`, icon: TrendingUp, color: "bg-primary" }
           ].map((item, i) => (
-            <Card key={i} className="rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
-              <div className={`h-2 ${item.color} w-full`} />
-              <CardContent className="p-6">
+            <Card key={i} className="rounded-[1.5rem] md:rounded-[2rem] border-none shadow-xl bg-white overflow-hidden">
+              <div className={`h-1.5 md:h-2 ${item.color} w-full`} />
+              <CardContent className="p-5 md:p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
-                    <h3 className={cn("font-black text-foreground uppercase italic", item.isText ? "text-xl" : "text-4xl")}>{item.val}</h3>
+                    <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</p>
+                    <h3 className={cn("font-black text-foreground uppercase italic", item.isText ? "text-lg md:text-xl" : "text-3xl md:text-4xl")}>{item.val}</h3>
                   </div>
-                  <div className="h-12 w-12 bg-muted/30 rounded-2xl flex items-center justify-center">
-                    <item.icon className={cn("h-6 w-6", item.color.replace('bg-', 'text-'))} />
+                  <div className="h-10 w-10 md:h-12 md:w-12 bg-muted/30 rounded-2xl flex items-center justify-center shrink-0">
+                    <item.icon className={cn("h-5 w-5 md:h-6 md:w-6", item.color.replace('bg-', 'text-'))} />
                   </div>
                 </div>
               </CardContent>
@@ -382,61 +384,61 @@ export default function IntelligenceCenter() {
         </div>
 
         {/* Quick Access CRUD Shortcut */}
-        <Card className="rounded-[2.5rem] border-none shadow-xl bg-primary text-white overflow-hidden group hover:scale-[1.01] transition-all duration-500">
-          <CardContent className="p-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-8 text-center md:text-left">
-              <div className="h-20 w-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center border-2 border-white/20">
-                <Users className="h-10 w-10 text-accent" />
+        <Card className="rounded-[2rem] md:rounded-[2.5rem] border-none shadow-xl bg-primary text-white overflow-hidden group hover:scale-[1.01] transition-all duration-500">
+          <CardContent className="p-8 md:p-10 flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8">
+            <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-8 text-center sm:text-left">
+              <div className="h-16 w-16 md:h-20 md:w-20 bg-white/10 rounded-[1.5rem] flex items-center justify-center border-2 border-white/20 shrink-0">
+                <Users className="h-8 w-8 md:h-10 md:w-10 text-accent" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-3xl font-black italic uppercase tracking-tighter">Visitor <span className="text-accent not-italic">Registry Hub</span></h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Manage identity CRUD & access termination (Blocking)</p>
+                <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Visitor <span className="text-accent not-italic">Registry Hub</span></h3>
+                <p className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Manage identity CRUD & access termination (Blocking)</p>
               </div>
             </div>
-            <Button asChild className="h-16 px-10 rounded-2xl bg-white text-primary font-black uppercase tracking-widest shadow-2xl hover:bg-accent hover:text-white transition-all">
+            <Button asChild className="w-full lg:w-fit h-14 md:h-16 px-8 md:px-10 rounded-2xl bg-white text-primary font-black uppercase tracking-widest shadow-2xl hover:bg-accent hover:text-white transition-all">
               <Link href="/students">
-                Open Registry <ArrowRight className="ml-3 h-6 w-6" />
+                Open Registry <ArrowRight className="ml-3 h-5 md:h-6 w-5 md:w-6" />
               </Link>
             </Button>
           </CardContent>
         </Card>
 
         {/* Behavioral Visualization */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8">
-            <CardHeader className="pb-8">
-              <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-                <Activity className="h-6 w-6 text-primary" /> Temporal Density
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white p-6 md:p-8">
+            <CardHeader className="p-0 pb-6 md:pb-8">
+              <CardTitle className="text-lg md:text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+                <Activity className="h-5 md:h-6 w-5 md:w-6 text-primary" /> Temporal Density
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px]">
+            <CardContent className="p-0 h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.chartData}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" fontSize={9} fontStyle="italic" fontWeight="900" tickLine={false} axisLine={false} />
-                  <YAxis fontSize={9} fontWeight="900" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="name" fontSize={8} fontStyle="italic" fontWeight="900" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={8} fontWeight="900" tickLine={false} axisLine={false} />
                   <ChartTooltip cursor={{ fill: '#f7f7f7', radius: 8 }} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[2.5rem] border-none shadow-xl bg-white p-8">
-            <CardHeader className="pb-8">
-              <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-                <PieIcon className="h-6 w-6 text-accent" /> Objective Vectors
+          <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white p-6 md:p-8">
+            <CardHeader className="p-0 pb-6 md:pb-8">
+              <CardTitle className="text-lg md:text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+                <PieIcon className="h-5 md:h-6 w-5 md:w-6 text-accent" /> Objective Vectors
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px]">
+            <CardContent className="p-0 h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats?.pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
+                    innerRadius={60}
+                    outerRadius={90}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
@@ -446,7 +448,7 @@ export default function IntelligenceCenter() {
                     ))}
                   </Pie>
                   <ChartTooltip />
-                  <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{value}</span>} />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-muted-foreground">{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -454,50 +456,52 @@ export default function IntelligenceCenter() {
         </div>
 
         {/* Log Inspection */}
-        <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
-          <CardHeader className="p-8 pb-4 border-b bg-muted/10">
-            <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-              <TableIcon className="h-6 w-6 text-primary" /> Institutional Access Log
+        <Card className="rounded-[1.5rem] md:rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="p-6 md:p-8 pb-4 border-b bg-muted/10">
+            <CardTitle className="text-lg md:text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+              <TableIcon className="h-5 md:h-6 w-5 md:w-6 text-primary" /> Institutional Log
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto no-scrollbar">
             <Table>
               <TableHeader className="bg-muted/5">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Visitor</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">ID</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Unit</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Time</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest">Purpose</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Role</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Visitor</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest hidden sm:table-cell">ID</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Unit</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Time</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Purpose</TableHead>
+                  <TableHead className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-right">Role</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {stats?.filteredSessions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-[10px] font-black uppercase tracking-[0.3em] opacity-30">
-                      No Records Found in Analysis Window
+                    <TableCell colSpan={6} className="h-32 text-center text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] opacity-30">
+                      No Records Found
                     </TableCell>
                   </TableRow>
                 ) : (
                   stats?.filteredSessions.map((session) => (
                     <TableRow key={session.id} className="hover:bg-muted/5 transition-colors">
-                      <TableCell className="text-xs font-bold py-4">
-                        <span className="uppercase italic tracking-tight">{session.visitorName || "N/A"}</span>
+                      <TableCell className="text-[10px] md:text-xs font-bold py-4">
+                        <span className="uppercase italic tracking-tight block max-w-[120px] truncate">{session.visitorName || "N/A"}</span>
                       </TableCell>
-                      <TableCell className="text-[10px] font-black opacity-60 tracking-widest">{session.visitorId || "N/A"}</TableCell>
-                      <TableCell className="text-[10px] font-black uppercase tracking-widest text-primary/80">{session.collegeOrOffice || "N/A"}</TableCell>
-                      <TableCell className="text-[10px] font-bold text-muted-foreground">
+                      <TableCell className="text-[9px] md:text-[10px] font-black opacity-60 tracking-widest hidden sm:table-cell">{session.visitorId || "N/A"}</TableCell>
+                      <TableCell className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/80">
+                         <span className="block max-w-[100px] truncate">{session.collegeOrOffice || "N/A"}</span>
+                      </TableCell>
+                      <TableCell className="text-[9px] md:text-[10px] font-bold text-muted-foreground">
                         {session.checkInTime ? format(session.checkInTime.toDate(), "PP | hh:mm a") : "N/A"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-primary/10 bg-primary/5 text-[8px] font-black py-0.5 px-2">
+                        <Badge variant="outline" className="border-primary/10 bg-primary/5 text-[7px] md:text-[8px] font-black py-0.5 px-2">
                           {session.purpose || "General"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Badge className={cn(
-                          "text-[8px] font-black uppercase px-2 py-0.5 rounded-md",
+                          "text-[7px] md:text-[8px] font-black uppercase px-2 py-0.5 rounded-md",
                           session.visitorType === "Student" ? "bg-accent text-white" : "bg-primary text-white"
                         )}>
                           {session.visitorType}
