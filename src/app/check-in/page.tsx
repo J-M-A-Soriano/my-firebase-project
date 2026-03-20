@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  CalendarDays, ShieldAlert, Timer
+  ShieldAlert, Timer, CalendarDays
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from "@/firebase";
@@ -43,7 +43,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Refined: Increased countdown to 10s for better user experience.
+ * Refined: 5s stable countdown with explicit session purge.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -114,8 +114,7 @@ export default function CheckInHub() {
   // TIMER LOGIC: Pure countdown state management
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      const initialSeconds = step === "BLOCKED" ? 12 : 10;
-      setSecondsLeft(initialSeconds);
+      setSecondsLeft(5); // Stable 5-second window
 
       const interval = setInterval(() => {
         setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -128,13 +127,10 @@ export default function CheckInHub() {
   // RESET SIDE EFFECT: Handle navigation and sign-out when timer hits zero
   useEffect(() => {
     if ((step === "WELCOME" || step === "BLOCKED") && secondsLeft === 0) {
-      if (auth.currentUser) {
-        signOut(auth).finally(() => {
-          router.replace("/");
-        });
-      } else {
+      // Explicitly sign out to prevent identity loops for the next visitor
+      signOut(auth).finally(() => {
         router.replace("/");
-      }
+      });
     }
   }, [secondsLeft, step, auth, router]);
 
@@ -218,7 +214,7 @@ export default function CheckInHub() {
       } : {}}
     >
       {step === "IDENTIFY" && (
-        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-[4px] z-0" />
+        <div className="fixed inset-0 bg-primary/70 backdrop-blur-[4px] z-0" />
       )}
       
       <div className="relative z-10">
@@ -396,9 +392,10 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90">
-                      Resetting for next user in {secondsLeft} seconds...
+                  <div className="pt-4 flex items-center justify-center gap-3">
+                    <Timer className="h-4 w-4 text-white/70" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                      Resetting for next user in {secondsLeft}s
                     </p>
                   </div>
                 </Card>
@@ -415,9 +412,10 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90">
-                      Resetting for next user in {secondsLeft} seconds...
+                  <div className="pt-4 flex items-center justify-center gap-3">
+                    <Timer className="h-4 w-4 text-white/70" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                      Resetting for next user in {secondsLeft}s
                     </p>
                   </div>
                 </Card>

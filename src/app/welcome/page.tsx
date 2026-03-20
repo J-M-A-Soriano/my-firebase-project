@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard, Loader2, CalendarDays } from "lucide-react";
+import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard, Loader2, CalendarDays, Timer } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { NavBar } from "@/components/nav-bar";
 
 /**
  * @fileOverview Institutional Verification Gateway.
- * Optimized: Stabilized 10s countdown for a more comfortable user experience.
+ * Optimized: Stable 5s countdown with explicit session purge.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -23,7 +23,7 @@ export default function AuthorizedGreeting() {
   const { isAdmin } = useAdmin();
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(10);
+  const [secondsLeft, setSecondsLeft] = useState(5);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -40,7 +40,7 @@ export default function AuthorizedGreeting() {
   useEffect(() => {
     setMounted(true);
     
-    // Auto-reset timer state management
+    // Pure countdown state management
     const timer = setInterval(() => {
       setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -135,9 +135,12 @@ export default function AuthorizedGreeting() {
                   </Button>
                 </div>
                 
-                <p className="text-[11px] font-black text-white/90 uppercase tracking-widest flex items-center justify-center gap-2">
-                  <CalendarDays className="h-4 w-4" /> Resetting for next user in {secondsLeft} seconds
-                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <Timer className="h-4 w-4 text-primary/70" />
+                  <p className="text-[11px] font-black text-primary uppercase tracking-widest">
+                    Resetting for next user in {secondsLeft}s
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
