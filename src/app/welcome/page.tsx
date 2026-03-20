@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * @fileOverview Institutional Verification Gateway.
- * Optimized: Clean guest focus (no NavBar) with high-contrast countdown.
+ * Optimized: Clean guest focus (no NavBar) with standard card sizing.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -62,14 +62,14 @@ export default function AuthorizedGreeting() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
-        <div className="max-w-4xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-700">
+        <div className="max-w-3xl w-full text-center space-y-10 animate-in fade-in zoom-in-95 duration-700">
           
-          <div className="inline-flex items-center justify-center p-10 bg-primary text-white rounded-[2.5rem] shadow-xl border-4 border-white success-glow">
-            <CheckCircle2 className="h-16 w-16" />
+          <div className="inline-flex items-center justify-center p-8 bg-primary text-white rounded-[2rem] shadow-xl border-4 border-white success-glow">
+            <CheckCircle2 className="h-12 w-12" />
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-foreground uppercase italic leading-none">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground uppercase italic leading-none">
               Welcome to <br /><span className="text-primary not-italic">NEU Library!</span>
             </h1>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.5em] opacity-60">
@@ -77,32 +77,32 @@ export default function AuthorizedGreeting() {
             </p>
           </div>
 
-          <Card className="p-10 bg-white/95 border-4 border-white max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl">
+          <Card className="p-8 md:p-12 bg-white/95 border-4 border-white max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl">
             <CardContent className="p-0 space-y-10">
               <div className="flex flex-col items-center gap-6">
                 <div className="h-20 w-20 rounded-[1.5rem] bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
                   <User className="h-10 w-10 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-4xl font-black uppercase text-foreground italic tracking-tight">
+                  <p className="text-3xl font-black uppercase text-foreground italic tracking-tight">
                     {user?.displayName || "Authorized User"}
                   </p>
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-50">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] opacity-50">
                     {user?.email}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { icon: ShieldCheck, label: "Status", value: "Verified", color: "text-primary" },
                   { icon: MapPin, label: "Portal", value: "Gateway-01", color: "text-foreground" },
                   { icon: Building2, label: "Identity", value: "Member", color: "text-foreground" }
                 ].map((item, i) => (
-                  <div key={i} className="p-8 bg-muted/30 rounded-2xl border-2 border-white space-y-2 group hover:bg-primary/5 transition-all">
-                    <item.icon className="h-6 w-6 text-primary mx-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-                    <p className="text-[9px] font-black text-primary uppercase tracking-widest">{item.label}</p>
-                    <p className={cn("text-xl font-black uppercase italic", item.color)}>{item.value}</p>
+                  <div key={i} className="p-6 bg-muted/30 rounded-2xl border-2 border-white space-y-2 group hover:bg-primary/5 transition-all">
+                    <item.icon className="h-5 w-5 text-primary mx-auto opacity-40 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-[8px] font-black text-primary uppercase tracking-widest">{item.label}</p>
+                    <p className={cn("text-lg font-black uppercase italic", item.color)}>{item.value}</p>
                   </div>
                 ))}
               </div>

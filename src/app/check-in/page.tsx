@@ -16,7 +16,6 @@ import { doc, getDoc, collection, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useAdmin } from "@/hooks/use-admin";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -42,7 +41,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Optimized: Kiosk-only focus (no NavBar) with high-contrast countdown visibility.
+ * Optimized: Kiosk-only focus (no NavBar) with high-visibility countdown.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -109,7 +108,7 @@ export default function CheckInHub() {
     performAuthHandshake();
   }, [user, isUserLoading, db, step, auth, toast]);
 
-  // TIMER LOGIC: Pure countdown state management
+  // TIMER LOGIC
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
       setSecondsLeft(5); 
@@ -127,7 +126,7 @@ export default function CheckInHub() {
     }
   }, [step]);
 
-  // RESET SIDE EFFECT: Handle navigation and sign-out when timer hits zero
+  // RESET SIDE EFFECT
   useEffect(() => {
     if ((step === "WELCOME" || step === "BLOCKED") && secondsLeft === 0) {
       signOut(auth).finally(() => {
@@ -247,7 +246,7 @@ export default function CheckInHub() {
 
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               {step === "IDENTIFY" && (
-                <Card className="kiosk-card p-8 md:p-14 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl overflow-hidden relative">
+                <Card className="kiosk-card p-8 md:p-14 rounded-[2.5rem] border-none bg-white shadow-2xl overflow-hidden relative">
                   <div className="relative z-10">
                     <div className="text-center space-y-4 mb-10">
                       <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-primary leading-none">
@@ -280,7 +279,7 @@ export default function CheckInHub() {
               )}
 
               {step === "REGISTER" && (
-                <Card className="kiosk-card p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
+                <Card className="kiosk-card p-8 md:p-12 rounded-[2.5rem] border-none bg-white shadow-2xl">
                   <div className="flex items-center gap-6 mb-10">
                     <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 border-2 border-primary/5">
                       <UserPlus className="h-8 w-8 text-primary" />
@@ -346,7 +345,7 @@ export default function CheckInHub() {
               )}
 
               {step === "INTENT" && (
-                <Card className="kiosk-card p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
+                <Card className="kiosk-card p-8 md:p-12 rounded-[2.5rem] border-none bg-white shadow-2xl">
                   <div className="flex items-center justify-between mb-10">
                     <div className="space-y-1">
                       <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-primary">Select <span className="text-accent not-italic">Intent</span></h2>
@@ -383,18 +382,18 @@ export default function CheckInHub() {
               )}
 
               {step === "WELCOME" && (
-                <Card className="p-10 md:p-20 text-center space-y-8 border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl success-glow">
-                  <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-primary rounded-[2rem] md:rounded-[3rem] shadow-2xl">
-                    <CheckCircle2 className="h-16 w-16 md:h-24 md:w-24" />
+                <Card className="p-8 md:p-14 text-center space-y-8 border-none bg-primary text-white rounded-[2.5rem] shadow-3xl success-glow">
+                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-white text-primary rounded-[2rem] shadow-2xl">
+                    <CheckCircle2 className="h-12 w-12 md:h-16 md:w-16" />
                   </div>
                   <div className="space-y-6">
-                    <h1 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">
+                    <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-tight text-white">
                       Welcome to <br /><span className="text-accent not-italic">NEU Library!</span>
                     </h1>
-                    <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
+                    <p className="text-[10px] md:text-[11px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-8 flex items-center justify-center gap-4">
-                    <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
+                  <div className="pt-4 flex flex-col items-center justify-center gap-2">
+                    <p className="text-[14px] font-black uppercase tracking-[0.3em] text-white">
                       Resetting in {secondsLeft ?? 5}s
                     </p>
                   </div>
@@ -402,18 +401,18 @@ export default function CheckInHub() {
               )}
 
               {step === "BLOCKED" && (
-                <Card className="p-10 md:p-20 text-center space-y-8 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
-                  <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-destructive rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
-                    <ShieldAlert className="h-16 w-16 md:h-24 md:w-24" />
+                <Card className="p-8 md:p-14 text-center space-y-8 border-none bg-destructive text-white rounded-[2.5rem] shadow-3xl">
+                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-white text-destructive rounded-[2rem] shadow-2xl animate-pulse">
+                    <ShieldAlert className="h-12 w-12 md:h-16 md:w-16" />
                   </div>
                   <div className="space-y-6">
-                    <h1 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">
+                    <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-tight text-white">
                       Access <br /><span className="not-italic">Denied</span>
                     </h1>
-                    <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
+                    <p className="text-[10px] md:text-[11px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-8 flex items-center justify-center gap-4">
-                    <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
+                  <div className="pt-4 flex flex-col items-center justify-center gap-2">
+                    <p className="text-[14px] font-black uppercase tracking-[0.3em] text-white">
                       Resetting in {secondsLeft ?? 5}s
                     </p>
                   </div>
