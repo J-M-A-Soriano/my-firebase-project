@@ -44,7 +44,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Fixed: Stabilized countdown logic to prevent immediate redirection.
+ * Optimized: High-contrast countdown visibility and session-safe redirection.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -115,7 +115,7 @@ export default function CheckInHub() {
   // TIMER LOGIC: Pure countdown state management
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      setSecondsLeft(5); // Explicitly set to 5 when entering success/error step
+      setSecondsLeft(5); 
 
       const interval = setInterval(() => {
         setSecondsLeft((prev) => {
@@ -133,7 +133,6 @@ export default function CheckInHub() {
   // RESET SIDE EFFECT: Handle navigation and sign-out when timer hits zero
   useEffect(() => {
     if ((step === "WELCOME" || step === "BLOCKED") && secondsLeft === 0) {
-      // Explicitly sign out to prevent identity loops for the next visitor
       signOut(auth).finally(() => {
         router.replace("/");
       });
@@ -388,7 +387,7 @@ export default function CheckInHub() {
               )}
 
               {step === "WELCOME" && (
-                <Card className="kiosk-card p-10 md:p-20 text-center space-y-8 success-glow border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                <Card className="p-10 md:p-20 text-center space-y-8 border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl success-glow">
                   <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-primary rounded-[2rem] md:rounded-[3rem] shadow-2xl">
                     <CheckCircle2 className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
@@ -398,9 +397,9 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-4 flex items-center justify-center gap-3">
-                    <Timer className="h-4 w-4 text-white/70" />
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                  <div className="pt-8 flex items-center justify-center gap-4">
+                    <Timer className="h-5 w-5 text-accent" />
+                    <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
                       Resetting for next user in {secondsLeft ?? 5}s
                     </p>
                   </div>
@@ -408,7 +407,7 @@ export default function CheckInHub() {
               )}
 
               {step === "BLOCKED" && (
-                <Card className="kiosk-card p-10 md:p-20 text-center space-y-8 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                <Card className="p-10 md:p-20 text-center space-y-8 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
                   <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-destructive rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
                     <ShieldAlert className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
@@ -418,9 +417,9 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-4 flex items-center justify-center gap-3">
-                    <Timer className="h-4 w-4 text-white/70" />
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                  <div className="pt-8 flex items-center justify-center gap-4">
+                    <Timer className="h-5 w-5 text-white" />
+                    <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
                       Resetting for next user in {secondsLeft ?? 5}s
                     </p>
                   </div>

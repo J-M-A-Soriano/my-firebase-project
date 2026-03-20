@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,7 +15,7 @@ import { NavBar } from "@/components/nav-bar";
 
 /**
  * @fileOverview Institutional Verification Gateway.
- * Optimized: Stable 5s countdown with explicit session purge.
+ * Optimized: High-contrast countdown for clear visibility.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -39,8 +40,6 @@ export default function AuthorizedGreeting() {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Pure countdown state management
     const timer = setInterval(() => {
       setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -48,7 +47,6 @@ export default function AuthorizedGreeting() {
     return () => clearInterval(timer);
   }, []);
 
-  // Side Effect: Trigger logout/navigation when countdown hits zero
   useEffect(() => {
     if (mounted && secondsLeft === 0) {
       handleLogout();
@@ -65,7 +63,6 @@ export default function AuthorizedGreeting() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Simulation Mode Header for Admins */}
       {isAdmin && <NavBar />}
       
       <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
@@ -84,7 +81,7 @@ export default function AuthorizedGreeting() {
             </p>
           </div>
 
-          <Card className="kiosk-card p-10 bg-white/95 border-4 border-white max-w-2xl mx-auto rounded-[2.5rem]">
+          <Card className="p-10 bg-white/95 border-4 border-white max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl">
             <CardContent className="p-0 space-y-10">
               <div className="flex flex-col items-center gap-6">
                 <div className="h-20 w-20 rounded-[1.5rem] bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
@@ -135,10 +132,10 @@ export default function AuthorizedGreeting() {
                   </Button>
                 </div>
                 
-                <div className="flex items-center justify-center gap-3">
-                  <Timer className="h-4 w-4 text-primary/70" />
-                  <p className="text-[11px] font-black text-primary uppercase tracking-widest">
-                    Resetting for next user in {secondsLeft}s
+                <div className="flex items-center justify-center gap-3 py-2">
+                  <Timer className="h-5 w-5 text-primary" />
+                  <p className="text-[14px] font-black text-primary uppercase tracking-[0.2em]">
+                    Resetting in {secondsLeft}s
                   </p>
                 </div>
               </div>
