@@ -151,12 +151,12 @@ export default function LandingPage() {
         backgroundPosition: 'center'
       }}
     >
-      <div className="absolute inset-0 bg-primary/70 backdrop-blur-[2px] z-0" />
+      <div className="absolute inset-0 bg-primary/75 backdrop-blur-[2px] z-0" />
 
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch z-10 relative">
 
         <Card className={cn(
-          "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2rem] md:rounded-[2.5rem] transition-all duration-700 border-none bg-primary/95 backdrop-blur-md",
+          "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2rem] md:rounded-[2.5rem] transition-all duration-700 border-none bg-primary/90 backdrop-blur-xl",
           showLoginTerminal ? "lg:col-span-7" : "lg:col-span-10"
         )}>
           <div className="p-4 md:p-6 flex items-center justify-between z-10">
@@ -166,7 +166,7 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col">
                 <span className="text-base md:text-xl font-black italic uppercase tracking-tighter leading-none text-white">NEULibrary</span>
-                <span className="text-[6px] md:text-[7px] font-black uppercase tracking-[0.4em] text-white/40">Intelligence Systems</span>
+                <span className="text-[6px] md:text-[7px] font-black uppercase tracking-[0.4em] text-white/50">Intelligence Systems</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
@@ -246,7 +246,7 @@ export default function LandingPage() {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 md:gap-6 pt-6 border-t border-white/10 opacity-60">
+            <div className="flex flex-wrap items-center gap-4 md:gap-6 pt-6 border-t border-white/10 opacity-70">
               <div className="flex items-center gap-2 text-[7px] md:text-[8px] font-black uppercase tracking-widest text-white">
                 <GraduationCap className="h-3 md:h-3.5 w-3 md:w-3.5 text-accent" /> Academic-Grade Security
               </div>
@@ -256,7 +256,7 @@ export default function LandingPage() {
             </div>
           </CardContent>
 
-          <div className="p-3 md:p-4 bg-black/20 flex items-center justify-between text-[7px] md:text-[8px] font-black uppercase tracking-[0.4em] text-white/30 z-10">
+          <div className="p-3 md:p-4 bg-black/30 flex items-center justify-between text-[7px] md:text-[8px] font-black uppercase tracking-[0.4em] text-white/40 z-10">
             <span>NEU-SAFE v4.0</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
@@ -264,46 +264,48 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-accent/20 rounded-full blur-[100px] pointer-events-none" />
         </Card>
 
         {showLoginTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
-            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group border-2 border-white rounded-[2rem] md:rounded-[2.5rem] bg-white/95 backdrop-blur-2xl">
-              <div className="p-4 md:p-5 flex items-center justify-between border-b border-muted/50">
+            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group border-2 border-white/30 rounded-[2rem] md:rounded-[2.5rem] bg-white/5 backdrop-blur-3xl overflow-hidden">
+              <div className="p-4 md:p-5 flex items-center justify-between border-b border-white/10 bg-white/5">
                 <div className="flex items-center gap-2">
                   <MonitorCheck className="h-3.5 w-3.5 md:h-4 md:w-4 text-accent" />
-                  <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">NL-01</span>
+                  <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-white/50">NL-01</span>
                 </div>
-                <span className="text-[8px] md:text-[9px] font-mono tabular-nums font-black opacity-40">{localTime || "--:--"}</span>
+                <span className="text-[8px] md:text-[9px] font-mono tabular-nums font-black text-white/40">{localTime || "--:--"}</span>
               </div>
 
-              <CardContent className="p-6 md:p-8 text-center space-y-8">
-                <div className="space-y-2">
-                  <h2 className="text-xl md:text-3xl font-black text-foreground uppercase tracking-tight italic leading-none">Access <br />NEULibrary</h2>
-                  <p className="text-foreground/40 text-[8px] font-black uppercase tracking-[0.3em]">Identity Verification Hub</p>
+              <CardContent className="p-6 md:p-8 text-center space-y-8 flex-1 flex flex-col justify-center">
+                <div className="space-y-3">
+                  <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight italic leading-tight">Access <br /><span className="text-accent not-italic">NEULibrary</span></h2>
+                  <p className="text-white/60 text-[8px] font-black uppercase tracking-[0.3em] ml-1">Identity Verification Hub</p>
                 </div>
 
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full h-16 md:h-20 rounded-2xl border-2 md:border-4 border-white hover:border-accent hover:bg-accent/5 transition-all shadow-lg kiosk-button group bg-white"
-                >
-                  <Link href="/check-in" className="flex flex-col items-center justify-center gap-1">
-                    <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-accent">TAP TO ENTER</span>
-                    <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-accent group-hover:translate-x-2 transition-transform" />
-                  </Link>
-                </Button>
+                <div className="pt-8">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full h-16 md:h-20 rounded-2xl border-none bg-white text-primary hover:bg-accent hover:text-white transition-all shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] kiosk-button group"
+                  >
+                    <Link href="/check-in" className="flex flex-col items-center justify-center gap-1">
+                      <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em]">TAP TO ENTER</span>
+                      <ArrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-2 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
 
-                <div className="pt-4 border-t border-dashed border-muted">
-                  <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest px-2 leading-relaxed">
+                <div className="pt-8 border-t border-dashed border-white/10">
+                  <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.2em] px-2 leading-relaxed">
                     Student / Faculty Credentials Required
                   </p>
                 </div>
               </CardContent>
 
-              <div className="p-3 bg-muted/20 text-center rounded-b-[2rem] md:rounded-b-[2.5rem]">
-                <span className="text-[6px] font-black text-muted-foreground/20 uppercase tracking-[0.4em]">NEULIB CORE</span>
+              <div className="p-3 bg-black/20 text-center">
+                <span className="text-[6px] font-black text-white/20 uppercase tracking-[0.4em]">NEULIB CORE SYSTEM</span>
               </div>
             </Card>
           </div>
