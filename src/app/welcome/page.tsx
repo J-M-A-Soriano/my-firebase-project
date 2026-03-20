@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard, Loader2, CalendarDays, Timer } from "lucide-react";
+import { CheckCircle2, User, LogOut, ShieldCheck, MapPin, Building2, LayoutDashboard, Loader2, Timer } from "lucide-react";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdmin } from "@/hooks/use-admin";
 import { cn } from "@/lib/utils";
-import { NavBar } from "@/components/nav-bar";
 
 /**
  * @fileOverview Institutional Verification Gateway.
- * Optimized: High-contrast countdown for clear visibility.
+ * Optimized: Clean guest focus (no NavBar) with high-contrast countdown.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -63,8 +61,6 @@ export default function AuthorizedGreeting() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {isAdmin && <NavBar />}
-      
       <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-10">
         <div className="max-w-4xl w-full text-center space-y-12 animate-in fade-in zoom-in-95 duration-700">
           

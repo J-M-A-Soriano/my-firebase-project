@@ -1,8 +1,6 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
-import { NavBar } from "@/components/nav-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  ShieldAlert, Timer, CalendarDays
+  ShieldAlert, Timer
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from "@/firebase";
@@ -44,7 +42,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Optimized: High-contrast countdown visibility and session-safe redirection.
+ * Optimized: Kiosk-only focus (no NavBar) with high-contrast countdown visibility.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -52,7 +50,6 @@ export default function CheckInHub() {
   const auth = useAuth();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
-  const { isAdmin } = useAdmin();
   
   const [step, setStep] = useState<KioskStep>("IDENTIFY");
   const [identifier, setIdentifier] = useState("");
@@ -223,8 +220,7 @@ export default function CheckInHub() {
       )}
       
       <div className="relative z-10">
-        <NavBar />
-        <main className="container mx-auto py-6 md:py-16 px-4 md:px-6 max-w-3xl">
+        <main className="container mx-auto py-10 md:py-20 px-4 md:px-6 max-w-3xl">
           <div className="space-y-8 md:space-y-12">
             
             {/* Step Indicators */}
@@ -398,9 +394,8 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
                   <div className="pt-8 flex items-center justify-center gap-4">
-                    <Timer className="h-5 w-5 text-accent" />
                     <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
-                      Resetting for next user in {secondsLeft ?? 5}s
+                      Resetting in {secondsLeft ?? 5}s
                     </p>
                   </div>
                 </Card>
@@ -418,9 +413,8 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
                   <div className="pt-8 flex items-center justify-center gap-4">
-                    <Timer className="h-5 w-5 text-white" />
                     <p className="text-[14px] md:text-[16px] font-black uppercase tracking-[0.3em] text-white">
-                      Resetting for next user in {secondsLeft ?? 5}s
+                      Resetting in {secondsLeft ?? 5}s
                     </p>
                   </div>
                 </Card>
