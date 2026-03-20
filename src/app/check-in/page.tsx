@@ -413,7 +413,7 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
                   <div className="pt-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
                       Resetting for next user in {secondsLeft} seconds...
                     </p>
                   </div>
@@ -432,7 +432,7 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
                   <div className="pt-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
                       Resetting for next user in {secondsLeft} seconds...
                     </p>
                   </div>

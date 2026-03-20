@@ -137,7 +137,7 @@ export default function AuthorizedGreeting() {
                   </Button>
                 </div>
                 
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2 opacity-50">
+                <p className="text-[11px] font-black text-primary uppercase tracking-widest flex items-center justify-center gap-2">
                   <CalendarDays className="h-4 w-4" /> Resetting for next user in {secondsLeft} seconds
                 </p>
               </div>
