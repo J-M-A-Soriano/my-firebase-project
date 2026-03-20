@@ -45,8 +45,7 @@ const ACADEMIC_UNITS = [
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
  * Resolved: Identity loop fixed by ensuring session teardown on visit completion.
- * UI/UX: Enhanced with a High-Comfort "Institutional Navy" palette for reduced eye strain.
- * Added: Large, prominent countdown timer for terminal reset feedback.
+ * UI/UX: Reverted to a cleaner, text-based countdown as per institutional preference.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -413,16 +412,10 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  
-                  {/* High-Visibility Countdown */}
-                  <div className="pt-8 flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-4 px-8 py-4 bg-white/10 rounded-2xl border-2 border-white/20">
-                      <Timer className="h-10 w-10 text-accent animate-pulse" />
-                      <div className="text-left">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Terminal Resetting</p>
-                        <p className="text-4xl font-black text-white italic leading-none">{secondsLeft} <span className="text-xl not-italic uppercase tracking-widest text-accent">Seconds</span></p>
-                      </div>
-                    </div>
+                  <div className="pt-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+                      Resetting for next user in {secondsLeft} seconds...
+                    </p>
                   </div>
                 </Card>
               )}
@@ -438,16 +431,10 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-
-                  {/* High-Visibility Countdown */}
-                  <div className="pt-8 flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-4 px-8 py-4 bg-white/10 rounded-2xl border-2 border-white/20">
-                      <Timer className="h-10 w-10 text-white animate-pulse" />
-                      <div className="text-left">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Security Reset</p>
-                        <p className="text-4xl font-black text-white italic leading-none">{secondsLeft} <span className="text-xl not-italic uppercase tracking-widest">Seconds</span></p>
-                      </div>
-                    </div>
+                  <div className="pt-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+                      Resetting for next user in {secondsLeft} seconds...
+                    </p>
                   </div>
                 </Card>
               )}
