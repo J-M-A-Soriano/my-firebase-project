@@ -16,7 +16,7 @@ import { NavBar } from "@/components/nav-bar";
 /**
  * @fileOverview Institutional Verification Gateway.
  * Features an automatic 5-second reset to clear the session for the next user.
- * Displays NavBar only for Admins to allow "Simulation Mode" auditing.
+ * Fix: Separated router navigation from state updaters to prevent lifecycle errors.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -42,20 +42,20 @@ export default function AuthorizedGreeting() {
   useEffect(() => {
     setMounted(true);
     
-    // Auto-reset timer (5 seconds)
+    // Auto-reset timer state management
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleLogout();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [auth]);
+  }, []);
+
+  // Side Effect: Trigger logout/navigation when countdown hits zero
+  useEffect(() => {
+    if (mounted && secondsLeft === 0) {
+      handleLogout();
+    }
+  }, [secondsLeft, mounted]);
 
   if (!mounted || isUserLoading) {
     return (
@@ -137,7 +137,7 @@ export default function AuthorizedGreeting() {
                   </Button>
                 </div>
                 
-                <p className="text-[11px] font-black text-primary uppercase tracking-widest flex items-center justify-center gap-2">
+                <p className="text-[11px] font-black text-white/90 uppercase tracking-widest flex items-center justify-center gap-2">
                   <CalendarDays className="h-4 w-4" /> Resetting for next user in {secondsLeft} seconds
                 </p>
               </div>

@@ -46,6 +46,7 @@ const ACADEMIC_UNITS = [
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
  * Resolved: Identity loop fixed by ensuring session teardown on visit completion.
  * UI/UX: Reverted to a cleaner, text-based countdown as per institutional preference.
+ * Fix: Separated router navigation from state updaters to prevent lifecycle errors.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -114,34 +115,34 @@ export default function CheckInHub() {
     performAuthHandshake();
   }, [user, isUserLoading, db, step, auth, toast]);
 
-  // DYNAMIC RESET TIMER
+  // TIMER LOGIC: Pure countdown state management
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
       const initialSeconds = step === "BLOCKED" ? 8 : 5;
       setSecondsLeft(initialSeconds);
 
       const interval = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            // TERMINAL RESET LOGIC:
-            // Force sign out to prevent auto-handshake identity loops
-            if (auth.currentUser) {
-              signOut(auth).finally(() => {
-                router.replace("/");
-              });
-            } else {
-              router.replace("/");
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
+        setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
 
       return () => clearInterval(interval);
     }
-  }, [step, auth, router]);
+  }, [step]);
+
+  // RESET SIDE EFFECT: Handle navigation and sign-out when timer hits zero
+  useEffect(() => {
+    if ((step === "WELCOME" || step === "BLOCKED") && secondsLeft === 0) {
+      // TERMINAL RESET LOGIC:
+      // Force sign out to prevent auto-handshake identity loops
+      if (auth.currentUser) {
+        signOut(auth).finally(() => {
+          router.replace("/");
+        });
+      } else {
+        router.replace("/");
+      }
+    }
+  }, [secondsLeft, step, auth, router]);
 
   const resetKiosk = () => {
     setStep("IDENTIFY");
