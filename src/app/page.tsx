@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -108,11 +109,21 @@ export default function LandingPage() {
   const showLoginTerminal = !user && !isUserLoading;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-background">
-      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden"
+      style={{
+        backgroundImage: `url('https://scontent.fmnl8-3.fna.fbcdn.net/v/t39.30808-6/481894944_988488900088897_1188078989470321883_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeEnZawWQVflSCql1enBMRNY630XRJwz97DrfRdEnDP3sKddAPbj7xAfQhbkFqzn0TtodgdbLmbydYhIwqTSpe4K&_nc_ohc=r3Mp_yMQG9gQ7kNvwEMLTq4&_nc_oc=AdrI8Nj4EBgP-T7A0shcnomBJ4el8YRYx-PLmXI702B3hqydxH3Qke33685vk2qhhV0&_nc_zt=23&_nc_ht=scontent.fmnl8-3.fna&_nc_gid=42E8uZ6Y05ED77tR4_vDSQ&_nc_ss=7a30f&oh=00_AfxNXOd0BXDVb_89YyriqgXTQJlPteaPWH8VFQUCRFgwbA&oe=69C2AA4A')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      {/* Institutional Diagnostic Overlay */}
+      <div className="absolute inset-0 bg-primary/60 backdrop-blur-[1px] z-0" />
+
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch h-full z-10 relative">
 
         <Card className={cn(
-          "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none",
+          "auth-hero flex flex-col justify-between group overflow-hidden shadow-2xl rounded-[2.5rem] transition-all duration-700 border-none bg-primary/95 backdrop-blur-md",
           showLoginTerminal ? "lg:col-span-7" : "lg:col-span-10"
         )}>
           <div className="p-6 flex items-center justify-between z-10">
@@ -222,7 +233,7 @@ export default function LandingPage() {
 
         {showLoginTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
-            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem]">
+            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group hover:translate-y-[-4px] border-2 border-white rounded-[2.5rem] bg-white/95 backdrop-blur-md">
               <div className="p-5 flex items-center justify-between border-b border-muted/50">
                 <div className="flex items-center gap-2">
                   <MonitorCheck className="h-4 w-4 text-accent" />
