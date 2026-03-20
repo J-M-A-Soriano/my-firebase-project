@@ -41,7 +41,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Optimized: Kiosk-only focus (no NavBar) with high-visibility countdown.
+ * Optimized: Kiosk-only focus with high-contrast step indicators.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -84,8 +84,6 @@ export default function CheckInHub() {
             
             if (data.isBlocked) {
               setStep("BLOCKED");
-              toast({ title: "Access Denied", description: "Your institutional privileges are suspended.", variant: "destructive" });
-              await signOut(auth);
               return;
             }
 
@@ -106,7 +104,7 @@ export default function CheckInHub() {
     };
 
     performAuthHandshake();
-  }, [user, isUserLoading, db, step, auth, toast]);
+  }, [user, isUserLoading, db, step]);
 
   // TIMER LOGIC
   useEffect(() => {
@@ -201,20 +199,22 @@ export default function CheckInHub() {
     setStep("WELCOME");
   };
 
+  const isIdentifyStep = step === "IDENTIFY";
+
   return (
     <div 
       className={cn(
         "min-h-screen pb-10 transition-all duration-700 relative",
-        step === "IDENTIFY" ? "bg-transparent" : "bg-background"
+        isIdentifyStep ? "bg-transparent" : "bg-background"
       )}
-      style={step === "IDENTIFY" ? {
+      style={isIdentifyStep ? {
         backgroundImage: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqSRvIh0BVjYvUYyv9hBfsaE-TMz2IXCvH1A&s')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'
       } : {}}
     >
-      {step === "IDENTIFY" && (
+      {isIdentifyStep && (
         <div className="fixed inset-0 bg-primary/70 backdrop-blur-[4px] z-0" />
       )}
       
@@ -222,23 +222,43 @@ export default function CheckInHub() {
         <main className="container mx-auto py-10 md:py-20 px-4 md:px-6 max-w-3xl">
           <div className="space-y-8 md:space-y-12">
             
-            {/* Step Indicators */}
+            {/* Context-Aware Step Indicators */}
             <div className="flex justify-center items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar py-2">
               {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
                 if (s === "REGISTER" && step !== "REGISTER") return null;
                 if (step === "BLOCKED") return null;
+                
                 const isActive = step === s;
                 const isPast = ["IDENTIFY", "REGISTER", "INTENT", "WELCOME"].indexOf(step) > idx;
+                
                 return (
                   <div key={s} className="flex items-center gap-2 md:gap-4 shrink-0">
                     <div className={cn(
                       "h-8 w-8 md:h-10 md:w-10 rounded-xl flex items-center justify-center font-black transition-all duration-500 border-2",
-                      isActive ? "step-active border-accent text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]" : isPast ? "bg-accent text-white border-accent" : "bg-white/10 text-white/40 border-white/10"
+                      isActive 
+                        ? "step-active border-accent text-white shadow-xl scale-110" 
+                        : isPast 
+                          ? "bg-accent text-white border-accent" 
+                          : isIdentifyStep 
+                            ? "bg-white/10 text-white/40 border-white/10" 
+                            : "bg-muted text-muted-foreground/40 border-muted"
                     )}>
-                      {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
+                      {idx === 0 ? "1" : (idx === 1 && step === "REGISTER" ? "2" : (step === "REGISTER" ? idx + 1 : idx))}
                     </div>
-                    {isActive && <span className="text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white italic whitespace-nowrap drop-shadow-lg">{s}</span>}
-                    {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-white/10 rounded-full" />}
+                    {isActive && (
+                      <span className={cn(
+                        "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] italic whitespace-nowrap transition-colors",
+                        isIdentifyStep ? "text-white drop-shadow-lg" : "text-primary"
+                      )}>
+                        {s}
+                      </span>
+                    )}
+                    {idx < 3 && (
+                      <div className={cn(
+                        "h-0.5 w-4 md:w-8 rounded-full",
+                        isIdentifyStep ? "bg-white/10" : "bg-muted"
+                      )} />
+                    )}
                   </div>
                 );
               })}
