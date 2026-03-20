@@ -269,34 +269,34 @@ export default function LandingPage() {
 
         {showLoginTerminal && (
           <div className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-10 duration-1000">
-            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group border-2 border-white rounded-[2rem] md:rounded-[2.5rem] bg-white/95 backdrop-blur-md">
+            <Card className="kiosk-card flex-1 flex flex-col justify-between terminal-accent group border-2 border-white rounded-[2rem] md:rounded-[2.5rem] bg-white/95 backdrop-blur-2xl">
               <div className="p-4 md:p-5 flex items-center justify-between border-b border-muted/50">
                 <div className="flex items-center gap-2">
                   <MonitorCheck className="h-3.5 w-3.5 md:h-4 md:w-4 text-accent" />
-                  <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground">NL-01</span>
+                  <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">NL-01</span>
                 </div>
-                <span className="text-[8px] md:text-[9px] font-mono tabular-nums font-black opacity-30">{localTime || "--:--"}</span>
+                <span className="text-[8px] md:text-[9px] font-mono tabular-nums font-black opacity-40">{localTime || "--:--"}</span>
               </div>
 
-              <CardContent className="p-6 md:p-8 text-center space-y-6">
-                <div className="space-y-1">
-                  <h2 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight italic leading-none">Access <br />NEULibrary</h2>
-                  <p className="text-muted-foreground text-[7px] font-black uppercase tracking-widest opacity-40">Identity Verification Hub</p>
+              <CardContent className="p-6 md:p-8 text-center space-y-8">
+                <div className="space-y-2">
+                  <h2 className="text-xl md:text-3xl font-black text-foreground uppercase tracking-tight italic leading-none">Access <br />NEULibrary</h2>
+                  <p className="text-foreground/40 text-[8px] font-black uppercase tracking-[0.3em]">Identity Verification Hub</p>
                 </div>
 
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full h-16 md:h-20 rounded-2xl border-2 md:border-4 border-white hover:border-accent hover:bg-accent/5 transition-all shadow-lg kiosk-button group"
+                  className="w-full h-16 md:h-20 rounded-2xl border-2 md:border-4 border-white hover:border-accent hover:bg-accent/5 transition-all shadow-lg kiosk-button group bg-white"
                 >
                   <Link href="/check-in" className="flex flex-col items-center justify-center gap-1">
-                    <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-accent">TAP TO ENTER</span>
-                    <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-accent group-hover:translate-x-1.5 transition-transform" />
+                    <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground group-hover:text-accent">TAP TO ENTER</span>
+                    <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-accent group-hover:translate-x-2 transition-transform" />
                   </Link>
                 </Button>
 
                 <div className="pt-4 border-t border-dashed border-muted">
-                  <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest opacity-30 px-2 leading-relaxed">
+                  <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest px-2 leading-relaxed">
                     Student / Faculty Credentials Required
                   </p>
                 </div>
