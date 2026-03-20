@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { 
   BookOpen, ShieldCheck, Loader2, Mail, 
   MonitorCheck, ArrowRight, UserCheck, 
-  LayoutDashboard, LogOut, GraduationCap, Briefcase
+  LayoutDashboard, LogOut, GraduationCap, Briefcase,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +19,7 @@ import { signOut } from "firebase/auth";
 
 /**
  * @fileOverview NEULibrary Institutional Gateway.
- * Features an Automated Identity Handshake and Security Enforcement Protocol.
+ * Features an Automated Identity Handshake and Institutional Email Enforcement.
  */
 export default function LandingPage() {
   const router = useRouter();
@@ -40,17 +40,35 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Sync action pending state with auth state to prevent deadlocks
+  // Sync action pending state with auth state
   useEffect(() => {
     if (user && isActionPending) {
       setIsActionPending(false);
     }
   }, [user, isActionPending]);
 
-  // INSTITUTIONAL IDENTITY HANDSHAKE: Automated routing to the verification hub
+  // INSTITUTIONAL ENFORCEMENT & HANDSHAKE
   useEffect(() => {
     const handleIdentityVerification = async () => {
       if (isUserLoading || isAdminLoading || !user) return;
+
+      const email = user.email?.toLowerCase() || "";
+      const isInstitutional = email.endsWith("@neu.edu.ph");
+      const isDevException = [
+        'johnmichaelsoriano76@gmail.com', 
+        'johnmichaelsoriano151@gmail.com'
+      ].includes(email);
+
+      if (!isInstitutional && !isDevException) {
+        toast({
+          variant: "destructive",
+          title: "Institutional Access Required",
+          description: "Access is restricted to @neu.edu.ph accounts only.",
+        });
+        await signOut(auth);
+        return;
+      }
+
       if (verifiedUid !== user.uid) return;
 
       if (isAdmin === false) {
@@ -59,12 +77,29 @@ export default function LandingPage() {
     };
 
     handleIdentityVerification();
-  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, router]);
+  }, [user, isAdmin, isAdminLoading, isUserLoading, verifiedUid, router, auth, toast]);
 
   const handleGoogleLogin = async () => {
     setIsActionPending(true);
     try {
-      await initiateGoogleSignIn(auth);
+      const result = await initiateGoogleSignIn(auth);
+      const email = result.user.email?.toLowerCase() || "";
+      const isInstitutional = email.endsWith("@neu.edu.ph");
+      const isDevException = [
+        'johnmichaelsoriano76@gmail.com', 
+        'johnmichaelsoriano151@gmail.com'
+      ].includes(email);
+
+      if (!isInstitutional && !isDevException) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Please use your institutional (@neu.edu.ph) email address.",
+        });
+        await signOut(auth);
+        setIsActionPending(false);
+        return;
+      }
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setIsActionPending(false);
@@ -72,12 +107,11 @@ export default function LandingPage() {
       }
       
       console.error("Auth Error:", err);
-
       let description = `Error: ${err.code || err.message}. Ensure Google Auth is enabled.`;
       
       if (err.code === 'auth/unauthorized-domain') {
         const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'your-domain.com';
-        description = `Domain Unauthorized. Go to Firebase Console > Authentication > Settings > Authorized domains and add: ${currentDomain}`;
+        description = `Domain Unauthorized. Whitelist this in Firebase Console: ${currentDomain}`;
       }
 
       toast({
@@ -117,7 +151,6 @@ export default function LandingPage() {
         backgroundPosition: 'center'
       }}
     >
-      {/* Institutional Diagnostic Overlay */}
       <div className="absolute inset-0 bg-primary/70 backdrop-blur-[2px] z-0" />
 
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch z-10 relative">
@@ -148,9 +181,12 @@ export default function LandingPage() {
                 {user ? "AUTHORIZED" : "SECURE"} <br /> 
                 <span className="text-accent not-italic">{user ? "PERSONA" : "GATEWAY"}</span>
               </h1>
-              <p className="text-white/50 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] ml-1">
-                {isUserLoading || isActionPending || isAdminLoading ? "Verifying Identity..." : user ? `Identity Verified: ${user.email}` : "Institutional Google Account Required"}
-              </p>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-accent animate-pulse" />
+                <p className="text-white font-black uppercase tracking-[0.2em] text-[8px] md:text-[9px]">
+                  Requires Institutional Email (@neu.edu.ph)
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -195,7 +231,7 @@ export default function LandingPage() {
                   ) : (
                     <div className="col-span-full md:col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
                       <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 text-center">Executing Identity Handshake...</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 text-center">Executing Institutional Handshake...</p>
                     </div>
                   )}
                   
@@ -221,10 +257,10 @@ export default function LandingPage() {
           </CardContent>
 
           <div className="p-3 md:p-4 bg-black/20 flex items-center justify-between text-[7px] md:text-[8px] font-black uppercase tracking-[0.4em] text-white/30 z-10">
-            <span>Core v3.8</span>
+            <span>NEU-SAFE v4.0</span>
             <span className="flex items-center gap-2">
               <span className="h-1 w-1 rounded-full bg-accent animate-pulse" />
-              Unified REDIRECTION Handshake Active
+              @neu.edu.ph Enforcement Active
             </span>
           </div>
 
