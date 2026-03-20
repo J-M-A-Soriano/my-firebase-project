@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Search, BookOpen, GraduationCap, Briefcase, CheckCircle2, 
   Loader2, UserPlus, MousePointer2, UserCheck, 
-  CalendarDays, ShieldAlert
+  CalendarDays, ShieldAlert, Timer
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from "@/firebase";
@@ -46,6 +46,7 @@ const ACADEMIC_UNITS = [
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
  * Resolved: Identity loop fixed by ensuring session teardown on visit completion.
  * UI/UX: Enhanced with a High-Comfort "Institutional Navy" palette for reduced eye strain.
+ * Added: Large, prominent countdown timer for terminal reset feedback.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -125,14 +126,13 @@ export default function CheckInHub() {
           if (prev <= 1) {
             clearInterval(interval);
             // TERMINAL RESET LOGIC:
-            // If the user was authenticated via Google, we MUST sign them out to clear 
-            // the terminal session. This prevents the auto-handshake loop for the next student.
+            // Force sign out to prevent auto-handshake identity loops
             if (auth.currentUser) {
-              signOut(auth).then(() => {
+              signOut(auth).finally(() => {
                 router.replace("/");
               });
             } else {
-              resetKiosk();
+              router.replace("/");
             }
             return 0;
           }
@@ -403,7 +403,7 @@ export default function CheckInHub() {
               )}
 
               {step === "WELCOME" && (
-                <Card className="kiosk-card p-10 md:p-24 text-center space-y-10 success-glow border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                <Card className="kiosk-card p-10 md:p-20 text-center space-y-8 success-glow border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
                   <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-primary rounded-[2rem] md:rounded-[3rem] shadow-2xl">
                     <CheckCircle2 className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
@@ -413,16 +413,22 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-12 border-t-4 border-dotted border-white/10">
-                    <p className="text-[11px] md:text-[13px] font-black text-white uppercase tracking-[0.3em] flex items-center justify-center gap-4">
-                      <CalendarDays className="h-6 w-6 text-accent" /> Resetting in {secondsLeft} Seconds
-                    </p>
+                  
+                  {/* High-Visibility Countdown */}
+                  <div className="pt-8 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-4 px-8 py-4 bg-white/10 rounded-2xl border-2 border-white/20">
+                      <Timer className="h-10 w-10 text-accent animate-pulse" />
+                      <div className="text-left">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Terminal Resetting</p>
+                        <p className="text-4xl font-black text-white italic leading-none">{secondsLeft} <span className="text-xl not-italic uppercase tracking-widest text-accent">Seconds</span></p>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               )}
 
               {step === "BLOCKED" && (
-                <Card className="kiosk-card p-10 md:p-24 text-center space-y-10 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                <Card className="kiosk-card p-10 md:p-20 text-center space-y-8 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
                   <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-destructive rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
                     <ShieldAlert className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
@@ -432,10 +438,16 @@ export default function CheckInHub() {
                     </h1>
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-12 border-t-4 border-dotted border-white/10">
-                    <p className="text-[12px] md:text-[14px] font-black text-white uppercase tracking-widest leading-relaxed">
-                      Suspended Account Flag. <br />Resetting in {secondsLeft} Seconds.
-                    </p>
+
+                  {/* High-Visibility Countdown */}
+                  <div className="pt-8 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-4 px-8 py-4 bg-white/10 rounded-2xl border-2 border-white/20">
+                      <Timer className="h-10 w-10 text-white animate-pulse" />
+                      <div className="text-left">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Security Reset</p>
+                        <p className="text-4xl font-black text-white italic leading-none">{secondsLeft} <span className="text-xl not-italic uppercase tracking-widest">Seconds</span></p>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               )}
