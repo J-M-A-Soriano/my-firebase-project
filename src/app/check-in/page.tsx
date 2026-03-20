@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,7 +44,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Refined: 5s stable countdown with explicit session purge.
+ * Fixed: Stabilized countdown logic to prevent immediate redirection.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -57,7 +58,7 @@ export default function CheckInHub() {
   const [identifier, setIdentifier] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [visitor, setVisitor] = useState<any | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   // Registration Form State
   const [regType, setRegType] = useState<"Student" | "Teacher" | "Staff">("Student");
@@ -114,13 +115,18 @@ export default function CheckInHub() {
   // TIMER LOGIC: Pure countdown state management
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      setSecondsLeft(5); // Stable 5-second window
+      setSecondsLeft(5); // Explicitly set to 5 when entering success/error step
 
       const interval = setInterval(() => {
-        setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+        setSecondsLeft((prev) => {
+          if (prev === null) return 5;
+          return prev > 0 ? prev - 1 : 0;
+        });
       }, 1000);
 
       return () => clearInterval(interval);
+    } else {
+      setSecondsLeft(null);
     }
   }, [step]);
 
@@ -395,7 +401,7 @@ export default function CheckInHub() {
                   <div className="pt-4 flex items-center justify-center gap-3">
                     <Timer className="h-4 w-4 text-white/70" />
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
-                      Resetting for next user in {secondsLeft}s
+                      Resetting for next user in {secondsLeft ?? 5}s
                     </p>
                   </div>
                 </Card>
@@ -415,7 +421,7 @@ export default function CheckInHub() {
                   <div className="pt-4 flex items-center justify-center gap-3">
                     <Timer className="h-4 w-4 text-white/70" />
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
-                      Resetting for next user in {secondsLeft}s
+                      Resetting for next user in {secondsLeft ?? 5}s
                     </p>
                   </div>
                 </Card>
