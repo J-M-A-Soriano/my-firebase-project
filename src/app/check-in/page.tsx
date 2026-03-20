@@ -44,7 +44,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Enhanced with dynamic countdown logic for automated resets.
+ * Enhanced with real-time countdown logic and premium accessibility styling.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -228,14 +228,15 @@ export default function CheckInHub() {
       } : {}}
     >
       {step === "IDENTIFY" && (
-        <div className="fixed inset-0 bg-primary/65 backdrop-blur-[3px] z-0" />
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-[4px] z-0" />
       )}
       
       <div className="relative z-10">
         <NavBar />
-        <main className="container mx-auto py-6 md:py-10 px-4 md:px-6 max-w-3xl">
-          <div className="space-y-6 md:space-y-10">
+        <main className="container mx-auto py-6 md:py-16 px-4 md:px-6 max-w-3xl">
+          <div className="space-y-8 md:space-y-12">
             
+            {/* Step Indicators */}
             <div className="flex justify-center items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar py-2">
               {(["IDENTIFY", "REGISTER", "INTENT", "WELCOME"] as KioskStep[]).map((s, idx) => {
                 if (s === "REGISTER" && step !== "REGISTER") return null;
@@ -246,38 +247,45 @@ export default function CheckInHub() {
                   <div key={s} className="flex items-center gap-2 md:gap-4 shrink-0">
                     <div className={cn(
                       "h-8 w-8 md:h-10 md:w-10 rounded-xl flex items-center justify-center font-black transition-all duration-500 border-2",
-                      isActive ? "step-active border-primary text-[9px] md:text-[10px]" : isPast ? "bg-accent text-white border-accent text-[9px] md:text-[10px]" : "bg-white text-muted-foreground border-muted text-[9px] md:text-[10px]"
+                      isActive ? "step-active border-accent text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]" : isPast ? "bg-accent text-white border-accent" : "bg-white/10 text-white/40 border-white/10"
                     )}>
                       {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
                     </div>
-                    {isActive && <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white italic whitespace-nowrap drop-shadow-md">{s}</span>}
-                    {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-white/20 rounded-full" />}
+                    {isActive && <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-white italic whitespace-nowrap drop-shadow-lg">{s}</span>}
+                    {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-white/10 rounded-full" />}
                   </div>
                 );
               })}
             </div>
 
-            <div className="animate-in fade-in slide-in-from-bottom-6 duration-500">
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               {step === "IDENTIFY" && (
-                <Card className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem]">
+                <Card className="kiosk-card p-8 md:p-14 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
                   <div className="relative z-10">
-                    <div className="text-center space-y-3 mb-8 md:mb-10">
-                      <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Access <span className="text-accent not-italic">Identification</span></h2>
-                      <p className="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-80">Enter ID Number or Connect Account</p>
+                    <div className="text-center space-y-4 mb-10">
+                      <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-primary leading-none">
+                        Access <span className="text-accent not-italic">Identification</span>
+                      </h2>
+                      <p className="text-muted-foreground text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
+                        Enter ID Number or Connect Account
+                      </p>
                     </div>
-                    <form onSubmit={handleIdentification} className="space-y-6">
-                      <Input 
-                        placeholder="Enter ID Number..."
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        className="h-16 md:h-20 text-lg md:text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-white/20 focus-visible:border-accent px-6 md:px-8 text-center bg-white/10 text-white placeholder:text-white/30"
-                        autoFocus
-                      />
+                    <form onSubmit={handleIdentification} className="space-y-8">
+                      <div className="relative group">
+                        <Input 
+                          placeholder="ENTER ID NUMBER..."
+                          value={identifier}
+                          onChange={(e) => setIdentifier(e.target.value)}
+                          className="h-20 md:h-24 text-xl md:text-3xl font-black uppercase tracking-[0.2em] rounded-[1.5rem] border-4 border-muted focus-visible:border-primary px-8 md:px-10 text-center bg-muted/30 text-primary placeholder:text-primary/20 transition-all"
+                          autoFocus
+                        />
+                        <div className="absolute inset-0 rounded-[1.5rem] border-2 border-primary/5 pointer-events-none group-focus-within:border-primary/20" />
+                      </div>
                       <Button 
                         disabled={!identifier || isLoading}
-                        className="w-full h-14 md:h-16 rounded-2xl bg-accent text-white text-base md:text-lg font-black uppercase tracking-widest shadow-lg kiosk-button hover:bg-primary transition-all"
+                        className="w-full h-16 md:h-20 rounded-[1.5rem] bg-primary text-white text-lg md:text-xl font-black uppercase tracking-widest shadow-xl kiosk-button hover:bg-[#1a263d] transition-all"
                       >
-                        {isLoading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" /> : "Verify Identity"}
+                        {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "Verify Identity"}
                       </Button>
                     </form>
                   </div>
@@ -285,38 +293,41 @@ export default function CheckInHub() {
               )}
 
               {step === "REGISTER" && (
-                <Card className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem]">
-                  <div className="flex items-center gap-4 md:gap-6 mb-8 md:mb-10">
-                    <div className="h-12 w-12 md:h-14 md:w-14 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                      <UserPlus className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+                <Card className="kiosk-card p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
+                  <div className="flex items-center gap-6 mb-10">
+                    <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 border-2 border-primary/5">
+                      <UserPlus className="h-8 w-8 text-primary" />
                     </div>
                     <div className="space-y-1">
-                      <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tighter">Initial <span className="text-primary not-italic">Record</span></h2>
-                      <p className="text-muted-foreground text-[7px] md:text-[8px] font-black uppercase tracking-widest opacity-60">Confirm profile details for enrollment</p>
+                      <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-primary">Initial <span className="text-accent not-italic">Record</span></h2>
+                      <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest opacity-60">Complete institutional profile</p>
                     </div>
                   </div>
                   <form onSubmit={handleRegistration} className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase tracking-widest ml-1">First Name</Label>
-                        <Input value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="h-11 rounded-xl border-2 font-bold px-4" required />
+                        <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">First Name</Label>
+                        <Input value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="h-14 rounded-xl border-2 border-muted font-bold px-5 text-primary focus-visible:border-primary" required />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Last Name</Label>
-                        <Input value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="h-11 rounded-xl border-2 font-bold px-4" required />
+                        <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Last Name</Label>
+                        <Input value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="h-14 rounded-xl border-2 border-muted font-bold px-5 text-primary focus-visible:border-primary" required />
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Visitor Classification</Label>
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Visitor Classification</Label>
+                      <div className="flex flex-col sm:flex-row gap-3">
                         {["Student", "Teacher", "Staff"].map((type) => (
                           <Button 
                             key={type}
                             type="button" 
                             variant={regType === type ? "default" : "outline"}
                             onClick={() => setRegType(type as any)}
-                            className="flex-1 h-11 rounded-xl font-black uppercase text-[8px] md:text-[9px]"
+                            className={cn(
+                              "flex-1 h-14 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all",
+                              regType === type ? "bg-primary text-white shadow-lg" : "border-2 border-muted text-muted-foreground hover:border-primary"
+                            )}
                           >
                             {type}
                           </Button>
@@ -325,14 +336,14 @@ export default function CheckInHub() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase tracking-widest ml-1">Academic Unit</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Academic Unit</Label>
                       <Select value={regCollege} onValueChange={setRegCollege}>
-                        <SelectTrigger className="h-11 rounded-xl border-2 font-black uppercase text-[8px] md:text-[9px] px-4">
+                        <SelectTrigger className="h-14 rounded-xl border-2 border-muted font-black uppercase text-[10px] px-5 text-primary focus:border-primary">
                           <SelectValue placeholder="Select Affiliation" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-xl p-2 max-h-[300px]">
+                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2 max-h-[300px]">
                           {ACADEMIC_UNITS.map(unit => (
-                            <SelectItem key={unit} value={unit} className="font-bold py-2 text-[9px] md:text-[10px] uppercase">
+                            <SelectItem key={unit} value={unit} className="font-bold py-3 text-[10px] uppercase cursor-pointer">
                               {unit}
                             </SelectItem>
                           ))}
@@ -340,7 +351,7 @@ export default function CheckInHub() {
                       </Select>
                     </div>
 
-                    <Button className="w-full h-12 md:h-14 rounded-xl bg-primary text-white font-black uppercase tracking-widest shadow-md kiosk-button">
+                    <Button className="w-full h-16 rounded-xl bg-primary text-white font-black uppercase tracking-widest shadow-xl kiosk-button hover:bg-[#1a263d]">
                       Initialize & Proceed
                     </Button>
                   </form>
@@ -348,18 +359,18 @@ export default function CheckInHub() {
               )}
 
               {step === "INTENT" && (
-                <Card className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem]">
-                  <div className="flex items-center justify-between mb-8 md:mb-10">
+                <Card className="kiosk-card p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
+                  <div className="flex items-center justify-between mb-10">
                     <div className="space-y-1">
-                      <h2 className="text-xl md:text-2xl font-black italic uppercase tracking-tighter text-primary">Select <span className="text-foreground not-italic">Intent</span></h2>
-                      <p className="text-muted-foreground text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-60">Identity Confirmed: {visitor?.firstName || user?.displayName}</p>
+                      <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-primary">Select <span className="text-accent not-italic">Intent</span></h2>
+                      <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">Access Granted: {visitor?.firstName || user?.displayName}</p>
                     </div>
-                    <div className="h-10 w-10 md:h-12 md:w-12 bg-accent/20 rounded-2xl flex items-center justify-center border-2 border-accent shrink-0">
-                      <UserCheck className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    <div className="h-14 w-14 bg-accent/10 rounded-2xl flex items-center justify-center border-2 border-accent/20 shrink-0">
+                      <UserCheck className="h-7 w-7 text-accent" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {INTENT_OPTIONS.map((intent) => {
                       const Icon = intent.icon;
                       return (
@@ -367,13 +378,13 @@ export default function CheckInHub() {
                           key={intent.id}
                           variant="outline"
                           onClick={() => handleIntent(intent.name)}
-                          className="h-24 md:h-28 rounded-2xl border-2 border-muted hover:border-primary hover:bg-primary hover:text-white group transition-all duration-300 shadow-sm hover:shadow-xl"
+                          className="h-28 md:h-32 rounded-[1.5rem] border-2 border-muted hover:border-accent hover:bg-accent/5 group transition-all duration-300 shadow-sm hover:shadow-xl"
                         >
-                          <div className="flex flex-col items-center gap-2 md:gap-3">
-                            <div className="p-2 md:p-3 bg-muted/30 rounded-xl group-hover:bg-white/20 transition-colors">
-                              <Icon className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground group-hover:text-white transition-colors" />
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="p-3 bg-muted/40 rounded-xl group-hover:bg-accent/10 transition-colors">
+                              <Icon className="h-7 w-7 text-muted-foreground group-hover:text-accent transition-colors" />
                             </div>
-                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest group-hover:text-white transition-colors">
+                            <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-primary transition-colors">
                               {intent.name}
                             </span>
                           </div>
@@ -385,38 +396,38 @@ export default function CheckInHub() {
               )}
 
               {step === "WELCOME" && (
-                <Card className="kiosk-card p-8 md:p-16 text-center space-y-8 md:space-y-10 success-glow border-4 border-white rounded-[2rem] md:rounded-[2.5rem]">
-                  <div className="inline-flex items-center justify-center p-6 md:p-8 bg-primary text-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl">
-                    <CheckCircle2 className="h-12 w-12 md:h-16 md:w-16" />
+                <Card className="kiosk-card p-10 md:p-20 text-center space-y-10 success-glow border-none bg-white rounded-[2rem] md:rounded-[4rem] shadow-2xl">
+                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-primary text-white rounded-[2rem] md:rounded-[3rem] shadow-2xl">
+                    <CheckCircle2 className="h-16 w-16 md:h-20 md:w-20" />
                   </div>
-                  <div className="space-y-3 md:space-y-4">
-                    <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-tight text-primary">
-                      Welcome to <br /><span className="not-italic">NEU Library!</span>
+                  <div className="space-y-4">
+                    <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-tight text-primary">
+                      Welcome to <br /><span className="text-accent not-italic">NEU Library!</span>
                     </h1>
-                    <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Access Transaction Logged</p>
+                    <p className="text-[10px] md:text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-6 md:pt-8 border-t-2 border-dashed border-muted">
-                    <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-                      <CalendarDays className="h-4 w-4" /> Resetting in {secondsLeft} Seconds
+                  <div className="pt-10 border-t-4 border-dotted border-muted">
+                    <p className="text-[10px] md:text-[11px] font-black text-primary uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+                      <CalendarDays className="h-5 w-5 text-accent" /> Resetting in {secondsLeft} Seconds
                     </p>
                   </div>
                 </Card>
               )}
 
               {step === "BLOCKED" && (
-                <Card className="kiosk-card p-8 md:p-16 text-center space-y-8 md:space-y-10 border-4 border-destructive rounded-[2rem] md:rounded-[2.5rem] bg-destructive/5 animate-pulse">
-                  <div className="inline-flex items-center justify-center p-6 md:p-8 bg-destructive text-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl">
-                    <ShieldAlert className="h-12 w-12 md:h-16 md:w-16" />
+                <Card className="kiosk-card p-10 md:p-20 text-center space-y-10 border-none bg-white rounded-[2rem] md:rounded-[4rem] shadow-2xl">
+                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-destructive text-white rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
+                    <ShieldAlert className="h-16 w-16 md:h-20 md:w-20" />
                   </div>
-                  <div className="space-y-3 md:space-y-4">
-                    <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-tight text-destructive">
+                  <div className="space-y-4">
+                    <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-tight text-destructive">
                       Access <br /><span className="not-italic">Denied</span>
                     </h1>
-                    <p className="text-[8px] md:text-[10px] font-black text-destructive uppercase tracking-[0.3em]">Institutional Privileges Terminated</p>
+                    <p className="text-[10px] md:text-[12px] font-black text-destructive uppercase tracking-[0.4em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-6 md:pt-8 border-t-2 border-dashed border-destructive/20">
-                    <p className="text-[9px] md:text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-relaxed">
-                      Account flag: Suspended Authority. <br />Resetting in {secondsLeft} Seconds.
+                  <div className="pt-10 border-t-4 border-dotted border-destructive/10">
+                    <p className="text-[11px] md:text-[12px] font-black text-muted-foreground uppercase tracking-widest leading-relaxed">
+                      Suspended Account Flag. <br />Resetting in {secondsLeft} Seconds.
                     </p>
                   </div>
                 </Card>
