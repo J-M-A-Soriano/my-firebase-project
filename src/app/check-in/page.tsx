@@ -238,8 +238,8 @@ export default function CheckInHub() {
                     )}>
                       {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
                     </div>
-                    {isActive && <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-primary italic whitespace-nowrap">{s}</span>}
-                    {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-muted rounded-full" />}
+                    {isActive && <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white italic whitespace-nowrap drop-shadow-md">{s}</span>}
+                    {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-white/20 rounded-full" />}
                   </div>
                 );
               })}
