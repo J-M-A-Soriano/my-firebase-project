@@ -141,6 +141,7 @@ export default function LandingPage() {
 
   const showPersonaSelection = user && !isAdminLoading && isAdmin;
   const showLoginTerminal = !user && !isUserLoading;
+  const isGlobalLoading = isUserLoading || (user && isAdminLoading && verifiedUid !== user.uid);
 
   return (
     <div 
@@ -197,7 +198,10 @@ export default function LandingPage() {
                   disabled={isActionPending || isUserLoading}
                 >
                   {isActionPending || isUserLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <div className="flex items-center gap-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                      <span>Verifying... Please wait</span>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-4">
                       <Mail className="h-5 w-5" />
@@ -229,9 +233,17 @@ export default function LandingPage() {
                       </Button>
                     </>
                   ) : (
-                    <div className="col-span-full md:col-span-2 flex flex-col items-center py-6 bg-white/5 rounded-2xl border border-white/10">
-                      <Loader2 className="h-8 w-8 text-accent animate-spin mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 text-center">Executing Institutional Handshake...</p>
+                    <div className="col-span-full md:col-span-2 flex flex-col items-center py-8 bg-white/5 rounded-[2rem] border-2 border-white/10 backdrop-blur-md">
+                      <div className="relative mb-4">
+                        <Loader2 className="h-12 w-12 text-accent animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <ShieldCheck className="h-5 w-5 text-white/40" />
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white italic">Executing Institutional Handshake</p>
+                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40">Please wait while we verify your authority</p>
+                      </div>
                     </div>
                   )}
                   
