@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -44,9 +43,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Resolved: Identity loop fixed by ensuring session teardown on visit completion.
- * UI/UX: Reverted to a cleaner, text-based countdown as per institutional preference.
- * Fix: Separated router navigation from state updaters to prevent lifecycle errors.
+ * Refined: Increased countdown to 10s for better user experience.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -79,7 +76,6 @@ export default function CheckInHub() {
     if (!db || isUserLoading) return;
 
     const performAuthHandshake = async () => {
-      // Only perform handshake if we are in the IDENTIFY step and a user is present
       if (user && step === "IDENTIFY") {
         setIsLoading(true);
         try {
@@ -118,7 +114,7 @@ export default function CheckInHub() {
   // TIMER LOGIC: Pure countdown state management
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      const initialSeconds = step === "BLOCKED" ? 8 : 5;
+      const initialSeconds = step === "BLOCKED" ? 12 : 10;
       setSecondsLeft(initialSeconds);
 
       const interval = setInterval(() => {
@@ -132,8 +128,6 @@ export default function CheckInHub() {
   // RESET SIDE EFFECT: Handle navigation and sign-out when timer hits zero
   useEffect(() => {
     if ((step === "WELCOME" || step === "BLOCKED") && secondsLeft === 0) {
-      // TERMINAL RESET LOGIC:
-      // Force sign out to prevent auto-handshake identity loops
       if (auth.currentUser) {
         signOut(auth).finally(() => {
           router.replace("/");
@@ -143,17 +137,6 @@ export default function CheckInHub() {
       }
     }
   }, [secondsLeft, step, auth, router]);
-
-  const resetKiosk = () => {
-    setStep("IDENTIFY");
-    setIdentifier("");
-    setVisitor(null);
-    setRegType("Student");
-    setRegCollege("");
-    setRegFirstName("");
-    setRegLastName("");
-    setSecondsLeft(0);
-  };
 
   const handleIdentification = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -414,7 +397,7 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
                   <div className="pt-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90">
                       Resetting for next user in {secondsLeft} seconds...
                     </p>
                   </div>
@@ -433,7 +416,7 @@ export default function CheckInHub() {
                     <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
                   <div className="pt-4">
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white">
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/90">
                       Resetting for next user in {secondsLeft} seconds...
                     </p>
                   </div>

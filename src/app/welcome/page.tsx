@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,8 +14,7 @@ import { NavBar } from "@/components/nav-bar";
 
 /**
  * @fileOverview Institutional Verification Gateway.
- * Features an automatic 5-second reset to clear the session for the next user.
- * Fix: Separated router navigation from state updaters to prevent lifecycle errors.
+ * Optimized: Stabilized 10s countdown for a more comfortable user experience.
  */
 export default function AuthorizedGreeting() {
   const { user, isUserLoading } = useUser();
@@ -25,7 +23,7 @@ export default function AuthorizedGreeting() {
   const { isAdmin } = useAdmin();
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(5);
+  const [secondsLeft, setSecondsLeft] = useState(10);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
