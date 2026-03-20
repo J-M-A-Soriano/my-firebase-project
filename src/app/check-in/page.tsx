@@ -44,7 +44,8 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
- * Enhanced with real-time countdown logic and premium accessibility styling.
+ * Resolved: Identity loop fixed by ensuring session teardown on visit completion.
+ * UI/UX: Enhanced with a High-Comfort "Institutional Navy" palette for reduced eye strain.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -77,6 +78,7 @@ export default function CheckInHub() {
     if (!db || isUserLoading) return;
 
     const performAuthHandshake = async () => {
+      // Only perform handshake if we are in the IDENTIFY step and a user is present
       if (user && step === "IDENTIFY") {
         setIsLoading(true);
         try {
@@ -122,8 +124,13 @@ export default function CheckInHub() {
         setSecondsLeft((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
-            if (user && !isAdmin) {
-              signOut(auth).then(() => router.replace("/"));
+            // TERMINAL RESET LOGIC:
+            // If the user was authenticated via Google, we MUST sign them out to clear 
+            // the terminal session. This prevents the auto-handshake loop for the next student.
+            if (auth.currentUser) {
+              signOut(auth).then(() => {
+                router.replace("/");
+              });
             } else {
               resetKiosk();
             }
@@ -135,7 +142,7 @@ export default function CheckInHub() {
 
       return () => clearInterval(interval);
     }
-  }, [step, user, isAdmin, auth, router]);
+  }, [step, auth, router]);
 
   const resetKiosk = () => {
     setStep("IDENTIFY");
@@ -251,7 +258,7 @@ export default function CheckInHub() {
                     )}>
                       {idx === 0 ? "1" : idx === 1 && step === "REGISTER" ? "2" : step === "REGISTER" ? idx + 1 : idx}
                     </div>
-                    {isActive && <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-white italic whitespace-nowrap drop-shadow-lg">{s}</span>}
+                    {isActive && <span className="text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white italic whitespace-nowrap drop-shadow-lg">{s}</span>}
                     {idx < 3 && <div className="h-0.5 w-4 md:w-8 bg-white/10 rounded-full" />}
                   </div>
                 );
@@ -260,14 +267,14 @@ export default function CheckInHub() {
 
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               {step === "IDENTIFY" && (
-                <Card className="kiosk-card p-8 md:p-14 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl">
+                <Card className="kiosk-card p-8 md:p-14 rounded-[2rem] md:rounded-[3rem] border-none bg-white shadow-2xl overflow-hidden relative">
                   <div className="relative z-10">
                     <div className="text-center space-y-4 mb-10">
                       <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-primary leading-none">
                         Access <span className="text-accent not-italic">Identification</span>
                       </h2>
                       <p className="text-muted-foreground text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
-                        Enter ID Number or Connect Account
+                        Enter ID Number or Verify Account
                       </p>
                     </div>
                     <form onSubmit={handleIdentification} className="space-y-8">
@@ -396,37 +403,37 @@ export default function CheckInHub() {
               )}
 
               {step === "WELCOME" && (
-                <Card className="kiosk-card p-10 md:p-20 text-center space-y-10 success-glow border-none bg-white rounded-[2rem] md:rounded-[4rem] shadow-2xl">
-                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-primary text-white rounded-[2rem] md:rounded-[3rem] shadow-2xl">
-                    <CheckCircle2 className="h-16 w-16 md:h-20 md:w-20" />
+                <Card className="kiosk-card p-10 md:p-24 text-center space-y-10 success-glow border-none bg-primary text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                  <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-primary rounded-[2rem] md:rounded-[3rem] shadow-2xl">
+                    <CheckCircle2 className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
-                  <div className="space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-tight text-primary">
+                  <div className="space-y-6">
+                    <h1 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">
                       Welcome to <br /><span className="text-accent not-italic">NEU Library!</span>
                     </h1>
-                    <p className="text-[10px] md:text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-60">Institutional Entry Logged</p>
+                    <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Institutional Entry Logged</p>
                   </div>
-                  <div className="pt-10 border-t-4 border-dotted border-muted">
-                    <p className="text-[10px] md:text-[11px] font-black text-primary uppercase tracking-[0.3em] flex items-center justify-center gap-3">
-                      <CalendarDays className="h-5 w-5 text-accent" /> Resetting in {secondsLeft} Seconds
+                  <div className="pt-12 border-t-4 border-dotted border-white/10">
+                    <p className="text-[11px] md:text-[13px] font-black text-white uppercase tracking-[0.3em] flex items-center justify-center gap-4">
+                      <CalendarDays className="h-6 w-6 text-accent" /> Resetting in {secondsLeft} Seconds
                     </p>
                   </div>
                 </Card>
               )}
 
               {step === "BLOCKED" && (
-                <Card className="kiosk-card p-10 md:p-20 text-center space-y-10 border-none bg-white rounded-[2rem] md:rounded-[4rem] shadow-2xl">
-                  <div className="inline-flex items-center justify-center p-8 md:p-10 bg-destructive text-white rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
-                    <ShieldAlert className="h-16 w-16 md:h-20 md:w-20" />
+                <Card className="kiosk-card p-10 md:p-24 text-center space-y-10 border-none bg-destructive text-white rounded-[2rem] md:rounded-[4rem] shadow-3xl">
+                  <div className="inline-flex items-center justify-center p-8 md:p-12 bg-white text-destructive rounded-[2rem] md:rounded-[3rem] shadow-2xl animate-pulse">
+                    <ShieldAlert className="h-16 w-16 md:h-24 md:w-24" />
                   </div>
-                  <div className="space-y-4">
-                    <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-tight text-destructive">
+                  <div className="space-y-6">
+                    <h1 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">
                       Access <br /><span className="not-italic">Denied</span>
                     </h1>
-                    <p className="text-[10px] md:text-[12px] font-black text-destructive uppercase tracking-[0.4em]">Authority Terminated</p>
+                    <p className="text-[11px] md:text-[13px] font-black text-white/50 uppercase tracking-[0.5em]">Authority Terminated</p>
                   </div>
-                  <div className="pt-10 border-t-4 border-dotted border-destructive/10">
-                    <p className="text-[11px] md:text-[12px] font-black text-muted-foreground uppercase tracking-widest leading-relaxed">
+                  <div className="pt-12 border-t-4 border-dotted border-white/10">
+                    <p className="text-[12px] md:text-[14px] font-black text-white uppercase tracking-widest leading-relaxed">
                       Suspended Account Flag. <br />Resetting in {secondsLeft} Seconds.
                     </p>
                   </div>
