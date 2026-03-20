@@ -44,6 +44,7 @@ const ACADEMIC_UNITS = [
 
 /**
  * @fileOverview Check-In Hub - Unified terminal for institutional access logging.
+ * Enhanced with dynamic countdown logic for automated resets.
  */
 export default function CheckInHub() {
   const { toast } = useToast();
@@ -57,6 +58,7 @@ export default function CheckInHub() {
   const [identifier, setIdentifier] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [visitor, setVisitor] = useState<any | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
 
   // Registration Form State
   const [regType, setRegType] = useState<"Student" | "Teacher" | "Staff">("Student");
@@ -70,7 +72,7 @@ export default function CheckInHub() {
   }, [db]);
   const { data: dynamicColleges } = useCollection(collegesQuery);
 
-  // AUTHENTICATED HANDSHAKE: Automatically identify users logging in via personal accounts
+  // AUTHENTICATED HANDSHAKE
   useEffect(() => {
     if (!db || isUserLoading) return;
 
@@ -84,7 +86,6 @@ export default function CheckInHub() {
           if (docSnap.exists()) {
             const data = docSnap.data();
             
-            // SECURITY CHECK: Terminate if blocked
             if (data.isBlocked) {
               setStep("BLOCKED");
               toast({ title: "Access Denied", description: "Your institutional privileges are suspended.", variant: "destructive" });
@@ -95,7 +96,6 @@ export default function CheckInHub() {
             setVisitor({ ...data, id: docSnap.id });
             setStep("INTENT");
           } else {
-            // New authenticated user: pre-fill registration from Google profile
             const nameParts = (user.displayName || "").split(" ");
             setRegFirstName(nameParts[0] || "");
             setRegLastName(nameParts.slice(1).join(" ") || "");
@@ -112,17 +112,28 @@ export default function CheckInHub() {
     performAuthHandshake();
   }, [user, isUserLoading, db, step, auth, toast]);
 
-  // RESET TIMER
+  // DYNAMIC RESET TIMER
   useEffect(() => {
     if (step === "WELCOME" || step === "BLOCKED") {
-      const timer = setTimeout(() => {
-        if (user && !isAdmin) {
-          signOut(auth).then(() => router.replace("/"));
-        } else {
-          resetKiosk();
-        }
-      }, step === "BLOCKED" ? 8000 : 5000);
-      return () => clearTimeout(timer);
+      const initialSeconds = step === "BLOCKED" ? 8 : 5;
+      setSecondsLeft(initialSeconds);
+
+      const interval = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            if (user && !isAdmin) {
+              signOut(auth).then(() => router.replace("/"));
+            } else {
+              resetKiosk();
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
     }
   }, [step, user, isAdmin, auth, router]);
 
@@ -134,6 +145,7 @@ export default function CheckInHub() {
     setRegCollege("");
     setRegFirstName("");
     setRegLastName("");
+    setSecondsLeft(0);
   };
 
   const handleIdentification = async (e?: React.FormEvent) => {
@@ -250,15 +262,15 @@ export default function CheckInHub() {
                 <Card className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem]">
                   <div className="relative z-10">
                     <div className="text-center space-y-3 mb-8 md:mb-10">
-                      <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">Access <span className="text-accent not-italic">Identification</span></h2>
-                      <p className="text-muted-foreground text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-80">Enter ID Number or Connect Account</p>
+                      <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Access <span className="text-accent not-italic">Identification</span></h2>
+                      <p className="text-white text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-80">Enter ID Number or Connect Account</p>
                     </div>
                     <form onSubmit={handleIdentification} className="space-y-6">
                       <Input 
                         placeholder="Enter ID Number..."
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
-                        className="h-16 md:h-20 text-lg md:text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-primary/20 focus-visible:border-accent px-6 md:px-8 text-center bg-muted/10 text-primary placeholder:text-muted-foreground/40"
+                        className="h-16 md:h-20 text-lg md:text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-white/20 focus-visible:border-accent px-6 md:px-8 text-center bg-white/10 text-white placeholder:text-white/30"
                         autoFocus
                       />
                       <Button 
@@ -385,7 +397,7 @@ export default function CheckInHub() {
                   </div>
                   <div className="pt-6 md:pt-8 border-t-2 border-dashed border-muted">
                     <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
-                      <CalendarDays className="h-4 w-4" /> Resetting in 5 Seconds
+                      <CalendarDays className="h-4 w-4" /> Resetting in {secondsLeft} Seconds
                     </p>
                   </div>
                 </Card>
@@ -404,7 +416,7 @@ export default function CheckInHub() {
                   </div>
                   <div className="pt-6 md:pt-8 border-t-2 border-dashed border-destructive/20">
                     <p className="text-[9px] md:text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest leading-relaxed">
-                      Account flag: Suspended Authority. <br />Please report to the Intelligence Center.
+                      Account flag: Suspended Authority. <br />Resetting in {secondsLeft} Seconds.
                     </p>
                   </div>
                 </Card>
