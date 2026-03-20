@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -230,26 +231,36 @@ export default function CheckInHub() {
 
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-500">
             {step === "IDENTIFY" && (
-              <Card className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem]">
-                <div className="text-center space-y-3 mb-8 md:mb-10">
-                  <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-primary leading-none">Access <span className="text-foreground not-italic">Identification</span></h2>
-                  <p className="text-muted-foreground text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Enter ID Number or Connect Account</p>
+              <Card 
+                className="kiosk-card p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden relative"
+                style={{
+                  backgroundImage: `url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqSRvIh0BVjYvUYyv9hBfsaE-TMz2IXCvH1A&s')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px] z-0" />
+                <div className="relative z-10">
+                  <div className="text-center space-y-3 mb-8 md:mb-10">
+                    <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Access <span className="text-accent not-italic">Identification</span></h2>
+                    <p className="text-white/70 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-80">Enter ID Number or Connect Account</p>
+                  </div>
+                  <form onSubmit={handleIdentification} className="space-y-6">
+                    <Input 
+                      placeholder="Enter ID Number..."
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className="h-16 md:h-20 text-lg md:text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-white/30 focus-visible:border-accent px-6 md:px-8 text-center bg-white/10 text-white placeholder:text-white/40 backdrop-blur-md"
+                      autoFocus
+                    />
+                    <Button 
+                      disabled={!identifier || isLoading}
+                      className="w-full h-14 md:h-16 rounded-2xl bg-accent text-white text-base md:text-lg font-black uppercase tracking-widest shadow-lg kiosk-button hover:bg-white hover:text-accent transition-all"
+                    >
+                      {isLoading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" /> : "Verify Identity"}
+                    </Button>
+                  </form>
                 </div>
-                <form onSubmit={handleIdentification} className="space-y-6">
-                  <Input 
-                    placeholder="Enter ID Number..."
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    className="h-16 md:h-20 text-lg md:text-xl font-black uppercase tracking-widest rounded-2xl border-2 border-muted focus-visible:border-primary px-6 md:px-8 text-center"
-                    autoFocus
-                  />
-                  <Button 
-                    disabled={!identifier || isLoading}
-                    className="w-full h-14 md:h-16 rounded-2xl bg-primary text-white text-base md:text-lg font-black uppercase tracking-widest shadow-lg kiosk-button"
-                  >
-                    {isLoading ? <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" /> : "Verify Identity"}
-                  </Button>
-                </form>
               </Card>
             )}
 
